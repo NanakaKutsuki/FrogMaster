@@ -9,6 +9,8 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -20,16 +22,18 @@ public class TradeParser {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("MM/dd/yyyy");
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
 
-    // temporary variables
+    // TODO remove temporary variables
     private static final LocalDate THIRD = LocalDate.of(2013, 9, 3);
     private static final LocalTime NINE = LocalTime.of(9, 30);
     private static final LocalTime FOUR = LocalTime.of(16, 15);
 
-    public void parse() {
+    public Set<PricePoint> parse() {
+        Set<PricePoint> priceSet = new HashSet<PricePoint>();
         BufferedReader br = null;
         FileReader fr = null;
 
         try {
+            // TODO remove hard coded path
             fr = new FileReader(new File("src/resources/ES_Trades.csv"));
             br = new BufferedReader(fr);
 
@@ -48,6 +52,11 @@ public class TradeParser {
                     LocalDate date = null;
                     try {
                         date = LocalDate.parse(split[1], DATE_FORMATTER);
+
+                        // TODO remove
+                        if (!date.isEqual(THIRD)) {
+                            continue;
+                        }
                     } catch (DateTimeParseException e) {
                         logger.error("Failed to parse Date: " + split[1] + " from: " + line, e);
                     }
@@ -57,6 +66,12 @@ public class TradeParser {
                     char letter = '#';
                     try {
                         time = LocalTime.parse(split[2], TIME_FORMATTER);
+
+                        // TODO remove DO NOT COPY
+                        if (time.isBefore(NINE) || time.isAfter(FOUR)) {
+                            continue;
+                        }
+
                         letter = parseLetter(time);
                     } catch (DateTimeParseException e) {
                         logger.error("Failed to parse Time: " + split[2] + " from: " + line, e);
@@ -70,7 +85,8 @@ public class TradeParser {
                         logger.error("Failed to parse Price: " + split[3] + " from: " + line, e);
                     }
 
-                    // parse volume @@ add to check
+                    // parse volume
+                    // TODO decide if volume is needed
                     // int volume = -1;
                     // try {
                     // volume = Integer.parseInt(split[4]);
@@ -80,21 +96,17 @@ public class TradeParser {
                     // }
 
                     if (StringUtils.isNotEmpty(symbol) && date != null && time != null && price != null) {
-                        if (date.isEqual(THIRD) && time.isAfter(NINE) && time.isBefore(FOUR)) {
-                            PricePoint point = new PricePoint();
-                            point.setDate(date);
-                            point.setLetter(letter);
-                            point.setPrice(price);
-                            point.setSymbol(symbol);
-                            point.setTime(time);
-
-                            logger.info(point.toString());
-                        }
+                        PricePoint point = new PricePoint();
+                        point.setDate(date);
+                        point.setLetter(letter);
+                        point.setPrice(price);
+                        point.setSymbol(symbol);
+                        point.setTime(time);
+                        priceSet.add(point);
                     }
                 } else {
                     logger.error("Bad Line: " + line);
                 }
-
             }
         } catch (IOException e) {
             logger.error("Error while reading from File.", e);
@@ -119,6 +131,8 @@ public class TradeParser {
                 }
             }
         }
+
+        return priceSet;
     }
 
     private char parseLetter(LocalTime time) {
