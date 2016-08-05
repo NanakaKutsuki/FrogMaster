@@ -9,10 +9,12 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
+import org.kutsuki.frogmaster.model.ProfileModel;
+import org.kutsuki.frogmaster.model.TpoModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,13 +24,18 @@ public class TradeParser {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("MM/dd/yyyy");
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
 
+    private Map<String, Map<LocalDate, ProfileModel>> profileMap;
+
     // TODO remove temporary variables
     private static final LocalDate THIRD = LocalDate.of(2013, 9, 3);
     private static final LocalTime NINE = LocalTime.of(9, 30);
     private static final LocalTime FOUR = LocalTime.of(16, 15);
 
-    public Set<PricePoint> parse() {
-        Set<PricePoint> priceSet = new HashSet<PricePoint>();
+    public TradeParser() {
+        this.profileMap = new HashMap<String, Map<LocalDate, ProfileModel>>();
+    }
+
+    public void parse() {
         BufferedReader br = null;
         FileReader fr = null;
 
@@ -62,10 +69,9 @@ public class TradeParser {
                     }
 
                     // parse time
-                    LocalTime time = null;
                     char letter = '#';
                     try {
-                        time = LocalTime.parse(split[2], TIME_FORMATTER);
+                        LocalTime time = LocalTime.parse(split[2], TIME_FORMATTER);
 
                         // TODO remove DO NOT COPY
                         if (time.isBefore(NINE) || time.isAfter(FOUR)) {
@@ -86,23 +92,22 @@ public class TradeParser {
                     }
 
                     // parse volume
-                    // TODO decide if volume is needed
-                    // int volume = -1;
-                    // try {
-                    // volume = Integer.parseInt(split[4]);
-                    // } catch (NumberFormatException e) {
-                    // logger.error("Failed to parse Volume: " + split[4] +
-                    // " from: " + line, e);
-                    // }
+                    int volume = 0;
+                    try {
+                        volume = Integer.parseInt(split[4]);
+                    } catch (NumberFormatException e) {
+                        logger.error("Failed to parse Volume: " + split[4] + " from: " + line, e);
+                    }
 
-                    if (StringUtils.isNotEmpty(symbol) && date != null && time != null && price != null) {
-                        PricePoint point = new PricePoint();
-                        point.setDate(date);
-                        point.setLetter(letter);
-                        point.setPrice(price);
-                        point.setSymbol(symbol);
-                        point.setTime(time);
-                        priceSet.add(point);
+                    // create TPO
+                    if (StringUtils.isNotEmpty(symbol) && date != null && price != null && volume > 0) {
+                        TpoModel tpo = new TpoModel();
+                        tpo.setDate(date);
+                        tpo.setLetter(letter);
+                        tpo.setPrice(price);
+                        tpo.setSymbol(symbol);
+                        tpo.setVolume(volume);
+                        addTpo(tpo);
                     }
                 } else {
                     logger.error("Bad Line: " + line);
@@ -131,8 +136,21 @@ public class TradeParser {
                 }
             }
         }
+    }
 
-        return priceSet;
+    public Map<LocalDate, ProfileModel> getProfileMapBySymbol(String symbol) {
+        return profileMap.get(symbol);
+    }
+
+    public ProfileModel getProfile(String symbol, LocalDate date) {
+        ProfileModel profile = null;
+
+        Map<LocalDate, ProfileModel> dateMap = getProfileMapBySymbol(symbol);
+        if (dateMap != null) {
+            profile = dateMap.get(date);
+        }
+
+        return profile;
     }
 
     private char parseLetter(LocalTime time) {
@@ -200,5 +218,32 @@ public class TradeParser {
         }
 
         return letter;
+    }
+
+    private void addTpo(TpoModel tpo) {
+        // get by symbol
+        Map<LocalDate, ProfileModel> dateProfileMap = profileMap.get(tpo.getSymbol());
+
+        // create a new date map if none was found
+        if (dateProfileMap == null) {
+            dateProfileMap = new HashMap<LocalDate, ProfileModel>();
+        }
+
+        // get by date
+        ProfileModel profile = dateProfileMap.get(tpo.getDate());
+
+        // create a new profile if none was found
+        if (profile == null) {
+            profile = new ProfileModel(tpo.getSymbol(), tpo.getDate());
+        }
+
+        // add tpo to profile
+        profile.addTpo(tpo);
+
+        // add profile to date map
+        dateProfileMap.put(tpo.getDate(), profile);
+
+        // add date map to profile map
+        profileMap.put(tpo.getSymbol(), dateProfileMap);
     }
 }

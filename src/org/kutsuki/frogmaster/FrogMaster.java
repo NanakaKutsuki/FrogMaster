@@ -1,44 +1,29 @@
 package org.kutsuki.frogmaster;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
-import java.util.TreeMap;
 
 import org.apache.commons.lang3.text.StrBuilder;
+import org.kutsuki.frogmaster.model.ProfileModel;
 
 public class FrogMaster {
     // private final Logger logger = LoggerFactory.getLogger(FrogMaster.class);
 
     public void run() {
         TradeParser parser = new TradeParser();
-        Set<PricePoint> priceSet = parser.parse();
+        parser.parse();
 
-        int maxSize = 0;
-        Map<BigDecimal, List<Character>> priceMap = new TreeMap<BigDecimal, List<Character>>(Collections.reverseOrder());
-        for (PricePoint point : priceSet) {
-            BigDecimal price = point.getPrice();
-            List<Character> letterList = priceMap.get(price);
-            if (letterList == null) {
-                letterList = new ArrayList<Character>();
-            }
+        LocalDate key = LocalDate.of(2013, 9, 3);
+        ProfileModel profile = parser.getProfile("ESU13", key);
+        int maxSize = profile.getMaxSize();
 
-            letterList.add(point.getLetter());
-            priceMap.put(price, letterList);
+        System.out.println(profile.getHighValuePrice());
+        System.out.println(profile.getLowValuePrice());
 
-            // find max size
-            if (letterList.size() > maxSize) {
-                maxSize = letterList.size();
-            }
-        }
-
-        for (Entry<BigDecimal, List<Character>> entry : priceMap.entrySet()) {
+        for (Entry<BigDecimal, List<Character>> entry : profile.getLetterMap().entrySet()) {
             List<Character> letterList = entry.getValue();
-            Collections.sort(letterList);
 
             StrBuilder sb = new StrBuilder();
             for (int i = 0; i < maxSize; i++) {
@@ -51,10 +36,14 @@ public class FrogMaster {
             sb.append(' ');
             sb.append(' ');
             sb.append(entry.getKey());
+            sb.append(' ');
+            sb.append(' ');
+            sb.append(profile.getPriceVolumeMap().get(entry.getKey()));
 
             System.out.println(sb.toString());
         }
-        System.out.println("9/3");
+        System.out.println(key.toString());
+
     }
 
     public static void main(String[] args) {
