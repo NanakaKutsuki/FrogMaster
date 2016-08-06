@@ -14,6 +14,7 @@ import java.util.TreeMap;
 public class ProfileModel {
     private static final BigDecimal SEVEN = new BigDecimal(0.7);
 
+    private boolean calculated;
     private BigDecimal highValuePrice;
     private BigDecimal lowValuePrice;
     private int totalVolume;
@@ -22,14 +23,11 @@ public class ProfileModel {
     private Map<BigDecimal, List<Character>> letterMap;
     private String symbol;
 
-    // TODO remove
-    private int maxSize = 0;
-    private Map<BigDecimal, Integer> priceVolumeMap = new HashMap<BigDecimal, Integer>();
-
     public ProfileModel(String symbol, LocalDate date) {
         this.symbol = symbol;
         this.date = date;
 
+        this.calculated = false;
         this.highValuePrice = BigDecimal.ZERO;
         this.lowValuePrice = new BigDecimal(1000000);
         this.letterMap = new TreeMap<BigDecimal, List<Character>>(Collections.reverseOrder());
@@ -49,11 +47,6 @@ public class ProfileModel {
         if (!letterList.contains(tpo.getLetter())) {
             letterList.add(tpo.getLetter());
             letterMap.put(tpo.getPrice(), letterList);
-
-            // TODO remove
-            if (letterList.size() > maxSize) {
-                maxSize = letterList.size();
-            }
         }
     }
 
@@ -62,10 +55,7 @@ public class ProfileModel {
     }
 
     public BigDecimal getHighValuePrice() {
-        if (highValuePrice.compareTo(BigDecimal.ZERO) == 0) {
-            calculateValueArea();
-        }
-
+        calculateValueArea();
         return highValuePrice;
     }
 
@@ -74,19 +64,8 @@ public class ProfileModel {
     }
 
     public BigDecimal getLowValuePrice() {
-        if (highValuePrice.compareTo(BigDecimal.ZERO) == 0) {
-            calculateValueArea();
-        }
-
+        calculateValueArea();
         return lowValuePrice;
-    }
-
-    public Map<BigDecimal, Integer> getPriceVolumeMap() {
-        return priceVolumeMap;
-    }
-
-    public int getMaxSize() {
-        return maxSize;
     }
 
     public String getSymbol() {
@@ -94,131 +73,137 @@ public class ProfileModel {
     }
 
     private void calculateValueArea() {
-        // find target volume, 70% of total volume
-        int targetVolume = BigDecimal.valueOf(totalVolume).multiply(SEVEN).intValue();
+        if (!calculated) {
+            Map<BigDecimal, Integer> priceVolumeMap = new HashMap<BigDecimal, Integer>();
 
-        int maxVolume = 0;
-        BigDecimal poc = BigDecimal.ZERO;
-        // Map<BigDecimal, Integer> priceVolumeMap = new HashMap<BigDecimal,
-        // Integer>();
-        for (TpoModel tpo : tpoList) {
-            // find by price
-            Integer volume = priceVolumeMap.get(tpo.getPrice());
+            // find target volume, 70% of total volume
+            int targetVolume = BigDecimal.valueOf(totalVolume).multiply(SEVEN).intValue();
 
-            // set volume to 0 if no volume was found.
-            if (volume == null) {
-                volume = 0;
-            }
+            int maxVolume = 0;
+            BigDecimal poc = BigDecimal.ZERO;
+            // Map<BigDecimal, Integer> priceVolumeMap = new HashMap<BigDecimal,
+            // Integer>();
+            for (TpoModel tpo : tpoList) {
+                // find by price
+                Integer volume = priceVolumeMap.get(tpo.getPrice());
 
-            // add volume
-            volume += tpo.getVolume();
-
-            // check max volume
-            if (volume > maxVolume) {
-                maxVolume = volume;
-                poc = tpo.getPrice();
-            }
-
-            // put into price volume map
-            priceVolumeMap.put(tpo.getPrice(), volume);
-        }
-
-        // find starting index
-        List<BigDecimal> priceList = new ArrayList<BigDecimal>(priceVolumeMap.keySet());
-        Collections.sort(priceList);
-
-        int i = 0;
-        int pocIndex = -1;
-        while (pocIndex == -1 && i < priceList.size()) {
-            if (poc.compareTo(priceList.get(i)) == 0) {
-                pocIndex = i;
-            }
-
-            i++;
-        }
-
-        // calculate value area
-        int volume = maxVolume;
-        Set<Integer> indexSet = new HashSet<Integer>();
-        indexSet.add(pocIndex);
-        while (volume < targetVolume) {
-            Integer highIndex = findHighIndex(pocIndex, priceList.size(), indexSet);
-            Integer lowIndex = findLowIndex(pocIndex, indexSet);
-
-            if (highIndex == null && lowIndex == null) {
-                // shouldn't happen
-                volume = totalVolume;
-            } else if (highIndex != null && lowIndex == null) {
-                int highIndex2 = highIndex - 1;
-                indexSet.add(highIndex);
-                indexSet.add(highIndex2);
-
-                BigDecimal highPrice = priceList.get(highIndex);
-                BigDecimal highPrice2 = priceList.get(highIndex2);
-                volume += priceVolumeMap.get(highPrice);
-                volume += priceVolumeMap.get(highPrice2);
-
-                if (highPrice.compareTo(highValuePrice) == 1) {
-                    highValuePrice = highPrice;
+                // set volume to 0 if no volume was found.
+                if (volume == null) {
+                    volume = 0;
                 }
-            } else if (highIndex == null && lowIndex != null) {
-                int lowIndex2 = lowIndex + 1;
-                indexSet.add(lowIndex);
-                indexSet.add(lowIndex2);
 
-                BigDecimal lowPrice = priceList.get(lowIndex);
-                BigDecimal lowPrice2 = priceList.get(lowIndex2);
-                volume += priceVolumeMap.get(lowPrice);
-                volume += priceVolumeMap.get(lowPrice2);
+                // add volume
+                volume += tpo.getVolume();
 
-                if (lowPrice.compareTo(lowValuePrice) == -1) {
-                    lowValuePrice = lowPrice;
+                // check max volume
+                if (volume > maxVolume) {
+                    maxVolume = volume;
+                    poc = tpo.getPrice();
                 }
-            } else if (highIndex != null && lowIndex != null) {
-                int highIndex2 = highIndex - 1;
-                BigDecimal highPrice = priceList.get(highIndex);
-                BigDecimal highPrice2 = priceList.get(highIndex2);
-                int highVolume = priceVolumeMap.get(highPrice) + priceVolumeMap.get(highPrice2);
 
-                int lowIndex2 = lowIndex + 1;
-                BigDecimal lowPrice = priceList.get(lowIndex);
-                BigDecimal lowPrice2 = priceList.get(lowIndex2);
-                int lowVolume = priceVolumeMap.get(lowPrice) + priceVolumeMap.get(lowPrice2);
+                // put into price volume map
+                priceVolumeMap.put(tpo.getPrice(), volume);
+            }
 
-                if (highVolume > lowVolume) {
+            // find starting index
+            List<BigDecimal> priceList = new ArrayList<BigDecimal>(priceVolumeMap.keySet());
+            Collections.sort(priceList);
+
+            int i = 0;
+            int pocIndex = -1;
+            while (pocIndex == -1 && i < priceList.size()) {
+                if (poc.compareTo(priceList.get(i)) == 0) {
+                    pocIndex = i;
+                }
+
+                i++;
+            }
+
+            // calculate value area
+            int volume = maxVolume;
+            Set<Integer> indexSet = new HashSet<Integer>();
+            indexSet.add(pocIndex);
+            while (volume < targetVolume) {
+                Integer highIndex = findHighIndex(pocIndex, priceList.size(), indexSet);
+                Integer lowIndex = findLowIndex(pocIndex, indexSet);
+
+                if (highIndex == null && lowIndex == null) {
+                    // shouldn't happen
+                    volume = totalVolume;
+                } else if (highIndex != null && lowIndex == null) {
+                    int highIndex2 = highIndex - 1;
                     indexSet.add(highIndex);
                     indexSet.add(highIndex2);
-                    volume += highVolume;
+
+                    BigDecimal highPrice = priceList.get(highIndex);
+                    BigDecimal highPrice2 = priceList.get(highIndex2);
+                    volume += priceVolumeMap.get(highPrice);
+                    volume += priceVolumeMap.get(highPrice2);
 
                     if (highPrice.compareTo(highValuePrice) == 1) {
                         highValuePrice = highPrice;
                     }
-                } else if (highVolume < lowVolume) {
+                } else if (highIndex == null && lowIndex != null) {
+                    int lowIndex2 = lowIndex + 1;
                     indexSet.add(lowIndex);
                     indexSet.add(lowIndex2);
-                    volume += lowVolume;
+
+                    BigDecimal lowPrice = priceList.get(lowIndex);
+                    BigDecimal lowPrice2 = priceList.get(lowIndex2);
+                    volume += priceVolumeMap.get(lowPrice);
+                    volume += priceVolumeMap.get(lowPrice2);
 
                     if (lowPrice.compareTo(lowValuePrice) == -1) {
                         lowValuePrice = lowPrice;
                     }
-                } else {
-                    indexSet.add(highIndex);
-                    indexSet.add(highIndex2);
-                    volume += highVolume;
+                } else if (highIndex != null && lowIndex != null) {
+                    int highIndex2 = highIndex - 1;
+                    BigDecimal highPrice = priceList.get(highIndex);
+                    BigDecimal highPrice2 = priceList.get(highIndex2);
+                    int highVolume = priceVolumeMap.get(highPrice) + priceVolumeMap.get(highPrice2);
 
-                    if (highPrice.compareTo(highValuePrice) == 1) {
-                        highValuePrice = highPrice;
-                    }
+                    int lowIndex2 = lowIndex + 1;
+                    BigDecimal lowPrice = priceList.get(lowIndex);
+                    BigDecimal lowPrice2 = priceList.get(lowIndex2);
+                    int lowVolume = priceVolumeMap.get(lowPrice) + priceVolumeMap.get(lowPrice2);
 
-                    indexSet.add(lowIndex);
-                    indexSet.add(lowIndex2);
-                    volume += lowVolume;
+                    if (highVolume > lowVolume) {
+                        indexSet.add(highIndex);
+                        indexSet.add(highIndex2);
+                        volume += highVolume;
 
-                    if (lowPrice.compareTo(lowValuePrice) == -1) {
-                        lowValuePrice = lowPrice;
+                        if (highPrice.compareTo(highValuePrice) == 1) {
+                            highValuePrice = highPrice;
+                        }
+                    } else if (highVolume < lowVolume) {
+                        indexSet.add(lowIndex);
+                        indexSet.add(lowIndex2);
+                        volume += lowVolume;
+
+                        if (lowPrice.compareTo(lowValuePrice) == -1) {
+                            lowValuePrice = lowPrice;
+                        }
+                    } else {
+                        indexSet.add(highIndex);
+                        indexSet.add(highIndex2);
+                        volume += highVolume;
+
+                        if (highPrice.compareTo(highValuePrice) == 1) {
+                            highValuePrice = highPrice;
+                        }
+
+                        indexSet.add(lowIndex);
+                        indexSet.add(lowIndex2);
+                        volume += lowVolume;
+
+                        if (lowPrice.compareTo(lowValuePrice) == -1) {
+                            lowValuePrice = lowPrice;
+                        }
                     }
                 }
             }
+
+            calculated = true;
         }
     }
 

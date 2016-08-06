@@ -2,12 +2,14 @@ package org.kutsuki.frogmaster.model;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalTime;
 
 import org.apache.commons.lang3.text.StrBuilder;
 
 public class TpoModel {
     private String symbol;
     private LocalDate date;
+    private LocalTime time;
     private char letter;
     private BigDecimal price;
     private int volume;
@@ -17,6 +19,7 @@ public class TpoModel {
         StrBuilder sb = new StrBuilder();
         sb.append(getSymbol()).append(',').append(' ');
         sb.append(getDate()).append(',').append(' ');
+        sb.append(getTime()).append(',').append(' ');
         sb.append(getLetter()).append(',').append(' ');
         sb.append(getPrice()).append(',').append(' ');
         sb.append(getVolume());
@@ -38,6 +41,14 @@ public class TpoModel {
 
     public void setDate(LocalDate date) {
         this.date = date;
+    }
+
+    public LocalTime getTime() {
+        return time;
+    }
+
+    public void setTime(LocalTime time) {
+        this.time = time;
     }
 
     public char getLetter() {

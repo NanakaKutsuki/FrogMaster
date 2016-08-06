@@ -11,6 +11,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.apache.commons.lang3.StringUtils;
 import org.kutsuki.frogmaster.model.ProfileModel;
@@ -23,13 +24,11 @@ public class TradeParser {
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("MM/dd/yyyy");
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
-
-    private Map<String, Map<LocalDate, ProfileModel>> profileMap;
-
-    // TODO remove temporary variables
-    private static final LocalDate THIRD = LocalDate.of(2013, 9, 3);
+    private static final LocalDate LABOR_DAY = LocalDate.of(2013, 9, 2);
     private static final LocalTime NINE = LocalTime.of(9, 30);
     private static final LocalTime FOUR = LocalTime.of(16, 15);
+
+    private Map<String, Map<LocalDate, ProfileModel>> profileMap;
 
     public TradeParser() {
         this.profileMap = new HashMap<String, Map<LocalDate, ProfileModel>>();
@@ -55,25 +54,13 @@ public class TradeParser {
                     // parse symbol
                     String symbol = split[0];
 
-                    // parse date
-                    LocalDate date = null;
-                    try {
-                        date = LocalDate.parse(split[1], DATE_FORMATTER);
-
-                        // TODO remove
-                        if (!date.isEqual(THIRD)) {
-                            continue;
-                        }
-                    } catch (DateTimeParseException e) {
-                        logger.error("Failed to parse Date: " + split[1] + " from: " + line, e);
-                    }
-
                     // parse time
                     char letter = '#';
+                    LocalTime time = null;
                     try {
-                        LocalTime time = LocalTime.parse(split[2], TIME_FORMATTER);
+                        time = LocalTime.parse(split[2], TIME_FORMATTER);
 
-                        // TODO remove DO NOT COPY
+                        // ignore after hours
                         if (time.isBefore(NINE) || time.isAfter(FOUR)) {
                             continue;
                         }
@@ -81,6 +68,19 @@ public class TradeParser {
                         letter = parseLetter(time);
                     } catch (DateTimeParseException e) {
                         logger.error("Failed to parse Time: " + split[2] + " from: " + line, e);
+                    }
+
+                    // parse date
+                    LocalDate date = null;
+                    try {
+                        date = LocalDate.parse(split[1], DATE_FORMATTER);
+
+                        // ignore after hours
+                        if (date.getDayOfWeek().getValue() >= 6 || date.isEqual(LABOR_DAY)) {
+                            continue;
+                        }
+                    } catch (DateTimeParseException e) {
+                        logger.error("Failed to parse Date: " + split[1] + " from: " + line, e);
                     }
 
                     // parse price
@@ -100,9 +100,10 @@ public class TradeParser {
                     }
 
                     // create TPO
-                    if (StringUtils.isNotEmpty(symbol) && date != null && price != null && volume > 0) {
+                    if (StringUtils.isNotEmpty(symbol) && date != null && time != null && price != null && volume > 0) {
                         TpoModel tpo = new TpoModel();
                         tpo.setDate(date);
+                        tpo.setTime(time);
                         tpo.setLetter(letter);
                         tpo.setPrice(price);
                         tpo.setSymbol(symbol);
@@ -226,7 +227,7 @@ public class TradeParser {
 
         // create a new date map if none was found
         if (dateProfileMap == null) {
-            dateProfileMap = new HashMap<LocalDate, ProfileModel>();
+            dateProfileMap = new TreeMap<LocalDate, ProfileModel>();
         }
 
         // get by date
