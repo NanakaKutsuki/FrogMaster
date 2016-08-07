@@ -8,7 +8,7 @@ import java.util.Map;
 import org.kutsuki.frogmaster.model.ProfileModel;
 
 public abstract class AbstractOutputter {
-    private static final NumberFormat NF = NumberFormat.getCurrencyInstance();
+    private static final NumberFormat CURRENCY = NumberFormat.getCurrencyInstance();
 
     private Map<LocalDate, ProfileModel> profileMap;
 
@@ -19,7 +19,7 @@ public abstract class AbstractOutputter {
     }
 
     public String format(BigDecimal bd) {
-        return NF.format(bd);
+        return CURRENCY.format(bd);
     }
 
     public Map<LocalDate, ProfileModel> getProfileMap() {

@@ -1,36 +1,42 @@
 package org.kutsuki.frogmaster.model;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 
 public class ProfileModel {
     private static final BigDecimal SEVEN = new BigDecimal(0.7);
 
     private boolean calculated;
+    private boolean poorHigh;
+    private boolean poorLow;
+    private BigDecimal closePrice;
+    private BigDecimal highPrice;
+    private BigDecimal lowPrice;
+    private BigDecimal openPrice;
+    private BigDecimal pocPrice;
     private BigDecimal highValuePrice;
     private BigDecimal lowValuePrice;
     private int totalVolume;
     private List<TpoModel> tpoList;
-    private LocalDate date;
     private Map<BigDecimal, List<Character>> letterMap;
-    private String symbol;
 
-    public ProfileModel(String symbol, LocalDate date) {
-        this.symbol = symbol;
-        this.date = date;
-
+    public ProfileModel() {
         this.calculated = false;
+        this.closePrice = BigDecimal.ZERO;
+        this.highPrice = BigDecimal.ZERO;
         this.highValuePrice = BigDecimal.ZERO;
+        this.lowPrice = new BigDecimal(1000000);
         this.lowValuePrice = new BigDecimal(1000000);
-        this.letterMap = new TreeMap<BigDecimal, List<Character>>(Collections.reverseOrder());
+        this.letterMap = new HashMap<BigDecimal, List<Character>>();
+        this.openPrice = BigDecimal.ZERO;
+        this.pocPrice = BigDecimal.ZERO;
         this.totalVolume = 0;
         this.tpoList = new ArrayList<TpoModel>();
     }
@@ -50,29 +56,7 @@ public class ProfileModel {
         }
     }
 
-    public LocalDate getDate() {
-        return date;
-    }
-
-    public BigDecimal getHighValuePrice() {
-        calculateValueArea();
-        return highValuePrice;
-    }
-
-    public Map<BigDecimal, List<Character>> getLetterMap() {
-        return letterMap;
-    }
-
-    public BigDecimal getLowValuePrice() {
-        calculateValueArea();
-        return lowValuePrice;
-    }
-
-    public String getSymbol() {
-        return symbol;
-    }
-
-    private void calculateValueArea() {
+    public void calculateValueArea() {
         if (!calculated) {
             Map<BigDecimal, Integer> priceVolumeMap = new HashMap<BigDecimal, Integer>();
 
@@ -80,7 +64,6 @@ public class ProfileModel {
             int targetVolume = BigDecimal.valueOf(totalVolume).multiply(SEVEN).intValue();
 
             int maxVolume = 0;
-            BigDecimal poc = BigDecimal.ZERO;
             // Map<BigDecimal, Integer> priceVolumeMap = new HashMap<BigDecimal,
             // Integer>();
             for (TpoModel tpo : tpoList) {
@@ -98,7 +81,7 @@ public class ProfileModel {
                 // check max volume
                 if (volume > maxVolume) {
                     maxVolume = volume;
-                    poc = tpo.getPrice();
+                    pocPrice = tpo.getPrice();
                 }
 
                 // put into price volume map
@@ -112,7 +95,7 @@ public class ProfileModel {
             int i = 0;
             int pocIndex = -1;
             while (pocIndex == -1 && i < priceList.size()) {
-                if (poc.compareTo(priceList.get(i)) == 0) {
+                if (pocPrice.compareTo(priceList.get(i)) == 0) {
                     pocIndex = i;
                 }
 
@@ -203,6 +186,36 @@ public class ProfileModel {
                 }
             }
 
+            // calculate open and close
+            if (!tpoList.isEmpty()) {
+                Collections.sort(tpoList, new Comparator<TpoModel>() {
+                    @Override
+                    public int compare(TpoModel lhs, TpoModel rhs) {
+                        return lhs.getTime().compareTo(rhs.getTime());
+                    }
+                });
+
+                openPrice = tpoList.get(0).getPrice();
+                closePrice = tpoList.get(tpoList.size() - 1).getPrice();
+            }
+
+            // calculate poors
+            if (priceList.size() > 1) {
+                highPrice = priceList.get(priceList.size() - 1);
+                BigDecimal highPrice2 = priceList.get(priceList.size() - 2);
+
+                if (letterMap.get(highPrice).size() == 1 && letterMap.get(highPrice2).size() > 1) {
+                    poorHigh = true;
+                }
+
+                lowPrice = priceList.get(0);
+                BigDecimal lowPrice2 = priceList.get(1);
+
+                if (letterMap.get(lowPrice).size() == 1 && letterMap.get(lowPrice2).size() > 1) {
+                    poorLow = true;
+                }
+            }
+
             calculated = true;
         }
     }
@@ -235,5 +248,56 @@ public class ProfileModel {
         }
 
         return target;
+    }
+
+    public BigDecimal getClosePrice() {
+        calculateValueArea();
+        return closePrice;
+    }
+
+    public BigDecimal getHighPrice() {
+        calculateValueArea();
+        return highPrice;
+    }
+
+    public BigDecimal getHighValuePrice() {
+        calculateValueArea();
+        return highValuePrice;
+    }
+
+    public Map<BigDecimal, List<Character>> getLetterMap() {
+        return letterMap;
+    }
+
+    public BigDecimal getLowPrice() {
+        calculateValueArea();
+        return lowPrice;
+    }
+
+    public BigDecimal getLowValuePrice() {
+        calculateValueArea();
+        return lowValuePrice;
+    }
+
+    public BigDecimal getOpenPrice() {
+        calculateValueArea();
+        return openPrice;
+    }
+
+    public BigDecimal getPocPrice() {
+        calculateValueArea();
+        return pocPrice;
+    }
+
+    public List<TpoModel> getTpoList() {
+        return tpoList;
+    }
+
+    public boolean isPoorHigh() {
+        return poorHigh;
+    }
+
+    public boolean isPoorLow() {
+        return poorLow;
     }
 }

@@ -235,7 +235,7 @@ public class TradeParser {
 
         // create a new profile if none was found
         if (profile == null) {
-            profile = new ProfileModel(tpo.getSymbol(), tpo.getDate());
+            profile = new ProfileModel();
         }
 
         // add tpo to profile

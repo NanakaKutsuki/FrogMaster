@@ -25,6 +25,9 @@ import org.slf4j.LoggerFactory;
 public class HtmlOutputter extends AbstractOutputter {
     private final Logger logger = LoggerFactory.getLogger(HtmlOutputter.class);
 
+    private static final String BLUE = "#3399ff";
+    private static final String ORANGE = "#ff9900";
+
     private List<LocalDate> dateList;
     private Map<BigDecimal, Map<LocalDate, OutputModel>> outputMap;
 
@@ -120,20 +123,58 @@ public class HtmlOutputter extends AbstractOutputter {
                     rowMap = new HashMap<LocalDate, OutputModel>();
                 }
 
-                StrBuilder sb = new StrBuilder();
-                for (char c : entry2.getValue()) {
-                    sb.append(c);
+                OutputModel output = new OutputModel();
+
+                if (price.compareTo(profile.getClosePrice()) == 0) {
+                    output.setClose(true);
                 }
 
-                OutputModel output = new OutputModel();
-                output.setOutput(sb.toString());
+                if ((profile.isPoorHigh() && price.compareTo(profile.getHighPrice()) == 0)
+                        || (profile.isPoorLow() && price.compareTo(profile.getLowPrice()) == 0)) {
+                    output.setPoor(true);
+                }
 
                 if (price.compareTo(profile.getHighValuePrice()) <= 0
                         && price.compareTo(profile.getLowValuePrice()) >= 0) {
                     output.setValue(true);
-                } else {
-                    output.setValue(false);
                 }
+
+                StrBuilder sb = new StrBuilder();
+                for (int i = 0; i < entry2.getValue().size(); i++) {
+                    char c = entry2.getValue().get(i);
+
+                    if (i == 0) {
+                        if (output.isClose()) {
+                            if (output.isValue()) {
+                                sb.append("<font color=\"" + BLUE + "\">");
+                            } else if (output.isPoor()) {
+                                sb.append("<font color=\"" + ORANGE + "\">");
+                            } else {
+                                sb.append("<font color=\"#ffffff\">");
+                            }
+                        }
+
+                        if (price.compareTo(profile.getOpenPrice()) == 0) {
+                            sb.append("<font color=\"#ff5050\">");
+                            sb.append(c);
+                            sb.append("</font>");
+                        } else {
+                            if (output.isPoor() && output.isValue()) {
+                                sb.append("<font color=\"" + BLUE + "\">");
+                            }
+
+                            sb.append(c);
+                        }
+                    } else {
+                        sb.append(c);
+                    }
+
+                    if (i == entry2.getValue().size() - 1
+                            && (output.isClose() || (output.isPoor() && output.isValue()))) {
+                        sb.append("</font>");
+                    }
+                }
+                output.setOutput(sb.toString());
 
                 rowMap.put(date, output);
                 outputMap.put(price, rowMap);
@@ -163,8 +204,12 @@ public class HtmlOutputter extends AbstractOutputter {
 
     private void writeRow(BufferedWriter bw, BigDecimal price, OutputModel output) throws IOException {
         if (output != null) {
-            if (output.isValue()) {
-                bw.write("<td bgcolor=\"#417DD4\">" + output.getOutput() + "</td>");
+            if (output.isPoor()) {
+                bw.write("<td bgcolor=\"" + ORANGE + "\">" + output.getOutput() + "</td>");
+            } else if (output.isClose()) {
+                bw.write("<td bgcolor=\"#000000\">" + output.getOutput() + "</td>");
+            } else if (output.isValue()) {
+                bw.write("<td bgcolor=\"" + BLUE + "\">" + output.getOutput() + "</td>");
             } else {
                 bw.write("<td>" + output.getOutput() + "</td>");
             }

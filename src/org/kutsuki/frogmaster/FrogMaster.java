@@ -13,6 +13,9 @@ public class FrogMaster {
         parser.parse();
         System.out.println("Parsing Done: " + (System.currentTimeMillis() - ms) + "ms");
 
+        Analytics analytics = new Analytics(parser.getProfileMapBySymbol("ESU13"));
+        analytics.run();
+
         AbstractOutputter out = new HtmlOutputter(parser.getProfileMapBySymbol("ESU13"));
         out.output();
 
