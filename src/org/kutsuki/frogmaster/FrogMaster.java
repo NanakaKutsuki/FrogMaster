@@ -1,29 +1,49 @@
 package org.kutsuki.frogmaster;
 
+import java.io.File;
+
+import org.apache.commons.lang3.StringUtils;
 import org.kutsuki.frogmaster.outputter.AbstractOutputter;
 import org.kutsuki.frogmaster.outputter.HtmlOutputter;
 
 // https://github.com/NanakaKutsuki/FrogMaster.git
 public class FrogMaster {
-    // private final Logger logger = LoggerFactory.getLogger(FrogMaster.class);
+	private static final String DIR_PATH = "C:/TickData/TickWrite7/DATA/FUT/E/ES";
+	private static final String GZ = ".gz";
+	private static final String SUMMARY = "SUMMARY";
 
-    public void run() {
-        long ms = System.currentTimeMillis();
-        TradeParser parser = new TradeParser();
-        parser.parse();
-        System.out.println("Parsing Done: " + (System.currentTimeMillis() - ms) + "ms");
+	public void run() {
+		long ms = System.currentTimeMillis();
 
-        Analytics analytics = new Analytics(parser.getProfileMapBySymbol("ESU13"));
-        analytics.run();
+		File dir = new File(DIR_PATH);
+		for (File file : dir.listFiles()) {
+			if (file.isDirectory()) {
+				TradeParser parser = new TradeParser();
 
-        AbstractOutputter out = new HtmlOutputter(parser.getProfileMapBySymbol("ESU13"));
-        out.output();
+				for (File gzFile : file.listFiles()) {
+					if (!StringUtils.contains(gzFile.getName(), SUMMARY)
+							&& StringUtils.endsWith(gzFile.getName(), GZ)) {
+						String symbol = StringUtils.substringBefore(gzFile.getName(), Character.toString('_'));
+						parser.parse(gzFile, symbol);
+					}
+				}
 
-        System.out.println("Output Done: " + (System.currentTimeMillis() - ms) + "ms");
-    }
+				System.out.println(file.getName() + ": Parsing Done: " + (System.currentTimeMillis() - ms) + "ms");
 
-    public static void main(String[] args) {
-        FrogMaster frogMaster = new FrogMaster();
-        frogMaster.run();
-    }
+				for (String symbol : parser.getSymbolList()) {
+					AbstractOutputter out = new HtmlOutputter(parser.getProfileMapBySymbol(symbol), symbol,
+							file.getName());
+					out.output();
+				}
+
+				System.out.println(file.getName() + ": Output Done: " + (System.currentTimeMillis() - ms) + "ms");
+			}
+		}
+
+	}
+
+	public static void main(String[] args) {
+		FrogMaster frogMaster = new FrogMaster();
+		frogMaster.run();
+	}
 }

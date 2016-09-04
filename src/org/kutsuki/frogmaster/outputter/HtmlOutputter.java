@@ -16,6 +16,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.StrBuilder;
 import org.kutsuki.frogmaster.model.OutputModel;
 import org.kutsuki.frogmaster.model.ProfileModel;
@@ -23,207 +24,241 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class HtmlOutputter extends AbstractOutputter {
-    private final Logger logger = LoggerFactory.getLogger(HtmlOutputter.class);
+	private final Logger logger = LoggerFactory.getLogger(HtmlOutputter.class);
 
-    private static final String BLUE = "#3399ff";
-    private static final String ORANGE = "#ff9900";
+	private static final String BLACK = "#000000";
+	private static final String BLUE = "#3399ff";
+	private static final String ORANGE = "#ff9900";
+	private static final String WHITE = "#ffffff";
 
-    private List<LocalDate> dateList;
-    private Map<BigDecimal, Map<LocalDate, OutputModel>> outputMap;
+	private static final String END = "\">";
+	private static final String END_TD = "</td>";
+	private static final String END_TR = "</tr>";
+	private static final String HTML = ".html";
+	private static final String TD = "<td>";
+	private static final String TD_BGCOLOR = "<td bgcolor=\"";
+	private static final String TR = "<tr>";
+	private static final String TITLE = "\" title=\"";
 
-    public HtmlOutputter(Map<LocalDate, ProfileModel> profileMap) {
-        super(profileMap);
+	private List<LocalDate> dateList;
+	private Map<BigDecimal, Map<LocalDate, OutputModel>> outputMap;
+	private String filename;
+	private String symbol;
 
-        this.outputMap = new TreeMap<BigDecimal, Map<LocalDate, OutputModel>>(Collections.reverseOrder());
-    }
+	public HtmlOutputter(Map<LocalDate, ProfileModel> profileMap, String symbol, String filename) {
+		super(profileMap);
 
-    @Override
-    public void output() {
-        FileWriter fw = null;
-        BufferedWriter bw = null;
+		this.filename = StringUtils.substringBeforeLast(filename, Character.toString('_'));
+		this.outputMap = new TreeMap<BigDecimal, Map<LocalDate, OutputModel>>(Collections.reverseOrder());
+		this.symbol = symbol;
+	}
 
-        try {
-            fw = new FileWriter(new File("MarketMap.html"));
-            bw = new BufferedWriter(fw);
+	@Override
+	public void output() {
+		FileWriter fw = null;
+		BufferedWriter bw = null;
 
-            writeHeader(bw);
-            createMap();
+		try {
+			File dir = new File(symbol);
+			if (!dir.exists()) {
+				dir.mkdirs();
+			}
 
-            for (Entry<BigDecimal, Map<LocalDate, OutputModel>> entry : outputMap.entrySet()) {
-                BigDecimal price = entry.getKey();
-                Map<LocalDate, OutputModel> rowMap = entry.getValue();
+			File file = new File(symbol + Character.toString('/') + symbol + Character.toString('_') + filename + HTML);
+			fw = new FileWriter(file);
+			bw = new BufferedWriter(fw);
 
-                bw.write("<tr>");
-                bw.newLine();
+			writeHeader(bw);
+			createMap();
 
-                for (LocalDate date : dateList) {
-                    OutputModel output = rowMap.get(date);
-                    writeRow(bw, price, output);
-                }
+			for (Entry<BigDecimal, Map<LocalDate, OutputModel>> entry : outputMap.entrySet()) {
+				BigDecimal price = entry.getKey();
+				Map<LocalDate, OutputModel> rowMap = entry.getValue();
 
-                bw.newLine();
-                bw.write("<td>" + format(price) + "</td>");
-                bw.newLine();
-                bw.write("</tr>");
-                bw.newLine();
+				bw.write(TR);
+				bw.newLine();
 
-            }
+				for (LocalDate date : dateList) {
+					OutputModel output = rowMap.get(date);
+					writeRow(bw, price, output);
+				}
 
-            bw.write("<tr>");
-            bw.newLine();
+				bw.newLine();
+				bw.write(TD + format(price) + END_TD);
+				bw.newLine();
+				bw.write(END_TR);
+				bw.newLine();
 
-            for (LocalDate date : dateList) {
-                bw.write("<td>" + date.getMonthValue() + "/" + date.getDayOfMonth() + "</td>");
-            }
-            bw.newLine();
-            bw.write("</tr>");
-            bw.newLine();
+			}
 
-            writeFooter(bw);
-        } catch (IOException e) {
-            logger.error("Error while writing to File.", e);
-        } finally {
-            if (bw != null) {
-                try {
-                    bw.close();
-                } catch (IOException e) {
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("Error while closing Buffered Reader!", e);
-                    }
-                }
-            }
+			bw.write(TR);
+			bw.newLine();
 
-            if (fw != null) {
-                try {
-                    fw.close();
-                } catch (IOException e) {
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("Error while closing File Reader!", e);
-                    }
-                }
-            }
-        }
-    }
+			for (LocalDate date : dateList) {
+				bw.write(TD + date.getMonthValue() + Character.toString('/') + date.getDayOfMonth() + END_TD);
+			}
+			bw.newLine();
+			bw.write(END_TR);
+			bw.newLine();
 
-    private void createMap() {
-        Set<LocalDate> dateSet = new HashSet<LocalDate>();
+			writeFooter(bw);
+		} catch (IOException e) {
+			logger.error("Error while writing to File.", e);
+		} finally {
+			if (bw != null) {
+				try {
+					bw.close();
+				} catch (IOException e) {
+					if (logger.isDebugEnabled()) {
+						logger.debug("Error while closing Buffered Reader!", e);
+					}
+				}
+			}
 
-        for (Entry<LocalDate, ProfileModel> entry : getProfileMap().entrySet()) {
-            LocalDate date = entry.getKey();
-            ProfileModel profile = entry.getValue();
+			if (fw != null) {
+				try {
+					fw.close();
+				} catch (IOException e) {
+					if (logger.isDebugEnabled()) {
+						logger.debug("Error while closing File Reader!", e);
+					}
+				}
+			}
+		}
+	}
 
-            dateSet.add(date);
+	private void createMap() {
+		Set<LocalDate> dateSet = new HashSet<LocalDate>();
 
-            for (Entry<BigDecimal, List<Character>> entry2 : profile.getLetterMap().entrySet()) {
-                BigDecimal price = entry2.getKey();
+		for (Entry<LocalDate, ProfileModel> entry : getProfileMap().entrySet()) {
+			LocalDate date = entry.getKey();
+			ProfileModel profile = entry.getValue();
 
-                Map<LocalDate, OutputModel> rowMap = outputMap.get(price);
+			dateSet.add(date);
 
-                if (rowMap == null) {
-                    rowMap = new HashMap<LocalDate, OutputModel>();
-                }
+			for (Entry<BigDecimal, List<Character>> entry2 : profile.getLetterMap().entrySet()) {
+				BigDecimal price = entry2.getKey();
 
-                OutputModel output = new OutputModel();
+				Map<LocalDate, OutputModel> rowMap = outputMap.get(price);
 
-                if (price.compareTo(profile.getClosePrice()) == 0) {
-                    output.setClose(true);
-                }
+				if (rowMap == null) {
+					rowMap = new HashMap<LocalDate, OutputModel>();
+				}
 
-                if ((profile.isPoorHigh() && price.compareTo(profile.getHighPrice()) == 0)
-                        || (profile.isPoorLow() && price.compareTo(profile.getLowPrice()) == 0)) {
-                    output.setPoor(true);
-                }
+				OutputModel output = new OutputModel();
 
-                if (price.compareTo(profile.getHighValuePrice()) <= 0
-                        && price.compareTo(profile.getLowValuePrice()) >= 0) {
-                    output.setValue(true);
-                }
+				if (price.compareTo(profile.getClosePrice()) == 0) {
+					output.setClose(true);
+				}
 
-                StrBuilder sb = new StrBuilder();
-                for (int i = 0; i < entry2.getValue().size(); i++) {
-                    char c = entry2.getValue().get(i);
+				if ((profile.isPoorHigh() && price.compareTo(profile.getHighPrice()) == 0)
+						|| (profile.isPoorLow() && price.compareTo(profile.getLowPrice()) == 0)) {
+					output.setPoor(true);
+				}
 
-                    if (i == 0) {
-                        if (output.isClose()) {
-                            if (output.isValue()) {
-                                sb.append("<font color=\"" + BLUE + "\">");
-                            } else if (output.isPoor()) {
-                                sb.append("<font color=\"" + ORANGE + "\">");
-                            } else {
-                                sb.append("<font color=\"#ffffff\">");
-                            }
-                        }
+				if (price.compareTo(profile.getHighValuePrice()) <= 0
+						&& price.compareTo(profile.getLowValuePrice()) >= 0) {
+					output.setValue(true);
+				}
 
-                        if (price.compareTo(profile.getOpenPrice()) == 0) {
-                            sb.append("<font color=\"#ff5050\">");
-                            sb.append(c);
-                            sb.append("</font>");
-                        } else {
-                            if (output.isPoor() && output.isValue()) {
-                                sb.append("<font color=\"" + BLUE + "\">");
-                            }
+				StrBuilder sb = new StrBuilder();
+				for (int i = 0; i < entry2.getValue().size(); i++) {
+					char c = entry2.getValue().get(i);
 
-                            sb.append(c);
-                        }
-                    } else {
-                        sb.append(c);
-                    }
+					if (i == 0) {
+						if (output.isClose()) {
+							if (output.isValue()) {
+								sb.append("<font color=\"" + BLUE + "\">");
+							} else if (output.isPoor()) {
+								sb.append("<font color=\"" + ORANGE + "\">");
+							} else {
+								sb.append("<font color=\"#ffffff\">");
+							}
+						}
 
-                    if (i == entry2.getValue().size() - 1
-                            && (output.isClose() || (output.isPoor() && output.isValue()))) {
-                        sb.append("</font>");
-                    }
-                }
-                output.setOutput(sb.toString());
+						if (price.compareTo(profile.getOpenPrice()) == 0) {
+							sb.append("<font color=\"#ff5050\">");
+							sb.append(c);
+							sb.append("</font>");
+						} else {
+							if (output.isPoor() && output.isValue()) {
+								sb.append("<font color=\"" + BLUE + "\">");
+							}
 
-                rowMap.put(date, output);
-                outputMap.put(price, rowMap);
-            }
-        }
+							sb.append(c);
+						}
+					} else {
+						sb.append(c);
+					}
 
-        dateList = new ArrayList<LocalDate>(dateSet);
-        Collections.sort(dateList);
-    }
+					if (i == entry2.getValue().size() - 1
+							&& (output.isClose() || (output.isPoor() && output.isValue()))) {
+						sb.append("</font>");
+					}
+				}
+				output.setOutput(sb.toString());
 
-    private void writeHeader(BufferedWriter bw) throws IOException {
-        bw.write("<!DOCTYPE html>");
-        bw.newLine();
-        bw.write("<html>");
-        bw.newLine();
-        bw.write("<head>");
-        bw.newLine();
-        bw.write("<title>Market Map - ESU13</title>");
-        bw.newLine();
-        bw.write("</head>");
-        bw.newLine();
-        bw.write("<body>");
-        bw.newLine();
-        bw.write("<table cellspacing=\"0\">");
-        bw.newLine();
-    }
+				rowMap.put(date, output);
+				outputMap.put(price, rowMap);
+			}
+		}
 
-    private void writeRow(BufferedWriter bw, BigDecimal price, OutputModel output) throws IOException {
-        if (output != null) {
-            if (output.isPoor()) {
-                bw.write("<td bgcolor=\"" + ORANGE + "\">" + output.getOutput() + "</td>");
-            } else if (output.isClose()) {
-                bw.write("<td bgcolor=\"#000000\">" + output.getOutput() + "</td>");
-            } else if (output.isValue()) {
-                bw.write("<td bgcolor=\"" + BLUE + "\">" + output.getOutput() + "</td>");
-            } else {
-                bw.write("<td>" + output.getOutput() + "</td>");
-            }
-        } else {
-            bw.write("<td></td>");
-        }
-    }
+		dateList = new ArrayList<LocalDate>(dateSet);
+		Collections.sort(dateList);
+	}
 
-    private void writeFooter(BufferedWriter bw) throws IOException {
-        bw.write("</table>");
-        bw.newLine();
-        bw.write("</body>");
-        bw.newLine();
-        bw.write("</html>");
-        bw.newLine();
-    }
+	private void writeHeader(BufferedWriter bw) throws IOException {
+		bw.write("<!DOCTYPE html>");
+		bw.newLine();
+		bw.write("<html>");
+		bw.newLine();
+		bw.write("<head>");
+		bw.newLine();
+		bw.write("<title>" + symbol + Character.toString('_') + filename + "</title>");
+		bw.newLine();
+		bw.write("</head>");
+		bw.newLine();
+		bw.write("<body>");
+		bw.newLine();
+		bw.write("<table cellspacing=\"0\">");
+		bw.newLine();
+	}
+
+	private void writeRow(BufferedWriter bw, BigDecimal price, OutputModel output) throws IOException {
+		StrBuilder sb = new StrBuilder();
+
+		if (output != null) {
+			sb.append(TD_BGCOLOR);
+
+			if (output.isPoor()) {
+				sb.append(ORANGE);
+			} else if (output.isClose()) {
+				sb.append(BLACK);
+			} else if (output.isValue()) {
+				sb.append(BLUE);
+			} else {
+				sb.append(WHITE);
+			}
+
+			sb.append(TITLE);
+			sb.append(format(price));
+			sb.append(END);
+			sb.append(output.getOutput());
+			sb.append(END_TD);
+		} else {
+			sb.append(TD);
+			sb.append(END_TD);
+		}
+
+		bw.write(sb.toString());
+	}
+
+	private void writeFooter(BufferedWriter bw) throws IOException {
+		bw.write("</table>");
+		bw.newLine();
+		bw.write("</body>");
+		bw.newLine();
+		bw.write("</html>");
+		bw.newLine();
+	}
 }

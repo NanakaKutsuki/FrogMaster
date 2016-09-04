@@ -2,16 +2,21 @@ package org.kutsuki.frogmaster;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.zip.GZIPInputStream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.kutsuki.frogmaster.model.ProfileModel;
@@ -20,231 +25,215 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class TradeParser {
-    private final Logger logger = LoggerFactory.getLogger(TradeParser.class);
+	private final Logger logger = LoggerFactory.getLogger(TradeParser.class);
 
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("MM/dd/yyyy");
-    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
-    private static final LocalDate LABOR_DAY = LocalDate.of(2013, 9, 2);
-    private static final LocalTime NINE = LocalTime.of(9, 30);
-    private static final LocalTime FOUR = LocalTime.of(16, 15);
+	private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("MM/dd/yyyy");
+	private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
+	private static final LocalTime NINE = LocalTime.of(9, 30);
+	private static final LocalTime FOUR = LocalTime.of(16, 15);
 
-    private Map<String, Map<LocalDate, ProfileModel>> profileMap;
+	private Map<String, Map<LocalDate, ProfileModel>> profileMap;
 
-    public TradeParser() {
-        this.profileMap = new HashMap<String, Map<LocalDate, ProfileModel>>();
-    }
+	public TradeParser() {
+		this.profileMap = new HashMap<String, Map<LocalDate, ProfileModel>>();
+	}
 
-    public void parse() {
-        BufferedReader br = null;
-        FileReader fr = null;
+	public void parse(File gzFile, String symbol) {
+		try (FileInputStream fis = new FileInputStream(gzFile);
+				GZIPInputStream gis = new GZIPInputStream(fis);
+				InputStreamReader isr = new InputStreamReader(gis);
+				BufferedReader br = new BufferedReader(isr);) {
+			// parse data
+			String line = null;
+			while ((line = br.readLine()) != null) {
+				String[] split = StringUtils.split(line, ',');
 
-        try {
-            // TODO remove hard coded path
-            fr = new FileReader(new File("src/resources/ES_Trades.csv"));
-            br = new BufferedReader(fr);
+				if (split.length > 4) {
+					// parse time first
+					boolean afterHours = false;
+					LocalTime time = null;
+					try {
+						time = LocalTime.parse(split[1], TIME_FORMATTER);
 
-            // skip first line
-            String line = br.readLine();
+						// ignore after hours
+						if (time.isBefore(NINE) || time.isAfter(FOUR)) {
+							afterHours = true;
+						}
 
-            // parse data
-            while ((line = br.readLine()) != null) {
-                String[] split = StringUtils.split(line, ',');
+					} catch (DateTimeParseException e) {
+						logger.error("Failed to parse Time: " + split[1] + " from: " + line, e);
+					}
 
-                if (split.length > 5) {
-                    // parse symbol
-                    String symbol = split[0];
+					// parse date
+					LocalDate date = null;
+					if (!afterHours) {
+						try {
+							date = LocalDate.parse(split[0], DATE_FORMATTER);
 
-                    // parse time
-                    char letter = '#';
-                    LocalTime time = null;
-                    try {
-                        time = LocalTime.parse(split[2], TIME_FORMATTER);
+							// ignore after hours
+							if (date.getDayOfWeek().getValue() >= 6) {
+								afterHours = true;
+							}
+						} catch (DateTimeParseException e) {
+							logger.error("Failed to parse Date: " + split[0] + " from: " + line, e);
+						}
+					}
 
-                        // ignore after hours
-                        if (time.isBefore(NINE) || time.isAfter(FOUR)) {
-                            continue;
-                        }
+					// check if after hours
+					if (!afterHours) {
+						// parse letter
+						char letter = parseLetter(time);
 
-                        letter = parseLetter(time);
-                    } catch (DateTimeParseException e) {
-                        logger.error("Failed to parse Time: " + split[2] + " from: " + line, e);
-                    }
+						// parse price
+						BigDecimal price = null;
+						try {
+							price = new BigDecimal(split[2]);
+						} catch (NumberFormatException e) {
+							logger.error("Failed to parse Price: " + split[2] + " from: " + line, e);
+						}
 
-                    // parse date
-                    LocalDate date = null;
-                    try {
-                        date = LocalDate.parse(split[1], DATE_FORMATTER);
+						// parse volume
+						int volume = 0;
+						try {
+							volume = Integer.parseInt(split[3]);
+						} catch (NumberFormatException e) {
+							logger.error("Failed to parse Volume: " + split[3] + " from: " + line, e);
+						}
 
-                        // ignore after hours
-                        if (date.getDayOfWeek().getValue() >= 6 || date.isEqual(LABOR_DAY)) {
-                            continue;
-                        }
-                    } catch (DateTimeParseException e) {
-                        logger.error("Failed to parse Date: " + split[1] + " from: " + line, e);
-                    }
+						// create TPO
+						if (StringUtils.isNotEmpty(symbol) && date != null && time != null && price != null
+								&& volume > 0) {
+							TpoModel tpo = new TpoModel();
+							tpo.setSymbol(symbol);
+							tpo.setDate(date);
+							tpo.setTime(time);
+							tpo.setLetter(letter);
+							tpo.setPrice(price);
+							tpo.setVolume(volume);
+							addTpo(tpo);
+						}
+					}
+				} else {
+					logger.error("Bad Line: " + line);
+				}
+			}
+		} catch (IOException e) {
+			logger.error("Error while reading from File.", e);
+		}
+	}
 
-                    // parse price
-                    BigDecimal price = null;
-                    try {
-                        price = new BigDecimal(split[3]);
-                    } catch (NumberFormatException e) {
-                        logger.error("Failed to parse Price: " + split[3] + " from: " + line, e);
-                    }
+	public List<String> getSymbolList() {
+		List<String> symbolList = new ArrayList<String>(profileMap.keySet());
+		Collections.sort(symbolList);
+		return symbolList;
+	}
 
-                    // parse volume
-                    int volume = 0;
-                    try {
-                        volume = Integer.parseInt(split[4]);
-                    } catch (NumberFormatException e) {
-                        logger.error("Failed to parse Volume: " + split[4] + " from: " + line, e);
-                    }
+	public Map<LocalDate, ProfileModel> getProfileMapBySymbol(String symbol) {
+		return profileMap.get(symbol);
+	}
 
-                    // create TPO
-                    if (StringUtils.isNotEmpty(symbol) && date != null && time != null && price != null && volume > 0) {
-                        TpoModel tpo = new TpoModel();
-                        tpo.setDate(date);
-                        tpo.setTime(time);
-                        tpo.setLetter(letter);
-                        tpo.setPrice(price);
-                        tpo.setSymbol(symbol);
-                        tpo.setVolume(volume);
-                        addTpo(tpo);
-                    }
-                } else {
-                    logger.error("Bad Line: " + line);
-                }
-            }
-        } catch (IOException e) {
-            logger.error("Error while reading from File.", e);
-        } finally {
-            if (br != null) {
-                try {
-                    br.close();
-                } catch (IOException e) {
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("Error while closing Buffered Reader!", e);
-                    }
-                }
-            }
+	public ProfileModel getProfile(String symbol, LocalDate date) {
+		ProfileModel profile = null;
 
-            if (fr != null) {
-                try {
-                    fr.close();
-                } catch (IOException e) {
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("Error while closing File Reader!", e);
-                    }
-                }
-            }
-        }
-    }
+		Map<LocalDate, ProfileModel> dateMap = getProfileMapBySymbol(symbol);
+		if (dateMap != null) {
+			profile = dateMap.get(date);
+		}
 
-    public Map<LocalDate, ProfileModel> getProfileMapBySymbol(String symbol) {
-        return profileMap.get(symbol);
-    }
+		return profile;
+	}
 
-    public ProfileModel getProfile(String symbol, LocalDate date) {
-        ProfileModel profile = null;
+	private char parseLetter(LocalTime time) {
+		char letter = '#';
 
-        Map<LocalDate, ProfileModel> dateMap = getProfileMapBySymbol(symbol);
-        if (dateMap != null) {
-            profile = dateMap.get(date);
-        }
+		int hour = time.getHour();
+		int minute = time.getMinute();
 
-        return profile;
-    }
+		switch (hour) {
+		case 9:
+			if (minute >= 30) {
+				letter = 'A';
+			}
+			break;
+		case 10:
+			if (minute >= 0 && minute < 30) {
+				letter = 'B';
+			} else {
+				letter = 'C';
+			}
+			break;
+		case 11:
+			if (minute >= 0 && minute < 30) {
+				letter = 'D';
+			} else {
+				letter = 'E';
+			}
+			break;
+		case 12:
+			if (minute >= 0 && minute < 30) {
+				letter = 'F';
+			} else {
+				letter = 'G';
+			}
+			break;
+		case 13:
+			if (minute >= 0 && minute < 30) {
+				letter = 'H';
+			} else {
+				letter = 'I';
+			}
+			break;
+		case 14:
+			if (minute >= 0 && minute < 30) {
+				letter = 'J';
+			} else {
+				letter = 'K';
+			}
+			break;
+		case 15:
+			if (minute >= 0 && minute < 30) {
+				letter = 'L';
+			} else {
+				letter = 'M';
+			}
+			break;
+		case 16:
+			if (minute >= 0 && minute < 15) {
+				letter = 'N';
+			}
+			break;
+		default:
+			// ignore after hours
+			break;
+		}
 
-    private char parseLetter(LocalTime time) {
-        char letter = '#';
+		return letter;
+	}
 
-        int hour = time.getHour();
-        int minute = time.getMinute();
+	private void addTpo(TpoModel tpo) {
+		// get by symbol
+		Map<LocalDate, ProfileModel> dateProfileMap = profileMap.get(tpo.getSymbol());
 
-        switch (hour) {
-        case 9:
-            if (minute >= 30) {
-                letter = 'A';
-            }
-            break;
-        case 10:
-            if (minute >= 0 && minute < 30) {
-                letter = 'B';
-            } else {
-                letter = 'C';
-            }
-            break;
-        case 11:
-            if (minute >= 0 && minute < 30) {
-                letter = 'D';
-            } else {
-                letter = 'E';
-            }
-            break;
-        case 12:
-            if (minute >= 0 && minute < 30) {
-                letter = 'F';
-            } else {
-                letter = 'G';
-            }
-            break;
-        case 13:
-            if (minute >= 0 && minute < 30) {
-                letter = 'H';
-            } else {
-                letter = 'I';
-            }
-            break;
-        case 14:
-            if (minute >= 0 && minute < 30) {
-                letter = 'J';
-            } else {
-                letter = 'K';
-            }
-            break;
-        case 15:
-            if (minute >= 0 && minute < 30) {
-                letter = 'L';
-            } else {
-                letter = 'M';
-            }
-            break;
-        case 16:
-            if (minute >= 0 && minute < 15) {
-                letter = 'N';
-            }
-            break;
-        default:
-            // ignore after hours
-            break;
-        }
+		// create a new date map if none was found
+		if (dateProfileMap == null) {
+			dateProfileMap = new TreeMap<LocalDate, ProfileModel>();
+		}
 
-        return letter;
-    }
+		// get by date
+		ProfileModel profile = dateProfileMap.get(tpo.getDate());
 
-    private void addTpo(TpoModel tpo) {
-        // get by symbol
-        Map<LocalDate, ProfileModel> dateProfileMap = profileMap.get(tpo.getSymbol());
+		// create a new profile if none was found
+		if (profile == null) {
+			profile = new ProfileModel();
+		}
 
-        // create a new date map if none was found
-        if (dateProfileMap == null) {
-            dateProfileMap = new TreeMap<LocalDate, ProfileModel>();
-        }
+		// add tpo to profile
+		profile.addTpo(tpo);
 
-        // get by date
-        ProfileModel profile = dateProfileMap.get(tpo.getDate());
+		// add profile to date map
+		dateProfileMap.put(tpo.getDate(), profile);
 
-        // create a new profile if none was found
-        if (profile == null) {
-            profile = new ProfileModel();
-        }
-
-        // add tpo to profile
-        profile.addTpo(tpo);
-
-        // add profile to date map
-        dateProfileMap.put(tpo.getDate(), profile);
-
-        // add date map to profile map
-        profileMap.put(tpo.getSymbol(), dateProfileMap);
-    }
+		// add date map to profile map
+		profileMap.put(tpo.getSymbol(), dateProfileMap);
+	}
 }
