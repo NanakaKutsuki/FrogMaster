@@ -17,15 +17,10 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.text.StrBuilder;
 import org.kutsuki.frogmaster.model.OutputModel;
 import org.kutsuki.frogmaster.model.ProfileModel;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class HtmlOutputter extends AbstractOutputter {
-    private final Logger logger = LoggerFactory.getLogger(HtmlOutputter.class);
-
     private static final String BLACK = "#000000";
     private static final String BLUE = "#3399ff";
     private static final String ORANGE = "#ff9900";
@@ -103,15 +98,13 @@ public class HtmlOutputter extends AbstractOutputter {
 
 	    writeFooter(bw);
 	} catch (IOException e) {
-	    logger.error("Error while writing to File.", e);
+	    e.printStackTrace();
 	} finally {
 	    if (bw != null) {
 		try {
 		    bw.close();
 		} catch (IOException e) {
-		    if (logger.isDebugEnabled()) {
-			logger.debug("Error while closing Buffered Reader!", e);
-		    }
+		    e.printStackTrace();
 		}
 	    }
 
@@ -119,9 +112,7 @@ public class HtmlOutputter extends AbstractOutputter {
 		try {
 		    fw.close();
 		} catch (IOException e) {
-		    if (logger.isDebugEnabled()) {
-			logger.debug("Error while closing File Reader!", e);
-		    }
+		    e.printStackTrace();
 		}
 	    }
 	}
@@ -161,7 +152,7 @@ public class HtmlOutputter extends AbstractOutputter {
 		    output.setValue(true);
 		}
 
-		StrBuilder sb = new StrBuilder();
+		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < entry2.getValue().size(); i++) {
 		    char c = entry2.getValue().get(i);
 
@@ -225,7 +216,7 @@ public class HtmlOutputter extends AbstractOutputter {
     }
 
     private void writeRow(BufferedWriter bw, BigDecimal price, OutputModel output) throws IOException {
-	StrBuilder sb = new StrBuilder();
+	StringBuilder sb = new StringBuilder();
 
 	if (output != null) {
 	    sb.append(TD_BGCOLOR);

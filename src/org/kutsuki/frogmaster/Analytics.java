@@ -13,7 +13,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang3.text.StrBuilder;
 import org.kutsuki.frogmaster.model.ProfileModel;
 import org.kutsuki.frogmaster.model.TpoModel;
 
@@ -114,7 +113,7 @@ public class Analytics {
 		}
 	    }
 
-	    StrBuilder sb = new StrBuilder();
+	    StringBuilder sb = new StringBuilder();
 	    sb.append(DTF.format(date));
 	    sb.append(':');
 	    sb.append(' ');
@@ -154,7 +153,7 @@ public class Analytics {
 		}
 	    }
 
-	    StrBuilder sb = new StrBuilder();
+	    StringBuilder sb = new StringBuilder();
 	    sb.append(DTF.format(date));
 	    sb.append(':');
 	    sb.append(' ');
@@ -174,7 +173,7 @@ public class Analytics {
 		ProfileModel today = profileMap.get(dateList.get(i));
 		ProfileModel yesterday = profileMap.get(dateList.get(i - 1));
 
-		StrBuilder sb = new StrBuilder();
+		StringBuilder sb = new StringBuilder();
 		sb.append(DTF.format(dateList.get(i)));
 		sb.append(':');
 		sb.append(' ');
@@ -248,7 +247,7 @@ public class Analytics {
 	    }
 
 	    if (!downList.isEmpty()) {
-		StrBuilder sb = new StrBuilder();
+		StringBuilder sb = new StringBuilder();
 		sb.append(date);
 		sb.append(' ');
 
@@ -262,7 +261,7 @@ public class Analytics {
 	    }
 
 	    if (!upList.isEmpty()) {
-		StrBuilder sb = new StrBuilder();
+		StringBuilder sb = new StringBuilder();
 		sb.append(date);
 		sb.append(' ');
 
@@ -364,7 +363,7 @@ public class Analytics {
 	    }
 
 	    if (!downList.isEmpty()) {
-		StrBuilder sb = new StrBuilder();
+		StringBuilder sb = new StringBuilder();
 		sb.append(date);
 		sb.append(' ');
 
@@ -378,7 +377,7 @@ public class Analytics {
 	    }
 
 	    if (!upList.isEmpty()) {
-		StrBuilder sb = new StrBuilder();
+		StringBuilder sb = new StringBuilder();
 		sb.append(date);
 		sb.append(' ');
 

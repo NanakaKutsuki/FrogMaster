@@ -4,8 +4,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
-import org.apache.commons.lang3.text.StrBuilder;
-
 public class TpoModel {
     private String symbol;
     private LocalDate date;
@@ -16,7 +14,7 @@ public class TpoModel {
 
     @Override
     public String toString() {
-	StrBuilder sb = new StrBuilder();
+	StringBuilder sb = new StringBuilder();
 	sb.append(getSymbol()).append(',').append(' ');
 	sb.append(getDate()).append(',').append(' ');
 	sb.append(getTime()).append(',').append(' ');

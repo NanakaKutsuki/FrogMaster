@@ -21,12 +21,8 @@ import java.util.zip.GZIPInputStream;
 import org.apache.commons.lang3.StringUtils;
 import org.kutsuki.frogmaster.model.ProfileModel;
 import org.kutsuki.frogmaster.model.TpoModel;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class TradeParser {
-    private final Logger logger = LoggerFactory.getLogger(TradeParser.class);
-
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("MM/dd/yyyy");
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
     private static final LocalTime NINE = LocalTime.of(9, 30);
@@ -61,7 +57,7 @@ public class TradeParser {
 			}
 
 		    } catch (DateTimeParseException e) {
-			logger.error("Failed to parse Time: " + split[1] + " from: " + line, e);
+			e.printStackTrace();
 		    }
 
 		    // parse date
@@ -75,7 +71,7 @@ public class TradeParser {
 				afterHours = true;
 			    }
 			} catch (DateTimeParseException e) {
-			    logger.error("Failed to parse Date: " + split[0] + " from: " + line, e);
+			    e.printStackTrace();
 			}
 		    }
 
@@ -89,7 +85,7 @@ public class TradeParser {
 			try {
 			    price = new BigDecimal(split[2]);
 			} catch (NumberFormatException e) {
-			    logger.error("Failed to parse Price: " + split[2] + " from: " + line, e);
+			    e.printStackTrace();
 			}
 
 			// parse volume
@@ -97,7 +93,7 @@ public class TradeParser {
 			try {
 			    volume = Integer.parseInt(split[3]);
 			} catch (NumberFormatException e) {
-			    logger.error("Failed to parse Volume: " + split[3] + " from: " + line, e);
+			    e.printStackTrace();
 			}
 
 			// create TPO
@@ -114,11 +110,11 @@ public class TradeParser {
 			}
 		    }
 		} else {
-		    logger.error("Bad Line: " + line);
+		    System.err.println("Bad Line: " + line);
 		}
 	    }
 	} catch (IOException e) {
-	    logger.error("Error while reading from File.", e);
+	    e.printStackTrace();
 	}
     }
 
