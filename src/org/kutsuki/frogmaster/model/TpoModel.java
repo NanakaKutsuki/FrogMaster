@@ -16,62 +16,62 @@ public class TpoModel {
 
     @Override
     public String toString() {
-        StrBuilder sb = new StrBuilder();
-        sb.append(getSymbol()).append(',').append(' ');
-        sb.append(getDate()).append(',').append(' ');
-        sb.append(getTime()).append(',').append(' ');
-        sb.append(getLetter()).append(',').append(' ');
-        sb.append(getPrice()).append(',').append(' ');
-        sb.append(getVolume());
+	StrBuilder sb = new StrBuilder();
+	sb.append(getSymbol()).append(',').append(' ');
+	sb.append(getDate()).append(',').append(' ');
+	sb.append(getTime()).append(',').append(' ');
+	sb.append(getLetter()).append(',').append(' ');
+	sb.append(getPrice()).append(',').append(' ');
+	sb.append(getVolume());
 
-        return sb.toString();
+	return sb.toString();
     }
 
     public String getSymbol() {
-        return symbol;
+	return symbol;
     }
 
     public void setSymbol(String symbol) {
-        this.symbol = symbol;
+	this.symbol = symbol;
     }
 
     public LocalDate getDate() {
-        return date;
+	return date;
     }
 
     public void setDate(LocalDate date) {
-        this.date = date;
+	this.date = date;
     }
 
     public LocalTime getTime() {
-        return time;
+	return time;
     }
 
     public void setTime(LocalTime time) {
-        this.time = time;
+	this.time = time;
     }
 
     public char getLetter() {
-        return letter;
+	return letter;
     }
 
     public void setLetter(char letter) {
-        this.letter = letter;
+	this.letter = letter;
     }
 
     public BigDecimal getPrice() {
-        return price;
+	return price;
     }
 
     public void setPrice(BigDecimal price) {
-        this.price = price;
+	this.price = price;
     }
 
     public int getVolume() {
-        return volume;
+	return volume;
     }
 
     public void setVolume(int volume) {
-        this.volume = volume;
+	this.volume = volume;
     }
 }

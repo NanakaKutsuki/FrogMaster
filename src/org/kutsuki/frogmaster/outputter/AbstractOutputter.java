@@ -15,14 +15,14 @@ public abstract class AbstractOutputter {
     public abstract void output();
 
     public AbstractOutputter(Map<LocalDate, ProfileModel> profileMap) {
-        this.profileMap = profileMap;
+	this.profileMap = profileMap;
     }
 
     public String format(BigDecimal bd) {
-        return CURRENCY.format(bd);
+	return CURRENCY.format(bd);
     }
 
     public Map<LocalDate, ProfileModel> getProfileMap() {
-        return profileMap;
+	return profileMap;
     }
 }
