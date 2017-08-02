@@ -106,10 +106,10 @@ public class CandlestickWriter {
     public static void main(String[] args) {
 	String path = "C:/Users/Matcha Green/Desktop/futures/";
 
-	CandlestickWriter parser = new CandlestickWriter();
 	for (File file : new File(path).listFiles()) {
 	    String symbol = StringUtils.substringBefore(file.getName(), Character.toString('.'));
 	    System.out.println(symbol);
+	    CandlestickWriter parser = new CandlestickWriter();
 	    parser.parse(file, symbol);
 	}
     }
