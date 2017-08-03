@@ -83,40 +83,31 @@ public class CandlestickParser {
 	for (int i = 13; i < keyList.size() - 1; i++) {
 	    LocalDateTime key = keyList.get(i);
 
-	    try {
-		Candlestick stick = getCandlestick(key, 0);
-		Candlestick stick12 = getCandlestick(key, 12);
+	    Candlestick stick = getCandlestick(key, 0);
+	    Candlestick stick12 = getCandlestick(key, 12);
 
-		Candlestick stick1 = getCandlestick(key, 1);
-		Candlestick stick13 = getCandlestick(key, 13);
+	    Candlestick stick1 = getCandlestick(key, 1);
+	    Candlestick stick13 = getCandlestick(key, 13);
 
-		Candlestick stickFuture = getCandlestick(key, -1);
+	    Candlestick stickFuture = getCandlestick(key, -1);
 
-		BigDecimal delta = stick.getClose().subtract(stick12.getClose());
-		BigDecimal delta1 = stick1.getClose().subtract(stick13.getClose());
-		BigDecimal acceleration = delta.subtract(delta1);
+	    BigDecimal delta = stick.getClose().subtract(stick12.getClose());
+	    BigDecimal delta1 = stick1.getClose().subtract(stick13.getClose());
+	    BigDecimal acceleration = delta.subtract(delta1);
 
-		BigDecimal high = stick.getHigh().add(SCALE);
-		BigDecimal low = stick.getLow().add(SCALE);
-		if (!purchased && delta.compareTo(BigDecimal.ZERO) == 1 && acceleration.compareTo(BigDecimal.ZERO) == 1
-			&& stickFuture.getHigh().compareTo(high) >= 0) {
-		    lastBuyPrice = stickFuture.getOpen().max(low);
-		    bankroll = bankroll.subtract(tickValue(lastBuyPrice));
-		    purchased = true;
-		    trades++;
-		} else if (purchased && delta.compareTo(BigDecimal.ZERO) == 1
-			&& acceleration.compareTo(BigDecimal.ZERO) == 1 && stickFuture.getLow().compareTo(low) <= 0) {
-		    bankroll = bankroll.add(tickValue(stickFuture.getOpen().max(high)));
-		    purchased = false;
-		    trades++;
-		}
-	    } catch (Exception e) {
-		// refund last purchase
-		if (purchased) {
-		    bankroll = bankroll.add(tickValue(lastBuyPrice));
-		    purchased = false;
-		    trades--;
-		}
+	    BigDecimal high = stick.getHigh().add(SCALE);
+	    BigDecimal low = stick.getLow().add(SCALE);
+	    if (!purchased && delta.compareTo(BigDecimal.ZERO) == 1 && acceleration.compareTo(BigDecimal.ZERO) == 1
+		    && stickFuture.getHigh().compareTo(high) >= 0) {
+		lastBuyPrice = stickFuture.getOpen().max(low);
+		bankroll = bankroll.subtract(tickValue(lastBuyPrice));
+		purchased = true;
+		trades++;
+	    } else if (purchased && delta.compareTo(BigDecimal.ZERO) == 1
+		    && acceleration.compareTo(BigDecimal.ZERO) == 1 && stickFuture.getLow().compareTo(low) <= 0) {
+		bankroll = bankroll.add(tickValue(stickFuture.getOpen().max(high)));
+		purchased = false;
+		trades++;
 	    }
 	}
 
@@ -139,41 +130,32 @@ public class CandlestickParser {
 	for (int i = 14; i < keyList.size() - 1; i++) {
 	    LocalDateTime key = keyList.get(i);
 
-	    try {
-		Candlestick stick1 = getCandlestick(key, 1);
-		Candlestick stick13 = getCandlestick(key, 13);
+	    Candlestick stick1 = getCandlestick(key, 1);
+	    Candlestick stick13 = getCandlestick(key, 13);
 
-		Candlestick stick2 = getCandlestick(key, 2);
-		Candlestick stick14 = getCandlestick(key, 14);
+	    Candlestick stick2 = getCandlestick(key, 2);
+	    Candlestick stick14 = getCandlestick(key, 14);
 
-		Candlestick stick = getCandlestick(key, 0);
-		Candlestick futureStick = getCandlestick(key, -1);
+	    Candlestick stick = getCandlestick(key, 0);
+	    Candlestick futureStick = getCandlestick(key, -1);
 
-		BigDecimal delta1 = stick1.getClose().subtract(stick13.getClose());
-		BigDecimal delta2 = stick2.getClose().subtract(stick14.getClose());
-		BigDecimal acceleration = delta1.subtract(delta2);
+	    BigDecimal delta1 = stick1.getClose().subtract(stick13.getClose());
+	    BigDecimal delta2 = stick2.getClose().subtract(stick14.getClose());
+	    BigDecimal acceleration = delta1.subtract(delta2);
 
-		BigDecimal high = stick1.getHigh().add(SCALE);
-		BigDecimal low = stick1.getLow().add(SCALE);
-		if (!purchased && delta1.compareTo(BigDecimal.ZERO) == 1 && acceleration.compareTo(BigDecimal.ZERO) == 1
-			&& stick.getHigh().compareTo(high) >= 0) {
-		    lastBuyPrice = futureStick.getOpen();
-		    bankroll = bankroll.subtract(tickValue(lastBuyPrice));
-		    purchased = true;
-		    trades++;
-		} else if (purchased && delta1.compareTo(BigDecimal.ZERO) == 1
-			&& acceleration.compareTo(BigDecimal.ZERO) == 1 && stick.getLow().compareTo(low) <= 0) {
-		    bankroll = bankroll.add(tickValue(futureStick.getOpen()));
-		    purchased = false;
-		    trades++;
-		}
-	    } catch (Exception e) {
-		// refund last purchase
-		if (purchased) {
-		    bankroll = bankroll.add(tickValue(lastBuyPrice));
-		    purchased = false;
-		    trades--;
-		}
+	    BigDecimal high = stick1.getHigh().add(SCALE);
+	    BigDecimal low = stick1.getLow().add(SCALE);
+	    if (!purchased && delta1.compareTo(BigDecimal.ZERO) == 1 && acceleration.compareTo(BigDecimal.ZERO) == 1
+		    && stick.getHigh().compareTo(high) >= 0) {
+		lastBuyPrice = futureStick.getOpen();
+		bankroll = bankroll.subtract(tickValue(lastBuyPrice));
+		purchased = true;
+		trades++;
+	    } else if (purchased && delta1.compareTo(BigDecimal.ZERO) == 1
+		    && acceleration.compareTo(BigDecimal.ZERO) == 1 && stick.getLow().compareTo(low) <= 0) {
+		bankroll = bankroll.add(tickValue(futureStick.getOpen()));
+		purchased = false;
+		trades++;
 	    }
 	}
 
@@ -206,41 +188,32 @@ public class CandlestickParser {
 	for (int i = 4; i < keyList.size() - 1; i++) {
 	    LocalDateTime key = keyList.get(i);
 
-	    try {
-		Candlestick stick = getCandlestick(key, 0);
-		Candlestick stick3 = getCandlestick(key, 3);
+	    Candlestick stick = getCandlestick(key, 0);
+	    Candlestick stick3 = getCandlestick(key, 3);
 
-		Candlestick stick1 = getCandlestick(key, 1);
-		Candlestick stick4 = getCandlestick(key, 4);
+	    Candlestick stick1 = getCandlestick(key, 1);
+	    Candlestick stick4 = getCandlestick(key, 4);
 
-		Candlestick futureStick = getCandlestick(key, -1);
+	    Candlestick futureStick = getCandlestick(key, -1);
 
-		BigDecimal delta = stick.getClose().subtract(stick3.getClose());
-		BigDecimal delta1 = stick1.getClose().subtract(stick4.getClose());
+	    BigDecimal delta = stick.getClose().subtract(stick3.getClose());
+	    BigDecimal delta1 = stick1.getClose().subtract(stick4.getClose());
 
-		BigDecimal acceleration = delta.subtract(delta1);
-		BigDecimal high = stick1.getHigh().add(SCALE);
-		BigDecimal low = stick1.getLow().add(SCALE);
+	    BigDecimal acceleration = delta.subtract(delta1);
+	    BigDecimal high = stick1.getHigh().add(SCALE);
+	    BigDecimal low = stick1.getLow().add(SCALE);
 
-		if (!purchased && delta.abs().compareTo(deltaLG) == 1
-			&& acceleration.abs().compareTo(accelerationLG) == 1 && stick.getHigh().compareTo(high) >= 0) {
-		    lastBuyPrice = futureStick.getOpen();
-		    bankroll = bankroll.subtract(tickValue(lastBuyPrice));
-		    purchased = true;
-		    trades++;
-		} else if (purchased && delta.abs().compareTo(deltaST) == 1
-			&& acceleration.abs().compareTo(accelerationST) == 1 && stick.getLow().compareTo(low) <= 0) {
-		    bankroll = bankroll.add(tickValue(futureStick.getOpen()));
-		    purchased = false;
-		    trades++;
-		}
-	    } catch (Exception e) {
-		// refund last purchase
-		if (purchased) {
-		    bankroll = bankroll.add(tickValue(lastBuyPrice));
-		    purchased = false;
-		    trades--;
-		}
+	    if (!purchased && delta.abs().compareTo(deltaLG) == 1 && acceleration.abs().compareTo(accelerationLG) == 1
+		    && stick.getHigh().compareTo(high) >= 0) {
+		lastBuyPrice = futureStick.getOpen();
+		bankroll = bankroll.subtract(tickValue(lastBuyPrice));
+		purchased = true;
+		trades++;
+	    } else if (purchased && delta.abs().compareTo(deltaST) == 1
+		    && acceleration.abs().compareTo(accelerationST) == 1 && stick.getLow().compareTo(low) <= 0) {
+		bankroll = bankroll.add(tickValue(futureStick.getOpen()));
+		purchased = false;
+		trades++;
 	    }
 	}
 
@@ -254,7 +227,7 @@ public class CandlestickParser {
 	return bankroll;
     }
 
-    private Candlestick getCandlestick(LocalDateTime ldt, int sticks) throws Exception {
+    private Candlestick getCandlestick(LocalDateTime ldt, int sticks) {
 	LocalDateTime key = null;
 	if (sticks < 0) {
 	    key = ldt.plusMinutes(INTERVAL * -sticks);
@@ -263,7 +236,9 @@ public class CandlestickParser {
 	}
 
 	if (!candlestickMap.containsKey(key)) {
-	    throw new Exception();
+	    System.out.println(ldt + " missing: " + key);
+
+	    throw new NullPointerException();
 	}
 
 	return candlestickMap.get(key);
@@ -279,27 +254,8 @@ public class CandlestickParser {
 	return price.divide(TICK_SIZE, 0, RoundingMode.HALF_UP).multiply(TICK_VALUE);
     }
 
-    public void verifyData(String symbol) {
-	boolean first = true;
-	Candlestick prevStick = null;
-	for (Candlestick stick : candlestickMap.values()) {
-	    if (first) {
-		prevStick = stick;
-		first = false;
-	    } else {
-		BigDecimal diff = stick.getClose().subtract(prevStick.getOpen()).abs();
-
-		if (diff.compareTo(BigDecimal.ONE) == 1) {
-		    System.out.println(stick.getKey() + " " + prevStick.getKey() + " " + diff);
-		}
-
-		prevStick = stick;
-	    }
-	}
-    }
-
     public static void main(String[] args) {
-	String path = "C:/Users/Matcha Green/Desktop/candlestick";
+	String path = "C:/Users/Matcha Green/Desktop/candlestickFilled";
 
 	File dir = new File(path);
 	for (File file : dir.listFiles()) {
@@ -308,7 +264,7 @@ public class CandlestickParser {
 	    // if (symbol.equals("ESZ16")) {
 	    CandlestickParser parser = new CandlestickParser();
 	    parser.parse(file);
-	    parser.analyze3(symbol);
+	    parser.analyze2(symbol);
 	    // }
 	}
     }
