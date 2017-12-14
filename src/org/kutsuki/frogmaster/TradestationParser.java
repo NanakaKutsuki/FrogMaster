@@ -15,8 +15,8 @@ import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import org.apache.commons.lang3.StringUtils;
-import org.kutsuki.frogmaster.strategy.LongStrategy;
-import org.kutsuki.frogmaster.strategy.ShortStrategy2;
+import org.kutsuki.frogmaster.strategy.HybridStrategy;
+import org.kutsuki.frogmaster.strategy.NoStrategy;
 
 public class TradestationParser {
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("MM/dd/yyyy");
@@ -68,19 +68,24 @@ public class TradestationParser {
 	    e.printStackTrace();
 	}
 
-	LongStrategy ls = new LongStrategy(barMap);
-	ls.run();
+	// LongStrategy strategy1 = new LongStrategy(barMap);
+	// strategy1.run();
+	//
+	// ShortStrategy2 strategy2 = new ShortStrategy2(barMap, input);
+	// strategy2.run();
 
-	ShortStrategy2 ss = new ShortStrategy2(barMap, input);
-	ss.run();
+	HybridStrategy strategy1 = new HybridStrategy(barMap, input);
+	strategy1.run();
+	NoStrategy strategy2 = new NoStrategy(barMap);
+	strategy2.run();
 
 	BigDecimal min = new BigDecimal(10000);
 	LocalDateTime minDateTime = null;
-	for (LocalDateTime key : ls.getEquityMap().keySet()) {
-	    Equity le = ls.getEquityMap().get(key);
-	    Equity se = ss.getEquityMap().get(key);
+	for (LocalDateTime key : strategy1.getEquityMap().keySet()) {
+	    Equity e1 = strategy1.getEquityMap().get(key);
+	    Equity e2 = strategy2.getEquityMap().get(key);
 
-	    BigDecimal total = le.getUnrealized().add(le.getRealized()).add(se.getUnrealized()).add(se.getRealized());
+	    BigDecimal total = e1.getUnrealized().add(e1.getRealized()).add(e2.getUnrealized()).add(e2.getRealized());
 
 	    if (total.compareTo(min) == -1) {
 		min = total;

@@ -44,7 +44,6 @@ public abstract class AbstractStrategy {
 		strategy(bar);
 
 		Equity equity = new Equity(key);
-		equity.setUnrealized(convertTicks(getUnrealized(bar)));
 
 		BigDecimal realized = convertTicks(getRealized(bar));
 		if (realized.compareTo(BigDecimal.ZERO) != 0) {
@@ -52,6 +51,8 @@ public abstract class AbstractStrategy {
 		} else {
 		    equity.setRealized(prevEquity.getRealized());
 		}
+
+		equity.setUnrealized(convertTicks(getUnrealized(bar)));
 
 		equityMap.put(key, equity);
 		prevEquity = equity;
