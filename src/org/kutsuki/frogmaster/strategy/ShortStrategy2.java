@@ -9,7 +9,7 @@ import java.util.TreeMap;
 import org.kutsuki.frogmaster.Bar;
 import org.kutsuki.frogmaster.Input;
 
-public class ShortStrategy extends AbstractStrategy {
+public class ShortStrategy2 extends AbstractStrategy {
     private static final LocalTime START = LocalTime.of(7, 59);
     private static final LocalTime END = LocalTime.of(15, 41);
 
@@ -18,7 +18,7 @@ public class ShortStrategy extends AbstractStrategy {
     private BigDecimal lowPrice;
     private Input input;
 
-    public ShortStrategy(TreeMap<LocalDateTime, Bar> barMap, Input input) {
+    public ShortStrategy2(TreeMap<LocalDateTime, Bar> barMap, Input input) {
 	super(barMap);
 	this.holding = null;
 	this.input = input;
@@ -52,15 +52,19 @@ public class ShortStrategy extends AbstractStrategy {
 		&& bar.getDateTime().toLocalTime().isAfter(START) && bar.getDateTime().toLocalTime().isBefore(END);
     }
 
-    private boolean isBuyToCover(Bar bar) {
-	return bar.getClose().compareTo(highPrice) >= 0 || bar.getClose().compareTo(lowPrice) <= 0;
+    private boolean isStopLoss(Bar bar) {
+	return bar.getClose().compareTo(highPrice) >= 0;
+    }
+
+    private boolean isLimit(Bar bar) {
+	return bar.getLow().compareTo(lowPrice) <= 0;
     }
 
     @Override
     public BigDecimal getUnrealized(Bar bar) {
 	BigDecimal unrealized = BigDecimal.ZERO;
 
-	if (holding != null && !(isDay(bar) && isBuyToCover(bar))) {
+	if (holding != null && !(isDay(bar) && (isStopLoss(bar) || isLimit(bar)))) {
 	    unrealized = holding.subtract(bar.getClose());
 	}
 
@@ -71,9 +75,14 @@ public class ShortStrategy extends AbstractStrategy {
     public BigDecimal getRealized(Bar bar) {
 	BigDecimal realized = BigDecimal.ZERO;
 
-	if (isDay(bar) && holding != null && isBuyToCover(bar)) {
-	    realized = holding.subtract(getNextBar().getOpen());
-	    holding = null;
+	if (isDay(bar) && holding != null) {
+	    if (isStopLoss(bar)) {
+		realized = holding.subtract(getNextBar().getOpen());
+		holding = null;
+	    } else if (isLimit(bar)) {
+		realized = holding.subtract(bar.getLow());
+		holding = null;
+	    }
 	}
 
 	return realized;

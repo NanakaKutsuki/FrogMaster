@@ -16,99 +16,120 @@ import java.util.TreeMap;
 
 import org.apache.commons.lang3.StringUtils;
 import org.kutsuki.frogmaster.strategy.LongStrategy;
-import org.kutsuki.frogmaster.strategy.ShortStrategy;
+import org.kutsuki.frogmaster.strategy.ShortStrategy2;
 
 public class TradestationParser {
-	private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("MM/dd/yyyy");
-	private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm");
-	private static final File DIR = new File("C:/Users/jleung/Desktop/ES");
+    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("MM/dd/yyyy");
+    private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm");
+    private static final File DIR = new File("C:/Users/Matcha Green/Desktop/ES");
 
-	private TreeMap<String, String> resultMap;
+    private TreeMap<String, String> resultMap;
 
-	public TradestationParser() {
-		this.resultMap = new TreeMap<String, String>();
+    public TradestationParser() {
+	this.resultMap = new TreeMap<String, String>();
+    }
+
+    public void run(File file, Input input) {
+	TreeMap<LocalDateTime, Bar> barMap = new TreeMap<LocalDateTime, Bar>();
+
+	try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+	    // skip first line
+	    br.readLine();
+
+	    String line = null;
+	    while ((line = br.readLine()) != null) {
+		String[] split = StringUtils.split(line, ',');
+
+		try {
+		    LocalDate date = LocalDate.parse(split[0], DATE_FORMAT);
+		    LocalTime time = LocalTime.parse(split[1], TIME_FORMAT);
+		    BigDecimal open = new BigDecimal(split[2]);
+		    BigDecimal high = new BigDecimal(split[3]);
+		    BigDecimal low = new BigDecimal(split[4]);
+		    BigDecimal close = new BigDecimal(split[5]);
+		    int up = Integer.parseInt(split[6]);
+		    int down = Integer.parseInt(split[7]);
+
+		    Bar bar = new Bar();
+		    bar.setDateTime(LocalDateTime.of(date, time));
+		    bar.setOpen(open);
+		    bar.setHigh(high);
+		    bar.setLow(low);
+		    bar.setClose(close);
+		    bar.setUp(up);
+		    bar.setDown(down);
+
+		    barMap.put(bar.getDateTime(), bar);
+		} catch (DateTimeParseException | NumberFormatException e) {
+		    e.printStackTrace();
+		}
+	    }
+	} catch (IOException e) {
+	    e.printStackTrace();
 	}
 
-	public void run(File file, Input input) {
-		TreeMap<LocalDateTime, Bar> barMap = new TreeMap<LocalDateTime, Bar>();
+	LongStrategy ls = new LongStrategy(barMap);
+	ls.run();
 
-		try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-			// skip first line
-			br.readLine();
+	ShortStrategy2 ss = new ShortStrategy2(barMap, input);
+	ss.run();
 
-			String line = null;
-			while ((line = br.readLine()) != null) {
-				String[] split = StringUtils.split(line, ',');
+	BigDecimal min = new BigDecimal(10000);
+	LocalDateTime minDateTime = null;
+	for (LocalDateTime key : ls.getEquityMap().keySet()) {
+	    Equity le = ls.getEquityMap().get(key);
+	    Equity se = ss.getEquityMap().get(key);
 
-				try {
-					LocalDate date = LocalDate.parse(split[0], DATE_FORMAT);
-					LocalTime time = LocalTime.parse(split[1], TIME_FORMAT);
-					BigDecimal open = new BigDecimal(split[2]);
-					BigDecimal high = new BigDecimal(split[3]);
-					BigDecimal low = new BigDecimal(split[4]);
-					BigDecimal close = new BigDecimal(split[5]);
-					int up = Integer.parseInt(split[6]);
-					int down = Integer.parseInt(split[7]);
+	    BigDecimal total = le.getUnrealized().add(le.getRealized()).add(se.getUnrealized()).add(se.getRealized());
 
-					Bar bar = new Bar();
-					bar.setDateTime(LocalDateTime.of(date, time));
-					bar.setOpen(open);
-					bar.setHigh(high);
-					bar.setLow(low);
-					bar.setClose(close);
-					bar.setUp(up);
-					bar.setDown(down);
-
-					barMap.put(bar.getDateTime(), bar);
-				} catch (DateTimeParseException | NumberFormatException e) {
-					e.printStackTrace();
-				}
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
-		LongStrategy ls = new LongStrategy(barMap);
-		ls.run();
-
-		ShortStrategy ss = new ShortStrategy(barMap, input);
-		ss.run();
-
-		BigDecimal min = new BigDecimal(10000);
-		LocalDateTime minDateTime = null;
-		for (LocalDateTime key : ls.getEquityMap().keySet()) {
-			Equity le = ls.getEquityMap().get(key);
-			Equity se = ss.getEquityMap().get(key);
-
-			BigDecimal total = le.getUnrealized().add(le.getRealized()).add(se.getUnrealized()).add(se.getRealized());
-
-			if (total.compareTo(min) == -1) {
-				min = total;
-				minDateTime = key;
-			}
-		}
-
-		resultMap.put(Inputs.getTicker(file.getName()), minDateTime + StringUtils.SPACE + min);
+	    if (total.compareTo(min) == -1) {
+		min = total;
+		minDateTime = key;
+	    }
 	}
 
-	public Map<String, String> getResultMap() {
-		return resultMap;
+	resultMap.put(Inputs.getTicker(file.getName()), minDateTime + StringUtils.SPACE + min);
+    }
+
+    public Map<String, String> getResultMap() {
+	return resultMap;
+    }
+
+    public String getResult(int year, char quarter) {
+	StringBuilder ticker = new StringBuilder("ES");
+
+	ticker.append(quarter);
+
+	if (year < 10) {
+	    ticker.append(0);
+	}
+	ticker.append(year);
+
+	return StringUtils.substringAfter(getResultMap().get(ticker.toString()), StringUtils.SPACE);
+    }
+
+    public static void main(String[] args) {
+	TradestationParser parser = new TradestationParser();
+
+	for (File file : DIR.listFiles()) {
+	    Input input = Inputs2.getInput(file.getName());
+	    parser.run(file, input);
 	}
 
-	public static void main(String[] args) {
-		TradestationParser parser = new TradestationParser();
+	// File file = new File(DIR + "/ESU15.txt");
+	// Input input = Inputs.getInput(file.getName());
+	// parser.run(file, input);
 
-		for (File file : DIR.listFiles()) {
-			Input input = Inputs.getInput(file.getName());
-			parser.run(file, input);
-		}
-
-		// File file = new File(DIR + "/ESU15.txt");
-		// Input input = Inputs.getInput(file.getName());
-		// parser.run(file, input);
-
-		for (Entry<String, String> entry : parser.getResultMap().entrySet()) {
-			System.out.println(entry.getKey() + StringUtils.SPACE + entry.getValue());
-		}
+	for (Entry<String, String> entry : parser.getResultMap().entrySet()) {
+	    System.out.println(entry.getKey() + StringUtils.SPACE + entry.getValue());
 	}
+
+	for (int i = 17; i >= 6; i--) {
+	    String h = parser.getResult(i, 'H');
+	    String m = parser.getResult(i, 'M');
+	    String u = parser.getResult(i, 'U');
+	    String z = parser.getResult(i, 'Z');
+	    System.out.println(h + "," + m + "," + u + "," + z);
+	}
+    }
 }
