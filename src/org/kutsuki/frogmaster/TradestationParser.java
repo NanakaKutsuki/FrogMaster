@@ -72,12 +72,14 @@ public class TradestationParser {
 	}
 
 	LongStrategy strategy1 = new LongStrategy(ticker, barMap);
+	// ShortStrategy2 strategy1 = new ShortStrategy2(ticker, barMap);
 	strategy1.run();
 	NoStrategy strategy2 = new NoStrategy(ticker, barMap);
 	strategy2.run();
 
 	BigDecimal min = new BigDecimal(10000);
 	LocalDateTime minDateTime = null;
+
 	for (LocalDateTime key : strategy1.getEquityMap().keySet()) {
 	    Equity e1 = strategy1.getEquityMap().get(key);
 	    Equity e2 = strategy2.getEquityMap().get(key);

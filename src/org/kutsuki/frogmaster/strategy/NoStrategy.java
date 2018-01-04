@@ -2,6 +2,7 @@ package org.kutsuki.frogmaster.strategy;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.TreeMap;
 
 import org.kutsuki.frogmaster.Bar;
@@ -25,5 +26,15 @@ public class NoStrategy extends AbstractStrategy {
     @Override
     public BigDecimal getRealized(Bar bar) {
 	return BigDecimal.ZERO;
+    }
+
+    @Override
+    public LocalDateTime getStartDateTime() {
+	return LocalDateTime.of(getStartDate(), LocalTime.MIDNIGHT);
+    }
+
+    @Override
+    public LocalDateTime getEndDateTime() {
+	return LocalDateTime.of(getEndDate(), LocalTime.MAX);
     }
 }

@@ -43,6 +43,8 @@ public class ShortStrategy2 extends AbstractStrategy {
 		    holding = getNextBar().getOpen();
 		    highPrice = bar.getClose().add(input.getUpAmount());
 		    lowPrice = bar.getClose().subtract(input.getDownAmount());
+		    System.out.println(bar.getDateTime() + " " + bar.getClose() + " " + bar8.getClose() + " "
+			    + bar8.getDateTime() + " " + mom + " " + accel);
 		}
 	    }
 	}
@@ -88,5 +90,15 @@ public class ShortStrategy2 extends AbstractStrategy {
 	}
 
 	return realized;
+    }
+
+    @Override
+    public LocalDateTime getStartDateTime() {
+	return LocalDateTime.of(getStartDate(), getEightAM());
+    }
+
+    @Override
+    public LocalDateTime getEndDateTime() {
+	return LocalDateTime.of(getEndDate(), LocalTime.MIDNIGHT);
     }
 }

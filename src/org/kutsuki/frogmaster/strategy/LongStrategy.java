@@ -49,4 +49,14 @@ public class LongStrategy extends AbstractStrategy {
 
 	return realized;
     }
+
+    @Override
+    public LocalDateTime getStartDateTime() {
+	return LocalDateTime.of(getStartDate(), getEightAM());
+    }
+
+    @Override
+    public LocalDateTime getEndDateTime() {
+	return LocalDateTime.of(getEndDate(), getEightAM());
+    }
 }

@@ -17,8 +17,7 @@ import org.kutsuki.frogmaster.Ticker;
 public abstract class AbstractStrategy {
     private static final BigDecimal FIFTY = new BigDecimal("50");
     private static final BigDecimal COMMISSION = new BigDecimal("5.38");
-
-    protected static final LocalTime EIGHT_AM = LocalTime.of(8, 0);
+    private static final LocalTime EIGHT_AM = LocalTime.of(8, 0);
 
     private int index;
     private LocalDate startDate;
@@ -33,6 +32,10 @@ public abstract class AbstractStrategy {
 
     public abstract BigDecimal getRealized(Bar bar);
 
+    public abstract LocalDateTime getStartDateTime();
+
+    public abstract LocalDateTime getEndDateTime();
+
     public AbstractStrategy(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap) {
 	this.barMap = barMap;
 	this.endDate = calcEndDate(ticker);
@@ -46,31 +49,31 @@ public abstract class AbstractStrategy {
     public void run() {
 	Equity prevEquity = new Equity(null);
 
-	LocalDateTime start = LocalDateTime.of(getStartDate(), LocalTime.MIDNIGHT);
-	LocalDateTime end = LocalDateTime.of(getEndDate(), EIGHT_AM);
+	for (LocalDateTime key = barMap.firstKey(); key.isBefore(barMap.lastKey())
+		|| key.isEqual(barMap.lastKey()); key = key.plusMinutes(5)) {
+	    if (!key.isBefore(getStartDateTime()) && !key.isAfter(getEndDateTime())) {
+		Bar bar = barMap.get(key);
 
-	for (LocalDateTime key = start; key.isBefore(barMap.lastKey()) || key.isEqual(end); key = key.plusMinutes(5)) {
-	    Bar bar = barMap.get(key);
+		if (bar != null) {
+		    strategy(bar);
 
-	    if (bar != null) {
-		strategy(bar);
+		    Equity equity = new Equity(key);
 
-		Equity equity = new Equity(key);
+		    BigDecimal realized = convertTicks(getRealized(bar));
+		    if (realized.compareTo(BigDecimal.ZERO) != 0) {
+			equity.setRealized(prevEquity.getRealized().add(realized).subtract(COMMISSION));
+		    } else {
+			equity.setRealized(prevEquity.getRealized());
+		    }
 
-		BigDecimal realized = convertTicks(getRealized(bar));
-		if (realized.compareTo(BigDecimal.ZERO) != 0) {
-		    equity.setRealized(prevEquity.getRealized().add(realized).subtract(COMMISSION));
+		    equity.setUnrealized(convertTicks(getUnrealized(bar)));
+
+		    equityMap.put(key, equity);
+		    prevEquity = equity;
+		    index++;
 		} else {
-		    equity.setRealized(prevEquity.getRealized());
+		    equityMap.put(key, new Equity(key, prevEquity));
 		}
-
-		equity.setUnrealized(convertTicks(getUnrealized(bar)));
-
-		equityMap.put(key, equity);
-		prevEquity = equity;
-		index++;
-	    } else {
-		equityMap.put(key, new Equity(key, prevEquity));
 	    }
 	}
     }
@@ -105,6 +108,10 @@ public abstract class AbstractStrategy {
 
     public LocalDate getStartDate() {
 	return startDate;
+    }
+
+    public LocalTime getEightAM() {
+	return EIGHT_AM;
     }
 
     public TreeMap<LocalDateTime, Equity> getEquityMap() {
