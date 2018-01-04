@@ -8,6 +8,8 @@ import java.util.TreeMap;
 
 import org.kutsuki.frogmaster.Bar;
 import org.kutsuki.frogmaster.Input;
+import org.kutsuki.frogmaster.Inputs2;
+import org.kutsuki.frogmaster.Ticker;
 
 public class ShortStrategy2 extends AbstractStrategy {
     private static final LocalTime START = LocalTime.of(7, 59);
@@ -18,10 +20,10 @@ public class ShortStrategy2 extends AbstractStrategy {
     private BigDecimal lowPrice;
     private Input input;
 
-    public ShortStrategy2(TreeMap<LocalDateTime, Bar> barMap, Input input) {
-	super(barMap);
+    public ShortStrategy2(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap) {
+	super(ticker, barMap);
 	this.holding = null;
-	this.input = input;
+	this.input = Inputs2.getInputFromLastYear(ticker.getYear());
     }
 
     @Override

@@ -1,7 +1,10 @@
 package org.kutsuki.frogmaster.strategy;
 
 import java.math.BigDecimal;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -9,12 +12,17 @@ import java.util.TreeMap;
 
 import org.kutsuki.frogmaster.Bar;
 import org.kutsuki.frogmaster.Equity;
+import org.kutsuki.frogmaster.Ticker;
 
 public abstract class AbstractStrategy {
     private static final BigDecimal FIFTY = new BigDecimal("50");
     private static final BigDecimal COMMISSION = new BigDecimal("5.38");
 
+    protected static final LocalTime EIGHT_AM = LocalTime.of(8, 0);
+
     private int index;
+    private LocalDate startDate;
+    private LocalDate endDate;
     private List<LocalDateTime> keyList;
     private TreeMap<LocalDateTime, Bar> barMap;
     private TreeMap<LocalDateTime, Equity> equityMap;
@@ -25,19 +33,23 @@ public abstract class AbstractStrategy {
 
     public abstract BigDecimal getRealized(Bar bar);
 
-    public AbstractStrategy(TreeMap<LocalDateTime, Bar> barMap) {
+    public AbstractStrategy(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap) {
 	this.barMap = barMap;
+	this.endDate = calcEndDate(ticker);
 	this.equityMap = new TreeMap<LocalDateTime, Equity>();
 	this.index = 0;
 	this.keyList = new ArrayList<LocalDateTime>(barMap.keySet());
+	this.startDate = calcStartDate(ticker);
 	Collections.sort(this.keyList);
     }
 
     public void run() {
 	Equity prevEquity = new Equity(null);
 
-	for (LocalDateTime key = barMap.firstKey(); key.isBefore(barMap.lastKey())
-		|| key.isEqual(barMap.lastKey()); key = key.plusMinutes(5)) {
+	LocalDateTime start = LocalDateTime.of(getStartDate(), LocalTime.MIDNIGHT);
+	LocalDateTime end = LocalDateTime.of(getEndDate(), EIGHT_AM);
+
+	for (LocalDateTime key = start; key.isBefore(barMap.lastKey()) || key.isEqual(end); key = key.plusMinutes(5)) {
 	    Bar bar = barMap.get(key);
 
 	    if (bar != null) {
@@ -56,7 +68,6 @@ public abstract class AbstractStrategy {
 
 		equityMap.put(key, equity);
 		prevEquity = equity;
-		// System.out.println(equity);
 		index++;
 	    } else {
 		equityMap.put(key, new Equity(key, prevEquity));
@@ -88,8 +99,92 @@ public abstract class AbstractStrategy {
 	return bar;
     }
 
+    public LocalDate getEndDate() {
+	return endDate;
+    }
+
+    public LocalDate getStartDate() {
+	return startDate;
+    }
+
     public TreeMap<LocalDateTime, Equity> getEquityMap() {
 	return equityMap;
+    }
+
+    private LocalDate calcStartDate(Ticker ticker) {
+	LocalDate date = null;
+
+	switch (ticker.getMonth()) {
+	case 'H':
+	    date = LocalDate.of(ticker.getFullYear() - 1, 12, 1);
+	    break;
+	case 'M':
+	    date = LocalDate.of(ticker.getFullYear(), 3, 1);
+	    break;
+	case 'U':
+	    date = LocalDate.of(ticker.getFullYear(), 6, 1);
+	    break;
+	case 'Z':
+	    date = LocalDate.of(ticker.getFullYear(), 9, 1);
+	    break;
+	default:
+	    throw new IllegalArgumentException("Bad Ticker!" + ticker);
+	}
+
+	LocalDateTime dateTime = LocalDateTime.of(calcThirdDayOfWeek(date), EIGHT_AM);
+	while (!barMap.containsKey(dateTime)) {
+	    dateTime = dateTime.plusDays(1);
+	}
+
+	return dateTime.toLocalDate();
+    }
+
+    private LocalDate calcEndDate(Ticker ticker) {
+	LocalDate date = null;
+
+	switch (ticker.getMonth()) {
+	case 'H':
+	    date = LocalDate.of(ticker.getFullYear(), 3, 1);
+	    break;
+	case 'M':
+	    date = LocalDate.of(ticker.getFullYear(), 6, 1);
+	    break;
+	case 'U':
+	    date = LocalDate.of(ticker.getFullYear(), 9, 1);
+	    break;
+	case 'Z':
+	    date = LocalDate.of(ticker.getFullYear(), 12, 1);
+	    break;
+	default:
+	    throw new IllegalArgumentException("Bad Ticker!" + ticker);
+	}
+
+	LocalDateTime dateTime = LocalDateTime.of(calcThirdDayOfWeek(date), EIGHT_AM);
+	while (!barMap.containsKey(dateTime)) {
+	    dateTime = dateTime.minusDays(1);
+	}
+
+	return dateTime.toLocalDate();
+    }
+
+    private LocalDate calcThirdDayOfWeek(LocalDate start) {
+	int week = 0;
+	LocalDate i = start;
+	LocalDate thirdDayOfWeek = null;
+
+	while (thirdDayOfWeek == null) {
+	    if (i.getDayOfWeek().equals(DayOfWeek.FRIDAY)) {
+		week++;
+	    }
+
+	    if (week == 3) {
+		thirdDayOfWeek = i;
+	    }
+
+	    i = i.plusDays(1);
+	}
+
+	return thirdDayOfWeek;
     }
 
     private BigDecimal convertTicks(BigDecimal ticks) {

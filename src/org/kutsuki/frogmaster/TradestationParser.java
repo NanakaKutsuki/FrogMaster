@@ -15,7 +15,7 @@ import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import org.apache.commons.lang3.StringUtils;
-import org.kutsuki.frogmaster.strategy.HybridStrategy;
+import org.kutsuki.frogmaster.strategy.LongStrategy;
 import org.kutsuki.frogmaster.strategy.NoStrategy;
 
 public class TradestationParser {
@@ -23,13 +23,16 @@ public class TradestationParser {
     private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm");
     private static final File DIR = new File("C:/Users/Matcha Green/Desktop/ES");
 
-    private TreeMap<String, String> resultMap;
+    private TreeMap<String, String> realizedMap;
+    private TreeMap<String, String> equityResultMap;
 
     public TradestationParser() {
-	this.resultMap = new TreeMap<String, String>();
+	this.realizedMap = new TreeMap<String, String>();
+	this.equityResultMap = new TreeMap<String, String>();
     }
 
-    public void run(File file, Input input) {
+    public void run(File file) {
+	Ticker ticker = new Ticker(file.getName());
 	TreeMap<LocalDateTime, Bar> barMap = new TreeMap<LocalDateTime, Bar>();
 
 	try (BufferedReader br = new BufferedReader(new FileReader(file))) {
@@ -68,15 +71,9 @@ public class TradestationParser {
 	    e.printStackTrace();
 	}
 
-	// LongStrategy strategy1 = new LongStrategy(barMap);
-	// strategy1.run();
-	//
-	// ShortStrategy2 strategy2 = new ShortStrategy2(barMap, input);
-	// strategy2.run();
-
-	HybridStrategy strategy1 = new HybridStrategy(barMap, input);
+	LongStrategy strategy1 = new LongStrategy(ticker, barMap);
 	strategy1.run();
-	NoStrategy strategy2 = new NoStrategy(barMap);
+	NoStrategy strategy2 = new NoStrategy(ticker, barMap);
 	strategy2.run();
 
 	BigDecimal min = new BigDecimal(10000);
@@ -93,47 +90,74 @@ public class TradestationParser {
 	    }
 	}
 
-	resultMap.put(Inputs.getTicker(file.getName()), minDateTime + StringUtils.SPACE + min);
+	String realized = strategy1.getEquityMap().lastEntry().getValue().getRealized()
+		.add(strategy2.getEquityMap().lastEntry().getValue().getRealized()).toString();
+	realizedMap.put(ticker.toString(), realized);
+	equityResultMap.put(ticker.toString(), minDateTime + StringUtils.SPACE + min);
     }
 
-    public Map<String, String> getResultMap() {
-	return resultMap;
+    public Map<String, String> getEquityResultMap() {
+	return equityResultMap;
     }
 
-    public String getResult(int year, char quarter) {
-	StringBuilder ticker = new StringBuilder("ES");
+    public Map<String, String> getRealizedMap() {
+	return realizedMap;
+    }
 
-	ticker.append(quarter);
+    public String getRealized(char month, int year) {
+	return getResult(getRealizedMap(), month, year);
+    }
 
-	if (year < 10) {
-	    ticker.append(0);
+    public String getEquityResult(char month, int year) {
+	return getResult(getEquityResultMap(), month, year);
+    }
+
+    private String getResult(Map<String, String> map, char month, int year) {
+	Ticker ticker = new Ticker(month, year);
+	String result = map.get(ticker.toString());
+	if (StringUtils.isNotBlank(result) && result.contains(StringUtils.SPACE)) {
+	    result = StringUtils.substringAfter(result, StringUtils.SPACE);
 	}
-	ticker.append(year);
 
-	return StringUtils.substringAfter(getResultMap().get(ticker.toString()), StringUtils.SPACE);
+	return result;
     }
 
     public static void main(String[] args) {
 	TradestationParser parser = new TradestationParser();
 
-	for (File file : DIR.listFiles()) {
-	    Input input = Inputs2.getInput(file.getName());
-	    parser.run(file, input);
-	}
+	// for (File file : DIR.listFiles()) {
+	// parser.run(file);
+	// }
 
-	// File file = new File(DIR + "/ESU15.txt");
-	// Input input = Inputs.getInput(file.getName());
-	// parser.run(file, input);
+	File file = new File(DIR + "/ESH14.txt");
+	parser.run(file);
 
-	for (Entry<String, String> entry : parser.getResultMap().entrySet()) {
+	System.out.println("Realized");
+	for (Entry<String, String> entry : parser.getRealizedMap().entrySet()) {
 	    System.out.println(entry.getKey() + StringUtils.SPACE + entry.getValue());
 	}
 
+	System.out.println("RealizedMap");
 	for (int i = 17; i >= 6; i--) {
-	    String h = parser.getResult(i, 'H');
-	    String m = parser.getResult(i, 'M');
-	    String u = parser.getResult(i, 'U');
-	    String z = parser.getResult(i, 'Z');
+	    String h = parser.getRealized('H', i);
+	    String m = parser.getRealized('M', i);
+	    String u = parser.getRealized('U', i);
+	    String z = parser.getRealized('Z', i);
+	    System.out.println(h + "," + m + "," + u + "," + z);
+	}
+
+	System.out.println("--------------------------");
+	System.out.println("EquityResult");
+	for (Entry<String, String> entry : parser.getEquityResultMap().entrySet()) {
+	    System.out.println(entry.getKey() + StringUtils.SPACE + entry.getValue());
+	}
+
+	System.out.println("EquityMap");
+	for (int i = 17; i >= 6; i--) {
+	    String h = parser.getRealized('H', i);
+	    String m = parser.getRealized('M', i);
+	    String u = parser.getRealized('U', i);
+	    String z = parser.getRealized('Z', i);
 	    System.out.println(h + "," + m + "," + u + "," + z);
 	}
     }

@@ -3,11 +3,8 @@ package org.kutsuki.frogmaster;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.lang3.StringUtils;
-
 public class Inputs2 {
     private final static Map<Integer, Input> INPUT_MAP = new HashMap<Integer, Input>();
-    private final static String TXT = ".txt";
 
     static {
 	INPUT_MAP.put(5, new Input("-5.75", "0", "6.5", "14.25"));
@@ -26,14 +23,10 @@ public class Inputs2 {
     }
 
     private Inputs2() {
+	// private constructor
     }
 
-    public static Input getInput(String fileName) {
-	int lastYear = Integer.parseInt(getTicker(fileName).substring(3)) - 1;
-	return INPUT_MAP.get(lastYear);
-    }
-
-    public static String getTicker(String fileName) {
-	return StringUtils.substringBefore(fileName, TXT);
+    public static Input getInputFromLastYear(int thisYear) {
+	return INPUT_MAP.get(thisYear - 1);
     }
 }

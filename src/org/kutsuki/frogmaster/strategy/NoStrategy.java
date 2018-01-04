@@ -5,10 +5,11 @@ import java.time.LocalDateTime;
 import java.util.TreeMap;
 
 import org.kutsuki.frogmaster.Bar;
+import org.kutsuki.frogmaster.Ticker;
 
 public class NoStrategy extends AbstractStrategy {
-    public NoStrategy(TreeMap<LocalDateTime, Bar> barMap) {
-	super(barMap);
+    public NoStrategy(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap) {
+	super(ticker, barMap);
     }
 
     @Override
