@@ -11,10 +11,11 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import org.apache.commons.lang3.StringUtils;
-import org.kutsuki.frogmaster.strategy.NoStrategy;
+import org.kutsuki.frogmaster.strategy.LongStrategy;
 import org.kutsuki.frogmaster.strategy.ShortStrategy2;
 
 public class TradestationParser {
@@ -70,10 +71,10 @@ public class TradestationParser {
 	    e.printStackTrace();
 	}
 
-	// LongStrategy strategy1 = new LongStrategy(ticker, barMap);
-	ShortStrategy2 strategy1 = new ShortStrategy2(ticker, barMap);
+	LongStrategy strategy1 = new LongStrategy(ticker, barMap);
+	ShortStrategy2 strategy2 = new ShortStrategy2(ticker, barMap);
+	// NoStrategy strategy2 = new NoStrategy(ticker, barMap);
 	strategy1.run();
-	NoStrategy strategy2 = new NoStrategy(ticker, barMap);
 	strategy2.run();
 
 	BigDecimal min = new BigDecimal(10000);
@@ -142,19 +143,19 @@ public class TradestationParser {
 	    System.out.println(h + "," + m + "," + u + "," + z);
 	}
 
-	// System.out.println("--------------------------");
-	// System.out.println("EquityResult");
-	// for (Entry<String, String> entry : parser.getEquityResultMap().entrySet()) {
-	// System.out.println(entry.getKey() + StringUtils.SPACE + entry.getValue());
-	// }
-	//
-	// System.out.println("EquityMap");
-	// for (int i = 17; i >= 6; i--) {
-	// String h = parser.getRealized('H', i);
-	// String m = parser.getRealized('M', i);
-	// String u = parser.getRealized('U', i);
-	// String z = parser.getRealized('Z', i);
-	// System.out.println(h + "," + m + "," + u + "," + z);
-	// }
+	System.out.println("--------------------------");
+	System.out.println("EquityResult");
+	for (Entry<String, String> entry : parser.getEquityResultMap().entrySet()) {
+	    System.out.println(entry.getKey() + StringUtils.SPACE + entry.getValue());
+	}
+
+	System.out.println("EquityMap");
+	for (int i = 17; i >= 6; i--) {
+	    String h = parser.getEquityResult('H', i);
+	    String m = parser.getEquityResult('M', i);
+	    String u = parser.getEquityResult('U', i);
+	    String z = parser.getEquityResult('Z', i);
+	    System.out.println(h + "," + m + "," + u + "," + z);
+	}
     }
 }

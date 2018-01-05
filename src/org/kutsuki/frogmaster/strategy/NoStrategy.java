@@ -35,6 +35,6 @@ public class NoStrategy extends AbstractStrategy {
 
     @Override
     public LocalDateTime getEndDateTime() {
-	return LocalDateTime.of(getEndDate(), LocalTime.MAX);
+	return getStartDateTime();
     }
 }

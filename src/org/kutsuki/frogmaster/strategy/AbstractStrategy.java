@@ -52,6 +52,7 @@ public abstract class AbstractStrategy {
 
 	for (LocalDateTime key = barMap.firstKey(); key.isBefore(barMap.lastKey())
 		|| key.isEqual(barMap.lastKey()); key = key.plusMinutes(5)) {
+	    boolean found = false;
 	    Bar bar = barMap.get(key);
 
 	    if (bar != null) {
@@ -73,13 +74,17 @@ public abstract class AbstractStrategy {
 
 		    equityMap.put(key, equity);
 		    prevEquity = equity;
+		    found = true;
 		}
 
 		index++;
-	    } else {
+	    }
+
+	    if (!found) {
 		equityMap.put(key, new Equity(key, prevEquity));
 	    }
 	}
+
     }
 
     public Bar getPrevBar(int length) {
