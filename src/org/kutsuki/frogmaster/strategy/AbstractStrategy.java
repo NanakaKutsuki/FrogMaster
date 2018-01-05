@@ -17,6 +17,7 @@ import org.kutsuki.frogmaster.Ticker;
 public abstract class AbstractStrategy {
     private static final BigDecimal FIFTY = new BigDecimal("50");
     private static final BigDecimal COMMISSION = new BigDecimal("5.38");
+    private static final BigDecimal SLIPPAGE = new BigDecimal("0.50");
     private static final LocalTime EIGHT_AM = LocalTime.of(8, 0);
 
     private int index;
@@ -51,35 +52,34 @@ public abstract class AbstractStrategy {
 
 	for (LocalDateTime key = barMap.firstKey(); key.isBefore(barMap.lastKey())
 		|| key.isEqual(barMap.lastKey()); key = key.plusMinutes(5)) {
-	    if (!key.isBefore(getStartDateTime()) && !key.isAfter(getEndDateTime())) {
-		Bar bar = barMap.get(key);
+	    Bar bar = barMap.get(key);
 
-		if (bar != null) {
+	    if (bar != null) {
+		if (!key.isBefore(getStartDateTime()) && !key.isAfter(getEndDateTime())) {
 		    strategy(bar);
 
 		    Equity equity = new Equity(key);
 
 		    BigDecimal realized = convertTicks(getRealized(bar));
 		    if (realized.compareTo(BigDecimal.ZERO) != 0) {
-			equity.setRealized(prevEquity.getRealized().add(realized).subtract(COMMISSION));
+			equity.setRealized(
+				prevEquity.getRealized().add(realized).subtract(COMMISSION).subtract(SLIPPAGE));
 		    } else {
 			equity.setRealized(prevEquity.getRealized());
+
 		    }
 
 		    equity.setUnrealized(convertTicks(getUnrealized(bar)));
 
 		    equityMap.put(key, equity);
 		    prevEquity = equity;
-		    index++;
-		} else {
-		    equityMap.put(key, new Equity(key, prevEquity));
 		}
+
+		index++;
+	    } else {
+		equityMap.put(key, new Equity(key, prevEquity));
 	    }
 	}
-    }
-
-    public LocalDateTime getLastBar() {
-	return barMap.lastKey();
     }
 
     public Bar getPrevBar(int length) {
@@ -194,7 +194,7 @@ public abstract class AbstractStrategy {
 	return thirdDayOfWeek;
     }
 
-    private BigDecimal convertTicks(BigDecimal ticks) {
+    public BigDecimal convertTicks(BigDecimal ticks) {
 	return ticks.multiply(FIFTY);
     }
 }

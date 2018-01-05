@@ -15,8 +15,8 @@ import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import org.apache.commons.lang3.StringUtils;
-import org.kutsuki.frogmaster.strategy.LongStrategy;
 import org.kutsuki.frogmaster.strategy.NoStrategy;
+import org.kutsuki.frogmaster.strategy.ShortStrategy2;
 
 public class TradestationParser {
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("MM/dd/yyyy");
@@ -71,8 +71,8 @@ public class TradestationParser {
 	    e.printStackTrace();
 	}
 
-	LongStrategy strategy1 = new LongStrategy(ticker, barMap);
-	// ShortStrategy2 strategy1 = new ShortStrategy2(ticker, barMap);
+	// LongStrategy strategy1 = new LongStrategy(ticker, barMap);
+	ShortStrategy2 strategy1 = new ShortStrategy2(ticker, barMap);
 	strategy1.run();
 	NoStrategy strategy2 = new NoStrategy(ticker, barMap);
 	strategy2.run();
@@ -127,12 +127,12 @@ public class TradestationParser {
     public static void main(String[] args) {
 	TradestationParser parser = new TradestationParser();
 
-	// for (File file : DIR.listFiles()) {
-	// parser.run(file);
-	// }
+	for (File file : DIR.listFiles()) {
+	    parser.run(file);
+	}
 
-	File file = new File(DIR + "/ESH14.txt");
-	parser.run(file);
+	// File file = new File(DIR + "/ESH14.txt");
+	// parser.run(file);
 
 	System.out.println("Realized");
 	for (Entry<String, String> entry : parser.getRealizedMap().entrySet()) {
@@ -148,19 +148,19 @@ public class TradestationParser {
 	    System.out.println(h + "," + m + "," + u + "," + z);
 	}
 
-	System.out.println("--------------------------");
-	System.out.println("EquityResult");
-	for (Entry<String, String> entry : parser.getEquityResultMap().entrySet()) {
-	    System.out.println(entry.getKey() + StringUtils.SPACE + entry.getValue());
-	}
-
-	System.out.println("EquityMap");
-	for (int i = 17; i >= 6; i--) {
-	    String h = parser.getRealized('H', i);
-	    String m = parser.getRealized('M', i);
-	    String u = parser.getRealized('U', i);
-	    String z = parser.getRealized('Z', i);
-	    System.out.println(h + "," + m + "," + u + "," + z);
-	}
+	// System.out.println("--------------------------");
+	// System.out.println("EquityResult");
+	// for (Entry<String, String> entry : parser.getEquityResultMap().entrySet()) {
+	// System.out.println(entry.getKey() + StringUtils.SPACE + entry.getValue());
+	// }
+	//
+	// System.out.println("EquityMap");
+	// for (int i = 17; i >= 6; i--) {
+	// String h = parser.getRealized('H', i);
+	// String m = parser.getRealized('M', i);
+	// String u = parser.getRealized('U', i);
+	// String z = parser.getRealized('Z', i);
+	// System.out.println(h + "," + m + "," + u + "," + z);
+	// }
     }
 }

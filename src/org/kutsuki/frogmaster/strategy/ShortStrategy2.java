@@ -13,40 +13,53 @@ import org.kutsuki.frogmaster.Ticker;
 
 public class ShortStrategy2 extends AbstractStrategy {
     private static final LocalTime START = LocalTime.of(7, 59);
-    private static final LocalTime END = LocalTime.of(15, 41);
+    private static final LocalTime END = LocalTime.of(15, 46);
 
     private BigDecimal holding;
     private BigDecimal highPrice;
     private BigDecimal lowPrice;
+    private BigDecimal lastMom;
     private Input input;
+
+    private int count;
+    private int count2;
 
     public ShortStrategy2(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap) {
 	super(ticker, barMap);
 	this.holding = null;
 	this.input = Inputs2.getInputFromLastYear(ticker.getYear());
+	this.count = 0;
+	this.count2 = 0;
+	this.lastMom = null;
     }
 
     @Override
     public void strategy(Bar bar) {
 	if (isDay(bar)) {
-	    Bar bar9 = getPrevBar(9);
+	    BigDecimal mom = bar.getClose().subtract(getPrevBar(8).getClose());
 
-	    if (bar9 != null) {
-		Bar bar1 = getPrevBar(1);
-		Bar bar8 = getPrevBar(8);
+	    if (lastMom != null) {
+		BigDecimal accel = mom.subtract(lastMom);
 
-		BigDecimal mom = bar.getClose().subtract(bar8.getClose());
-		BigDecimal accel = mom.subtract(bar1.getClose().subtract(bar9.getClose()));
+		// if (bar.getDateTime().isEqual(LocalDateTime.of(2014, 3, 13, 12, 40, 0))) {
+		// System.out.println("XXX. " + bar.getDateTime().plusMinutes(5) + " ?????? " +
+		// holding + " " + mom
+		// + " " + accel);
+		// }
 
 		if (holding == null && mom.compareTo(input.getMomST()) == -1
 			&& accel.compareTo(input.getAccelST()) == -1) {
 		    holding = getNextBar().getOpen();
 		    highPrice = bar.getClose().add(input.getUpAmount());
 		    lowPrice = bar.getClose().subtract(input.getDownAmount());
-		    System.out.println(bar.getDateTime() + " " + bar.getClose() + " " + bar8.getClose() + " "
-			    + bar8.getDateTime() + " " + mom + " " + accel);
+
+		    count++;
+		    System.out.println(count + ". " + bar.getDateTime().plusMinutes(5) + " ShortST " + holding + " "
+			    + mom + " " + accel);
 		}
 	    }
+
+	    lastMom = mom;
 	}
     }
 
@@ -79,13 +92,23 @@ public class ShortStrategy2 extends AbstractStrategy {
     public BigDecimal getRealized(Bar bar) {
 	BigDecimal realized = BigDecimal.ZERO;
 
-	if (isDay(bar) && holding != null) {
-	    if (isStopLoss(bar)) {
+	if (holding != null) {
+	    if (isDay(bar) && isStopLoss(bar)) {
 		realized = holding.subtract(getNextBar().getOpen());
 		holding = null;
-	    } else if (isLimit(bar)) {
-		realized = holding.subtract(bar.getLow());
+
+		count2++;
+		System.out.println(count2 + ". " + bar.getDateTime().plusMinutes(5) + " CoverLose "
+			+ getNextBar().getOpen() + " " + convertTicks(realized));
+	    }
+
+	    if (isLimit(getNextBar())) {
+		realized = holding.subtract(lowPrice);
 		holding = null;
+
+		count2++;
+		System.out.println(count2 + ". " + getNextBar().getDateTime() + " CoverWin " + lowPrice + " "
+			+ convertTicks(realized));
 	    }
 	}
 
