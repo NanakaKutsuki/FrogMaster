@@ -16,8 +16,8 @@ import org.kutsuki.frogmaster.Ticker;
 
 public abstract class AbstractStrategy {
     private static final BigDecimal FIFTY = new BigDecimal("50");
-    private static final BigDecimal COMMISSION = new BigDecimal("5.38");
-    private static final BigDecimal SLIPPAGE = new BigDecimal("0.50");
+    public static final BigDecimal COMMISSION = new BigDecimal("5.38");
+    public static final BigDecimal SLIPPAGE = new BigDecimal("0.50");
     private static final LocalTime EIGHT_AM = LocalTime.of(8, 0);
 
     private int index;

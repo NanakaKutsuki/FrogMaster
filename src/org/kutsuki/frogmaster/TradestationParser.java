@@ -11,7 +11,6 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import org.apache.commons.lang3.StringUtils;
@@ -131,13 +130,8 @@ public class TradestationParser {
 	    parser.run(file);
 	}
 
-	// File file = new File(DIR + "/ESH14.txt");
+	// File file = new File(DIR + "/ESZ12.txt");
 	// parser.run(file);
-
-	System.out.println("Realized");
-	for (Entry<String, String> entry : parser.getRealizedMap().entrySet()) {
-	    System.out.println(entry.getKey() + StringUtils.SPACE + entry.getValue());
-	}
 
 	System.out.println("RealizedMap");
 	for (int i = 17; i >= 6; i--) {

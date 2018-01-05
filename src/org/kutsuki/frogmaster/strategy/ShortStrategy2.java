@@ -13,7 +13,7 @@ import org.kutsuki.frogmaster.Ticker;
 
 public class ShortStrategy2 extends AbstractStrategy {
     private static final LocalTime START = LocalTime.of(7, 59);
-    private static final LocalTime END = LocalTime.of(15, 46);
+    private static final LocalTime END = LocalTime.of(15, 45);
 
     private BigDecimal holding;
     private BigDecimal highPrice;
@@ -21,15 +21,10 @@ public class ShortStrategy2 extends AbstractStrategy {
     private BigDecimal lastMom;
     private Input input;
 
-    private int count;
-    private int count2;
-
     public ShortStrategy2(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap) {
 	super(ticker, barMap);
 	this.holding = null;
 	this.input = Inputs2.getInputFromLastYear(ticker.getYear());
-	this.count = 0;
-	this.count2 = 0;
 	this.lastMom = null;
     }
 
@@ -41,21 +36,11 @@ public class ShortStrategy2 extends AbstractStrategy {
 	    if (lastMom != null) {
 		BigDecimal accel = mom.subtract(lastMom);
 
-		// if (bar.getDateTime().isEqual(LocalDateTime.of(2014, 3, 13, 12, 40, 0))) {
-		// System.out.println("XXX. " + bar.getDateTime().plusMinutes(5) + " ?????? " +
-		// holding + " " + mom
-		// + " " + accel);
-		// }
-
 		if (holding == null && mom.compareTo(input.getMomST()) == -1
 			&& accel.compareTo(input.getAccelST()) == -1) {
 		    holding = getNextBar().getOpen();
 		    highPrice = bar.getClose().add(input.getUpAmount());
 		    lowPrice = bar.getClose().subtract(input.getDownAmount());
-
-		    count++;
-		    System.out.println(count + ". " + bar.getDateTime().plusMinutes(5) + " ShortST " + holding + " "
-			    + mom + " " + accel);
 		}
 	    }
 
@@ -96,19 +81,16 @@ public class ShortStrategy2 extends AbstractStrategy {
 	    if (isDay(bar) && isStopLoss(bar)) {
 		realized = holding.subtract(getNextBar().getOpen());
 		holding = null;
-
-		count2++;
-		System.out.println(count2 + ". " + bar.getDateTime().plusMinutes(5) + " CoverLose "
-			+ getNextBar().getOpen() + " " + convertTicks(realized));
 	    }
 
 	    if (isLimit(getNextBar())) {
-		realized = holding.subtract(lowPrice);
-		holding = null;
+		BigDecimal gain = lowPrice;
+		if (lowPrice.compareTo(getNextBar().getOpen()) == 1) {
+		    gain = getNextBar().getOpen();
+		}
 
-		count2++;
-		System.out.println(count2 + ". " + getNextBar().getDateTime() + " CoverWin " + lowPrice + " "
-			+ convertTicks(realized));
+		realized = holding.subtract(gain);
+		holding = null;
 	    }
 	}
 
