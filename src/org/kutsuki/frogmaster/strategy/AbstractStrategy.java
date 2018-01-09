@@ -13,11 +13,10 @@ import java.util.TreeMap;
 import org.kutsuki.frogmaster.Bar;
 import org.kutsuki.frogmaster.Equity;
 import org.kutsuki.frogmaster.Ticker;
+import org.kutsuki.frogmaster.Tradestation;
 
 public abstract class AbstractStrategy {
     private static final BigDecimal FIFTY = new BigDecimal("50");
-    public static final BigDecimal COMMISSION = new BigDecimal("5.38");
-    public static final BigDecimal SLIPPAGE = new BigDecimal("0.50");
     private static final LocalTime EIGHT_AM = LocalTime.of(8, 0);
 
     private int index;
@@ -63,8 +62,8 @@ public abstract class AbstractStrategy {
 
 		    BigDecimal realized = convertTicks(getRealized(bar));
 		    if (realized.compareTo(BigDecimal.ZERO) != 0) {
-			equity.setRealized(
-				prevEquity.getRealized().add(realized).subtract(COMMISSION).subtract(SLIPPAGE));
+			equity.setRealized(prevEquity.getRealized().add(realized).subtract(Tradestation.COMMISSION)
+				.subtract(Tradestation.SLIPPAGE));
 		    } else {
 			equity.setRealized(prevEquity.getRealized());
 

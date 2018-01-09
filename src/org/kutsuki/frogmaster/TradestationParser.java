@@ -1,17 +1,18 @@
 package org.kutsuki.frogmaster;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import org.apache.commons.lang3.StringUtils;
@@ -21,21 +22,37 @@ import org.kutsuki.frogmaster.strategy.ShortStrategy2;
 public class TradestationParser {
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("MM/dd/yyyy");
     private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm");
-    private static final File DIR = new File("C:/Users/Matcha Green/Desktop/ES");
+    private static final String DIR = "C:/Users/Matcha Green/Desktop/ES/";
+    private static final String TXT = ".txt";
 
-    private TreeMap<String, String> realizedMap;
-    private TreeMap<String, String> equityResultMap;
+    private Map<String, Ticker> tickerMap;
 
     public TradestationParser() {
-	this.realizedMap = new TreeMap<String, String>();
-	this.equityResultMap = new TreeMap<String, String>();
+	this.tickerMap = new HashMap<String, Ticker>();
+
+	for (int year = 6; year < 18; year++) {
+	    Ticker h = new Ticker('H', year);
+	    Ticker m = new Ticker('M', year);
+	    Ticker u = new Ticker('U', year);
+	    Ticker z = new Ticker('Z', year);
+
+	    tickerMap.put(h.toString(), h);
+	    tickerMap.put(m.toString(), m);
+	    tickerMap.put(u.toString(), u);
+	    tickerMap.put(z.toString(), z);
+	}
     }
 
-    public void run(File file) {
-	Ticker ticker = new Ticker(file.getName());
+    public void run(char month, int year) {
+	Ticker ticker = getTicker(month, year);
 	TreeMap<LocalDateTime, Bar> barMap = new TreeMap<LocalDateTime, Bar>();
 
-	try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+	StringBuilder sb = new StringBuilder();
+	sb.append(DIR);
+	sb.append(ticker);
+	sb.append(TXT);
+
+	try (BufferedReader br = new BufferedReader(new FileReader(sb.toString()))) {
 	    // skip first line
 	    br.readLine();
 
@@ -73,12 +90,21 @@ public class TradestationParser {
 
 	LongStrategy strategy1 = new LongStrategy(ticker, barMap);
 	ShortStrategy2 strategy2 = new ShortStrategy2(ticker, barMap);
+	// HybridStrategy strategy1 = new HybridStrategy(ticker, barMap);
 	// NoStrategy strategy2 = new NoStrategy(ticker, barMap);
 	strategy1.run();
 	strategy2.run();
 
-	BigDecimal min = new BigDecimal(10000);
-	LocalDateTime minDateTime = null;
+	BigDecimal running = getPrevTicker(ticker).getRunning();
+	BigDecimal numContracts = getPrevTicker(ticker).getNumContracts();
+	BigDecimal runningBar = getPrevTicker(ticker).getRunningBar();
+	BigDecimal numContractsBar = getPrevTicker(ticker).getNumContractsBar();
+	BigDecimal lastNumContractsBar = getPrevTicker(ticker).getNumContractsBar();
+	BigDecimal lastTotal = BigDecimal.ZERO;
+	BigDecimal dailyEquity = new BigDecimal(10000);
+	BigDecimal equity = new BigDecimal(10000);
+	LocalDateTime dailyEquityDateTime = null;
+	LocalDateTime equityDateTime = null;
 
 	for (LocalDateTime key : strategy1.getEquityMap().keySet()) {
 	    Equity e1 = strategy1.getEquityMap().get(key);
@@ -86,75 +112,146 @@ public class TradestationParser {
 
 	    BigDecimal total = e1.getUnrealized().add(e1.getRealized()).add(e2.getUnrealized()).add(e2.getRealized());
 
-	    if (total.compareTo(min) == -1) {
-		min = total;
-		minDateTime = key;
+	    if (total.compareTo(equity) == -1) {
+		equity = total;
+		equityDateTime = key;
 	    }
+
+	    if (!key.getDayOfWeek().equals(DayOfWeek.SATURDAY) && !key.getDayOfWeek().equals(DayOfWeek.SUNDAY)
+		    && key.getHour() == 15 && key.getMinute() == 45 && total.compareTo(dailyEquity) == -1) {
+		dailyEquity = total;
+		dailyEquityDateTime = key;
+	    }
+
+	    if (ticker.getYear() > 8) {
+		runningBar = runningBar.add(total.subtract(lastTotal).multiply(numContractsBar));
+
+		if (key.toLocalTime().equals(LocalTime.of(15, 40))) {
+		    numContractsBar = runningBar.divide(Tradestation.COST_PER_CONTRACT, 0, RoundingMode.FLOOR);
+
+		    // pay extra commission
+		    BigDecimal deltaContracts = numContractsBar.subtract(lastNumContractsBar).abs();
+		    BigDecimal commission = Tradestation.COMMISSION.add(Tradestation.SLIPPAGE);
+		    runningBar = runningBar.subtract(deltaContracts.multiply(commission));
+		    lastNumContractsBar = numContractsBar;
+		}
+	    }
+
+	    lastTotal = total;
 	}
 
-	String realized = strategy1.getEquityMap().lastEntry().getValue().getRealized()
-		.add(strategy2.getEquityMap().lastEntry().getValue().getRealized()).toString();
-	realizedMap.put(ticker.toString(), realized);
-	equityResultMap.put(ticker.toString(), minDateTime + StringUtils.SPACE + min);
-    }
+	// calculate realized
+	BigDecimal realized = strategy1.getEquityMap().lastEntry().getValue().getRealized()
+		.add(strategy2.getEquityMap().lastEntry().getValue().getRealized());
+	ticker.setRealized(realized);
 
-    public Map<String, String> getEquityResultMap() {
-	return equityResultMap;
-    }
-
-    public Map<String, String> getRealizedMap() {
-	return realizedMap;
-    }
-
-    public String getRealized(char month, int year) {
-	return getResult(getRealizedMap(), month, year);
-    }
-
-    public String getEquityResult(char month, int year) {
-	return getResult(getEquityResultMap(), month, year);
-    }
-
-    private String getResult(Map<String, String> map, char month, int year) {
-	Ticker ticker = new Ticker(month, year);
-	String result = map.get(ticker.toString());
-	if (StringUtils.isNotBlank(result) && result.contains(StringUtils.SPACE)) {
-	    result = StringUtils.substringAfter(result, StringUtils.SPACE);
+	// calculate running
+	if (ticker.getYear() > 8) {
+	    running = running.add(realized.multiply(numContracts));
+	    numContracts = running.divide(Tradestation.COST_PER_CONTRACT, 0, RoundingMode.FLOOR);
 	}
 
-	return result;
+	// set ticker data
+	ticker.setEquityDateTime(equityDateTime);
+	ticker.setEquity(equity);
+	ticker.setDailyEquityDateTime(dailyEquityDateTime);
+	ticker.setDailyEquity(dailyEquity);
+	ticker.setRunning(running);
+	ticker.setNumContracts(numContracts);
+	ticker.setRunningBar(runningBar);
+	ticker.setNumContractsBar(numContractsBar);
+
+	tickerMap.put(ticker.toString(), ticker);
+    }
+
+    public Ticker getTicker(char month, int year) {
+	return tickerMap.get(Ticker.getKey(month, year));
+    }
+
+    private Ticker getPrevTicker(Ticker ticker) {
+	Ticker prevTicker = null;
+
+	switch (ticker.getMonth()) {
+	case 'H':
+	    prevTicker = getTicker('Z', ticker.getYear() - 1);
+	    break;
+	case 'M':
+	    prevTicker = getTicker('H', ticker.getYear());
+	    break;
+	case 'U':
+	    prevTicker = getTicker('M', ticker.getYear());
+	    break;
+	case 'Z':
+	    prevTicker = getTicker('U', ticker.getYear());
+	    break;
+	default:
+	    throw new IllegalStateException("Previous Ticker not found: " + ticker);
+	}
+
+	if (prevTicker == null) {
+	    prevTicker = new Ticker('X', -1);
+	}
+
+	return prevTicker;
     }
 
     public static void main(String[] args) {
 	TradestationParser parser = new TradestationParser();
+	// parser.run('M', 11);
 
-	for (File file : DIR.listFiles()) {
-	    parser.run(file);
+	for (int year = 6; year < 18; year++) {
+	    parser.run('H', year);
+	    parser.run('M', year);
+	    parser.run('U', year);
+	    parser.run('Z', year);
 	}
 
-	// File file = new File(DIR + "/ESZ12.txt");
-	// parser.run(file);
-
 	System.out.println("RealizedMap");
-	for (int i = 17; i >= 6; i--) {
-	    String h = parser.getRealized('H', i);
-	    String m = parser.getRealized('M', i);
-	    String u = parser.getRealized('U', i);
-	    String z = parser.getRealized('Z', i);
+	for (int year = 17; year >= 6; year--) {
+	    BigDecimal h = parser.getTicker('H', year).getRealized();
+	    BigDecimal m = parser.getTicker('M', year).getRealized();
+	    BigDecimal u = parser.getTicker('U', year).getRealized();
+	    BigDecimal z = parser.getTicker('Z', year).getRealized();
 	    System.out.println(h + "," + m + "," + u + "," + z);
 	}
 
 	System.out.println("--------------------------");
-	System.out.println("EquityResult");
-	for (Entry<String, String> entry : parser.getEquityResultMap().entrySet()) {
-	    System.out.println(entry.getKey() + StringUtils.SPACE + entry.getValue());
+	System.out.println("Running");
+	for (int year = 17; year >= 9; year--) {
+	    BigDecimal h = parser.getTicker('H', year).getRunning();
+	    BigDecimal m = parser.getTicker('M', year).getRunning();
+	    BigDecimal u = parser.getTicker('U', year).getRunning();
+	    BigDecimal z = parser.getTicker('Z', year).getRunning();
+	    System.out.println(h + "," + m + "," + u + "," + z);
 	}
 
+	System.out.println("--------------------------");
+	System.out.println("RunningBar");
+	for (int year = 17; year >= 9; year--) {
+	    BigDecimal h = parser.getTicker('H', year).getRunningBar();
+	    BigDecimal m = parser.getTicker('M', year).getRunningBar();
+	    BigDecimal u = parser.getTicker('U', year).getRunningBar();
+	    BigDecimal z = parser.getTicker('Z', year).getRunningBar();
+	    System.out.println(h + "," + m + "," + u + "," + z);
+	}
+
+	System.out.println("--------------------------");
 	System.out.println("EquityMap");
-	for (int i = 17; i >= 6; i--) {
-	    String h = parser.getEquityResult('H', i);
-	    String m = parser.getEquityResult('M', i);
-	    String u = parser.getEquityResult('U', i);
-	    String z = parser.getEquityResult('Z', i);
+	for (int year = 17; year >= 6; year--) {
+	    BigDecimal h = parser.getTicker('H', year).getEquity();
+	    BigDecimal m = parser.getTicker('M', year).getEquity();
+	    BigDecimal u = parser.getTicker('U', year).getEquity();
+	    BigDecimal z = parser.getTicker('Z', year).getEquity();
+	    System.out.println(h + "," + m + "," + u + "," + z);
+	}
+
+	System.out.println("--------------------------");
+	System.out.println("DailyEquityMap");
+	for (int year = 17; year >= 6; year--) {
+	    BigDecimal h = parser.getTicker('H', year).getDailyEquity();
+	    BigDecimal m = parser.getTicker('M', year).getDailyEquity();
+	    BigDecimal u = parser.getTicker('U', year).getDailyEquity();
+	    BigDecimal z = parser.getTicker('Z', year).getDailyEquity();
 	    System.out.println(h + "," + m + "," + u + "," + z);
 	}
     }
