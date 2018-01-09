@@ -122,6 +122,20 @@ public abstract class AbstractStrategy {
 	return equityMap;
     }
 
+    public String debug(Bar bar, String name, BigDecimal price, BigDecimal realized, BigDecimal bankroll) {
+	StringBuilder sb = new StringBuilder();
+	sb.append(bar.getDateTime().plusMinutes(5)).append(' ');
+	sb.append(name).append(' ');
+	sb.append(price).append(' ');
+	sb.append(convertTicks(realized)).append(' ');
+	sb.append(bankroll);
+	return sb.toString();
+    }
+
+    public BigDecimal addBankroll(BigDecimal bankroll, BigDecimal realized) {
+	return bankroll.add(convertTicks(realized)).subtract(Tradestation.COMMISSION).subtract(Tradestation.SLIPPAGE);
+    }
+
     private LocalDate calcStartDate(Ticker ticker) {
 	LocalDate date = null;
 
@@ -198,7 +212,7 @@ public abstract class AbstractStrategy {
 	return thirdDayOfWeek;
     }
 
-    public BigDecimal convertTicks(BigDecimal ticks) {
+    private BigDecimal convertTicks(BigDecimal ticks) {
 	return ticks.multiply(FIFTY);
     }
 }

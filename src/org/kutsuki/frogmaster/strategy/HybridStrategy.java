@@ -12,35 +12,34 @@ import org.kutsuki.frogmaster.Inputs2;
 import org.kutsuki.frogmaster.Ticker;
 
 public class HybridStrategy extends AbstractStrategy {
+    private static final LocalTime SEVEN_FIFTY_FIVE = LocalTime.of(7, 55);
     private static final LocalTime START = LocalTime.of(7, 59);
     private static final LocalTime END = LocalTime.of(15, 45);
 
     private boolean initialized;
-    private boolean sell;
-    private BigDecimal holding;
+    private BigDecimal longPos;
+    private BigDecimal shortPos;
     private BigDecimal highPrice;
     private BigDecimal lowPrice;
     private BigDecimal lastMom;
     private Input input;
     private LocalDateTime buyDateTime;
-    private LocalDateTime sellDateTime;
 
     public HybridStrategy(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap) {
 	super(ticker, barMap);
-	this.buyDateTime = LocalDateTime.of(getStartDate(), LocalTime.of(8, 0));
-	this.holding = null;
+	this.buyDateTime = LocalDateTime.of(getStartDate(), SEVEN_FIFTY_FIVE);
 	this.initialized = false;
 	this.input = Inputs2.getInputFromLastYear(ticker.getYear());
 	this.lastMom = null;
-	this.sell = false;
-	this.sellDateTime = LocalDateTime.of(getEndDate(), LocalTime.of(8, 0));
+	this.longPos = null;
+	this.shortPos = null;
     }
 
     @Override
     public void strategy(Bar bar) {
 	if (!initialized) {
 	    if (bar.getDateTime().isEqual(buyDateTime)) {
-		holding = bar.getClose();
+		longPos = getNextBar().getOpen();
 		initialized = true;
 	    }
 	} else {
@@ -50,8 +49,9 @@ public class HybridStrategy extends AbstractStrategy {
 		if (lastMom != null) {
 		    BigDecimal accel = mom.subtract(lastMom);
 
-		    if (mom.compareTo(input.getMomST()) == -1 && accel.compareTo(input.getAccelST()) == -1) {
-			sell = true;
+		    if (shortPos == null && mom.compareTo(input.getMomST()) == -1
+			    && accel.compareTo(input.getAccelST()) == -1) {
+			shortPos = getNextBar().getOpen();
 			highPrice = bar.getClose().add(input.getUpAmount());
 			lowPrice = bar.getClose().subtract(input.getDownAmount());
 		    }
@@ -78,33 +78,43 @@ public class HybridStrategy extends AbstractStrategy {
 
     @Override
     public BigDecimal getUnrealized(Bar bar) {
-	return BigDecimal.ZERO;
+	BigDecimal unrealized = BigDecimal.ZERO;
+
+	if (longPos != null && shortPos == null) {
+	    unrealized = bar.getClose().subtract(longPos);
+	} else if (shortPos != null && longPos == null && !(isDay(bar) && (isStopLoss(bar) || isLimit(bar)))) {
+	    unrealized = shortPos.subtract(bar.getClose());
+	}
+
+	return unrealized;
     }
+
+    private BigDecimal bankroll = BigDecimal.ZERO;
 
     @Override
     public BigDecimal getRealized(Bar bar) {
 	BigDecimal realized = BigDecimal.ZERO;
 
-	if (bar.getDateTime().isEqual(sellDateTime) || sell) {
-	    realized = getNextBar().getOpen().subtract(holding);
-	    holding = getNextBar().getOpen();
-	    sell = false;
-	} else if (highPrice != null && lowPrice != null) {
+	if (longPos != null && shortPos != null) {
+	    realized = shortPos.subtract(longPos);
+	    longPos = null;
+
+	    bankroll = addBankroll(bankroll, realized);
+	    System.out.println(debug(bar, "SellShort", shortPos, realized, bankroll));
+	} else if (longPos == null && shortPos != null) {
 	    if (isDay(bar) && isStopLoss(bar)) {
-		realized = holding.subtract(getNextBar().getOpen());
-		holding = getNextBar().getOpen();
-		highPrice = null;
-		lowPrice = null;
+		realized = shortPos.subtract(getNextBar().getOpen());
+		longPos = getNextBar().getOpen();
+		shortPos = null;
 	    } else if (isLimit(getNextBar())) {
 		BigDecimal gain = lowPrice;
 		if (lowPrice.compareTo(getNextBar().getOpen()) == 1) {
 		    gain = getNextBar().getOpen();
 		}
 
-		realized = holding.subtract(gain);
-		holding = getNextBar().getOpen();
-		highPrice = null;
-		lowPrice = null;
+		realized = shortPos.subtract(gain);
+		longPos = getNextBar().getOpen();
+		shortPos = null;
 	    }
 	}
 
@@ -113,7 +123,7 @@ public class HybridStrategy extends AbstractStrategy {
 
     @Override
     public LocalDateTime getStartDateTime() {
-	return LocalDateTime.of(getStartDate(), getEightAM());
+	return LocalDateTime.of(getStartDate(), SEVEN_FIFTY_FIVE);
     }
 
     @Override

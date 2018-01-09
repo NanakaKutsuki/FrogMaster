@@ -16,8 +16,8 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.apache.commons.lang3.StringUtils;
-import org.kutsuki.frogmaster.strategy.LongStrategy;
-import org.kutsuki.frogmaster.strategy.ShortStrategy2;
+import org.kutsuki.frogmaster.strategy.HybridStrategy;
+import org.kutsuki.frogmaster.strategy.NoStrategy;
 
 public class TradestationParser {
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("MM/dd/yyyy");
@@ -88,10 +88,10 @@ public class TradestationParser {
 	    e.printStackTrace();
 	}
 
-	LongStrategy strategy1 = new LongStrategy(ticker, barMap);
-	ShortStrategy2 strategy2 = new ShortStrategy2(ticker, barMap);
-	// HybridStrategy strategy1 = new HybridStrategy(ticker, barMap);
-	// NoStrategy strategy2 = new NoStrategy(ticker, barMap);
+	// LongStrategy strategy1 = new LongStrategy(ticker, barMap);
+	// ShortStrategy2 strategy2 = new ShortStrategy2(ticker, barMap);
+	HybridStrategy strategy1 = new HybridStrategy(ticker, barMap);
+	NoStrategy strategy2 = new NoStrategy(ticker, barMap);
 	strategy1.run();
 	strategy2.run();
 
@@ -197,14 +197,14 @@ public class TradestationParser {
 
     public static void main(String[] args) {
 	TradestationParser parser = new TradestationParser();
-	// parser.run('M', 11);
+	parser.run('U', 15);
 
-	for (int year = 6; year < 18; year++) {
-	    parser.run('H', year);
-	    parser.run('M', year);
-	    parser.run('U', year);
-	    parser.run('Z', year);
-	}
+	// for (int year = 6; year < 18; year++) {
+	// parser.run('H', year);
+	// parser.run('M', year);
+	// parser.run('U', year);
+	// parser.run('Z', year);
+	// }
 
 	System.out.println("RealizedMap");
 	for (int year = 17; year >= 6; year--) {
@@ -215,44 +215,44 @@ public class TradestationParser {
 	    System.out.println(h + "," + m + "," + u + "," + z);
 	}
 
-	System.out.println("--------------------------");
-	System.out.println("Running");
-	for (int year = 17; year >= 9; year--) {
-	    BigDecimal h = parser.getTicker('H', year).getRunning();
-	    BigDecimal m = parser.getTicker('M', year).getRunning();
-	    BigDecimal u = parser.getTicker('U', year).getRunning();
-	    BigDecimal z = parser.getTicker('Z', year).getRunning();
-	    System.out.println(h + "," + m + "," + u + "," + z);
-	}
-
-	System.out.println("--------------------------");
-	System.out.println("RunningBar");
-	for (int year = 17; year >= 9; year--) {
-	    BigDecimal h = parser.getTicker('H', year).getRunningBar();
-	    BigDecimal m = parser.getTicker('M', year).getRunningBar();
-	    BigDecimal u = parser.getTicker('U', year).getRunningBar();
-	    BigDecimal z = parser.getTicker('Z', year).getRunningBar();
-	    System.out.println(h + "," + m + "," + u + "," + z);
-	}
-
-	System.out.println("--------------------------");
-	System.out.println("EquityMap");
-	for (int year = 17; year >= 6; year--) {
-	    BigDecimal h = parser.getTicker('H', year).getEquity();
-	    BigDecimal m = parser.getTicker('M', year).getEquity();
-	    BigDecimal u = parser.getTicker('U', year).getEquity();
-	    BigDecimal z = parser.getTicker('Z', year).getEquity();
-	    System.out.println(h + "," + m + "," + u + "," + z);
-	}
-
-	System.out.println("--------------------------");
-	System.out.println("DailyEquityMap");
-	for (int year = 17; year >= 6; year--) {
-	    BigDecimal h = parser.getTicker('H', year).getDailyEquity();
-	    BigDecimal m = parser.getTicker('M', year).getDailyEquity();
-	    BigDecimal u = parser.getTicker('U', year).getDailyEquity();
-	    BigDecimal z = parser.getTicker('Z', year).getDailyEquity();
-	    System.out.println(h + "," + m + "," + u + "," + z);
-	}
+	// System.out.println("--------------------------");
+	// System.out.println("Running");
+	// for (int year = 17; year >= 9; year--) {
+	// BigDecimal h = parser.getTicker('H', year).getRunning();
+	// BigDecimal m = parser.getTicker('M', year).getRunning();
+	// BigDecimal u = parser.getTicker('U', year).getRunning();
+	// BigDecimal z = parser.getTicker('Z', year).getRunning();
+	// System.out.println(h + "," + m + "," + u + "," + z);
+	// }
+	//
+	// System.out.println("--------------------------");
+	// System.out.println("RunningBar");
+	// for (int year = 17; year >= 9; year--) {
+	// BigDecimal h = parser.getTicker('H', year).getRunningBar();
+	// BigDecimal m = parser.getTicker('M', year).getRunningBar();
+	// BigDecimal u = parser.getTicker('U', year).getRunningBar();
+	// BigDecimal z = parser.getTicker('Z', year).getRunningBar();
+	// System.out.println(h + "," + m + "," + u + "," + z);
+	// }
+	//
+	// System.out.println("--------------------------");
+	// System.out.println("EquityMap");
+	// for (int year = 17; year >= 6; year--) {
+	// BigDecimal h = parser.getTicker('H', year).getEquity();
+	// BigDecimal m = parser.getTicker('M', year).getEquity();
+	// BigDecimal u = parser.getTicker('U', year).getEquity();
+	// BigDecimal z = parser.getTicker('Z', year).getEquity();
+	// System.out.println(h + "," + m + "," + u + "," + z);
+	// }
+	//
+	// System.out.println("--------------------------");
+	// System.out.println("DailyEquityMap");
+	// for (int year = 17; year >= 6; year--) {
+	// BigDecimal h = parser.getTicker('H', year).getDailyEquity();
+	// BigDecimal m = parser.getTicker('M', year).getDailyEquity();
+	// BigDecimal u = parser.getTicker('U', year).getDailyEquity();
+	// BigDecimal z = parser.getTicker('Z', year).getDailyEquity();
+	// System.out.println(h + "," + m + "," + u + "," + z);
+	// }
     }
 }
