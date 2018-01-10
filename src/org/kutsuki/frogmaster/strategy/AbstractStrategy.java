@@ -19,6 +19,8 @@ public abstract class AbstractStrategy {
     private static final BigDecimal FIFTY = new BigDecimal("50");
     private static final LocalTime EIGHT_AM = LocalTime.of(8, 0);
 
+    private BigDecimal bankroll;
+    private int count;
     private int index;
     private LocalDate startDate;
     private LocalDate endDate;
@@ -37,7 +39,9 @@ public abstract class AbstractStrategy {
     public abstract LocalDateTime getEndDateTime();
 
     public AbstractStrategy(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap) {
+	this.bankroll = BigDecimal.ZERO;
 	this.barMap = barMap;
+	this.count = 1;
 	this.endDate = calcEndDate(ticker);
 	this.equityMap = new TreeMap<LocalDateTime, Equity>();
 	this.index = 0;
@@ -59,17 +63,9 @@ public abstract class AbstractStrategy {
 		    strategy(bar);
 
 		    Equity equity = new Equity(key);
-
-		    BigDecimal realized = convertTicks(getRealized(bar));
-		    if (realized.compareTo(BigDecimal.ZERO) != 0) {
-			equity.setRealized(prevEquity.getRealized().add(realized).subtract(Tradestation.COMMISSION)
-				.subtract(Tradestation.SLIPPAGE));
-		    } else {
-			equity.setRealized(prevEquity.getRealized());
-
-		    }
-
-		    equity.setUnrealized(convertTicks(getUnrealized(bar)));
+		    BigDecimal realized = getRealized(bar);
+		    equity.setRealized(prevEquity.getRealized().add(realized));
+		    equity.setUnrealized(getUnrealized(bar));
 
 		    equityMap.put(key, equity);
 		    prevEquity = equity;
@@ -83,7 +79,15 @@ public abstract class AbstractStrategy {
 		equityMap.put(key, new Equity(key, prevEquity));
 	    }
 	}
+    }
 
+    public BigDecimal convertTicks(BigDecimal ticks) {
+	return ticks.multiply(FIFTY);
+    }
+
+    public BigDecimal payCommission(BigDecimal realized) {
+	// convertTicks first!
+	return realized.subtract(Tradestation.COMMISSION).subtract(Tradestation.SLIPPAGE);
     }
 
     public Bar getPrevBar(int length) {
@@ -122,18 +126,31 @@ public abstract class AbstractStrategy {
 	return equityMap;
     }
 
-    public String debug(Bar bar, String name, BigDecimal price, BigDecimal realized, BigDecimal bankroll) {
+    public String debug(String name, BigDecimal price, BigDecimal realized) {
 	StringBuilder sb = new StringBuilder();
-	sb.append(bar.getDateTime().plusMinutes(5)).append(' ');
+
+	if (realized != null) {
+
+	    for (int i = 0; i < Integer.toString(count).length() + 2; i++) {
+		sb.append(' ');
+	    }
+	} else {
+	    sb.append(count).append('.').append(' ');
+	    count++;
+	}
+
+	sb.append(getNextBar().getDateTime()).append(' ');
 	sb.append(name).append(' ');
 	sb.append(price).append(' ');
-	sb.append(convertTicks(realized)).append(' ');
-	sb.append(bankroll);
-	return sb.toString();
-    }
 
-    public BigDecimal addBankroll(BigDecimal bankroll, BigDecimal realized) {
-	return bankroll.add(convertTicks(realized)).subtract(Tradestation.COMMISSION).subtract(Tradestation.SLIPPAGE);
+	if (realized != null) {
+	    sb.append(convertTicks(realized)).append(' ');
+	    bankroll = bankroll.add(convertTicks(realized));
+	    bankroll = bankroll.subtract(Tradestation.COMMISSION).subtract(Tradestation.SLIPPAGE);
+	    sb.append(bankroll);
+	}
+
+	return sb.toString();
     }
 
     private LocalDate calcStartDate(Ticker ticker) {
@@ -210,9 +227,5 @@ public abstract class AbstractStrategy {
 	}
 
 	return thirdDayOfWeek;
-    }
-
-    private BigDecimal convertTicks(BigDecimal ticks) {
-	return ticks.multiply(FIFTY);
     }
 }

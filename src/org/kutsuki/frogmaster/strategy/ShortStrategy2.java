@@ -70,7 +70,7 @@ public class ShortStrategy2 extends AbstractStrategy {
 	    unrealized = holding.subtract(bar.getClose());
 	}
 
-	return unrealized;
+	return convertTicks(unrealized);
     }
 
     @Override
@@ -80,6 +80,7 @@ public class ShortStrategy2 extends AbstractStrategy {
 	if (holding != null) {
 	    if (isDay(bar) && isStopLoss(bar)) {
 		realized = holding.subtract(getNextBar().getOpen());
+		realized = payCommission(convertTicks(realized));
 		holding = null;
 	    }
 
@@ -90,6 +91,7 @@ public class ShortStrategy2 extends AbstractStrategy {
 		}
 
 		realized = holding.subtract(gain);
+		realized = payCommission(convertTicks(realized));
 		holding = null;
 	    }
 	}

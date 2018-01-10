@@ -197,14 +197,14 @@ public class TradestationParser {
 
     public static void main(String[] args) {
 	TradestationParser parser = new TradestationParser();
-	parser.run('U', 15);
+	// parser.run('U', 15);
 
-	// for (int year = 6; year < 18; year++) {
-	// parser.run('H', year);
-	// parser.run('M', year);
-	// parser.run('U', year);
-	// parser.run('Z', year);
-	// }
+	for (int year = 6; year < 18; year++) {
+	    parser.run('H', year);
+	    parser.run('M', year);
+	    parser.run('U', year);
+	    parser.run('Z', year);
+	}
 
 	System.out.println("RealizedMap");
 	for (int year = 17; year >= 6; year--) {
@@ -215,44 +215,44 @@ public class TradestationParser {
 	    System.out.println(h + "," + m + "," + u + "," + z);
 	}
 
-	// System.out.println("--------------------------");
-	// System.out.println("Running");
-	// for (int year = 17; year >= 9; year--) {
-	// BigDecimal h = parser.getTicker('H', year).getRunning();
-	// BigDecimal m = parser.getTicker('M', year).getRunning();
-	// BigDecimal u = parser.getTicker('U', year).getRunning();
-	// BigDecimal z = parser.getTicker('Z', year).getRunning();
-	// System.out.println(h + "," + m + "," + u + "," + z);
-	// }
-	//
-	// System.out.println("--------------------------");
-	// System.out.println("RunningBar");
-	// for (int year = 17; year >= 9; year--) {
-	// BigDecimal h = parser.getTicker('H', year).getRunningBar();
-	// BigDecimal m = parser.getTicker('M', year).getRunningBar();
-	// BigDecimal u = parser.getTicker('U', year).getRunningBar();
-	// BigDecimal z = parser.getTicker('Z', year).getRunningBar();
-	// System.out.println(h + "," + m + "," + u + "," + z);
-	// }
-	//
-	// System.out.println("--------------------------");
-	// System.out.println("EquityMap");
-	// for (int year = 17; year >= 6; year--) {
-	// BigDecimal h = parser.getTicker('H', year).getEquity();
-	// BigDecimal m = parser.getTicker('M', year).getEquity();
-	// BigDecimal u = parser.getTicker('U', year).getEquity();
-	// BigDecimal z = parser.getTicker('Z', year).getEquity();
-	// System.out.println(h + "," + m + "," + u + "," + z);
-	// }
-	//
-	// System.out.println("--------------------------");
-	// System.out.println("DailyEquityMap");
-	// for (int year = 17; year >= 6; year--) {
-	// BigDecimal h = parser.getTicker('H', year).getDailyEquity();
-	// BigDecimal m = parser.getTicker('M', year).getDailyEquity();
-	// BigDecimal u = parser.getTicker('U', year).getDailyEquity();
-	// BigDecimal z = parser.getTicker('Z', year).getDailyEquity();
-	// System.out.println(h + "," + m + "," + u + "," + z);
-	// }
+	System.out.println("--------------------------");
+	System.out.println("Running");
+	for (int year = 17; year >= 9; year--) {
+	    BigDecimal h = parser.getTicker('H', year).getRunning();
+	    BigDecimal m = parser.getTicker('M', year).getRunning();
+	    BigDecimal u = parser.getTicker('U', year).getRunning();
+	    BigDecimal z = parser.getTicker('Z', year).getRunning();
+	    System.out.println(h + "," + m + "," + u + "," + z);
+	}
+
+	System.out.println("--------------------------");
+	System.out.println("RunningBar");
+	for (int year = 17; year >= 9; year--) {
+	    BigDecimal h = parser.getTicker('H', year).getRunningBar();
+	    BigDecimal m = parser.getTicker('M', year).getRunningBar();
+	    BigDecimal u = parser.getTicker('U', year).getRunningBar();
+	    BigDecimal z = parser.getTicker('Z', year).getRunningBar();
+	    System.out.println(h + "," + m + "," + u + "," + z);
+	}
+
+	System.out.println("--------------------------");
+	System.out.println("EquityMap");
+	for (int year = 17; year >= 6; year--) {
+	    BigDecimal h = parser.getTicker('H', year).getEquity();
+	    BigDecimal m = parser.getTicker('M', year).getEquity();
+	    BigDecimal u = parser.getTicker('U', year).getEquity();
+	    BigDecimal z = parser.getTicker('Z', year).getEquity();
+	    System.out.println(h + "," + m + "," + u + "," + z);
+	}
+
+	System.out.println("--------------------------");
+	System.out.println("DailyEquityMap");
+	for (int year = 17; year >= 6; year--) {
+	    BigDecimal h = parser.getTicker('H', year).getDailyEquity();
+	    BigDecimal m = parser.getTicker('M', year).getDailyEquity();
+	    BigDecimal u = parser.getTicker('U', year).getDailyEquity();
+	    BigDecimal z = parser.getTicker('Z', year).getDailyEquity();
+	    System.out.println(h + "," + m + "," + u + "," + z);
+	}
     }
 }

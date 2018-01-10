@@ -35,7 +35,7 @@ public class LongStrategy extends AbstractStrategy {
 	    unrealized = bar.getClose().subtract(holding);
 	}
 
-	return unrealized;
+	return convertTicks(unrealized);
     }
 
     @Override
@@ -44,6 +44,7 @@ public class LongStrategy extends AbstractStrategy {
 
 	if (holding != null && bar.getDateTime().isEqual(sellDateTime)) {
 	    realized = bar.getClose().subtract(holding);
+	    realized = payCommission(convertTicks(realized));
 	    holding = null;
 	}
 

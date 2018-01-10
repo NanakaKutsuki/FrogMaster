@@ -81,29 +81,30 @@ public class HybridStrategy extends AbstractStrategy {
 	BigDecimal unrealized = BigDecimal.ZERO;
 
 	if (longPos != null && shortPos == null) {
-	    unrealized = bar.getClose().subtract(longPos);
+	    unrealized = bar.getLow().subtract(longPos);
 	} else if (shortPos != null && longPos == null && !(isDay(bar) && (isStopLoss(bar) || isLimit(bar)))) {
-	    unrealized = shortPos.subtract(bar.getClose());
+	    unrealized = shortPos.subtract(bar.getHigh());
 	}
 
-	return unrealized;
+	return convertTicks(unrealized);
     }
-
-    private BigDecimal bankroll = BigDecimal.ZERO;
 
     @Override
     public BigDecimal getRealized(Bar bar) {
-	BigDecimal realized = BigDecimal.ZERO;
+	BigDecimal total = BigDecimal.ZERO;
 
 	if (longPos != null && shortPos != null) {
-	    realized = shortPos.subtract(longPos);
+	    BigDecimal realized = shortPos.subtract(longPos);
+	    total = total.add(convertTicks(realized));
+	    total = payCommission(total);
 	    longPos = null;
+	}
 
-	    bankroll = addBankroll(bankroll, realized);
-	    System.out.println(debug(bar, "SellShort", shortPos, realized, bankroll));
-	} else if (longPos == null && shortPos != null) {
+	if (longPos == null && shortPos != null) {
 	    if (isDay(bar) && isStopLoss(bar)) {
-		realized = shortPos.subtract(getNextBar().getOpen());
+		BigDecimal realized = shortPos.subtract(getNextBar().getOpen());
+		total = total.add(convertTicks(realized));
+		total = payCommission(total);
 		longPos = getNextBar().getOpen();
 		shortPos = null;
 	    } else if (isLimit(getNextBar())) {
@@ -112,13 +113,15 @@ public class HybridStrategy extends AbstractStrategy {
 		    gain = getNextBar().getOpen();
 		}
 
-		realized = shortPos.subtract(gain);
-		longPos = getNextBar().getOpen();
+		BigDecimal realized = shortPos.subtract(gain);
+		total = total.add(convertTicks(realized));
+		total = payCommission(total);
+		longPos = gain;
 		shortPos = null;
 	    }
 	}
 
-	return realized;
+	return total;
     }
 
     @Override
@@ -128,6 +131,6 @@ public class HybridStrategy extends AbstractStrategy {
 
     @Override
     public LocalDateTime getEndDateTime() {
-	return LocalDateTime.of(getEndDate(), LocalTime.MIDNIGHT);
+	return LocalDateTime.of(getEndDate(), LocalTime.of(9, 25));
     }
 }
