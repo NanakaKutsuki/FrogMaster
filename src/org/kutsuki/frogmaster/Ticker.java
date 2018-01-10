@@ -8,21 +8,18 @@ public class Ticker {
     private char month;
     private int year;
 
-    private BigDecimal dailyEquity;
     private BigDecimal equity;
     private BigDecimal numContracts;
     private BigDecimal numContractsBar;
     private BigDecimal running;
     private BigDecimal realized;
     private BigDecimal runningBar;
-    private LocalDateTime dailyEquityDateTime;
     private LocalDateTime equityDateTime;
 
     public Ticker(char month, int year) {
 	this.month = month;
 	this.year = year;
 
-	this.dailyEquity = null;
 	this.equity = null;
 	this.numContracts = Tradestation.STARTING_BANKROLL.divide(Tradestation.COST_PER_CONTRACT, 0,
 		RoundingMode.FLOOR);
@@ -31,7 +28,6 @@ public class Ticker {
 	this.realized = null;
 	this.running = Tradestation.STARTING_BANKROLL;
 	this.runningBar = Tradestation.STARTING_BANKROLL;
-	this.dailyEquityDateTime = null;
 	this.equityDateTime = null;
     }
 
@@ -72,14 +68,6 @@ public class Ticker {
 
     public int getYear() {
 	return year;
-    }
-
-    public BigDecimal getDailyEquity() {
-	return dailyEquity;
-    }
-
-    public void setDailyEquity(BigDecimal dailyEquity) {
-	this.dailyEquity = dailyEquity;
     }
 
     public BigDecimal getEquity() {
@@ -128,14 +116,6 @@ public class Ticker {
 
     public void setRunningBar(BigDecimal runningBar) {
 	this.runningBar = runningBar;
-    }
-
-    public LocalDateTime getDailyEquityDateTime() {
-	return dailyEquityDateTime;
-    }
-
-    public void setDailyEquityDateTime(LocalDateTime dailyEquityDateTime) {
-	this.dailyEquityDateTime = dailyEquityDateTime;
     }
 
     public LocalDateTime getEquityDateTime() {

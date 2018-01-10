@@ -5,7 +5,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -101,9 +100,7 @@ public class TradestationParser {
 	BigDecimal numContractsBar = getPrevTicker(ticker).getNumContractsBar();
 	BigDecimal lastNumContractsBar = getPrevTicker(ticker).getNumContractsBar();
 	BigDecimal lastTotal = BigDecimal.ZERO;
-	BigDecimal dailyEquity = new BigDecimal(10000);
 	BigDecimal equity = new BigDecimal(10000);
-	LocalDateTime dailyEquityDateTime = null;
 	LocalDateTime equityDateTime = null;
 
 	for (LocalDateTime key : strategy1.getEquityMap().keySet()) {
@@ -117,16 +114,10 @@ public class TradestationParser {
 		equityDateTime = key;
 	    }
 
-	    if (!key.getDayOfWeek().equals(DayOfWeek.SATURDAY) && !key.getDayOfWeek().equals(DayOfWeek.SUNDAY)
-		    && key.getHour() == 15 && key.getMinute() == 45 && total.compareTo(dailyEquity) == -1) {
-		dailyEquity = total;
-		dailyEquityDateTime = key;
-	    }
-
 	    if (ticker.getYear() > 8) {
 		runningBar = runningBar.add(total.subtract(lastTotal).multiply(numContractsBar));
 
-		if (key.toLocalTime().equals(LocalTime.of(15, 40))) {
+		if (key.toLocalTime().equals(LocalTime.of(8, 0))) {
 		    numContractsBar = runningBar.divide(Tradestation.COST_PER_CONTRACT, 0, RoundingMode.FLOOR);
 
 		    // pay extra commission
@@ -154,8 +145,6 @@ public class TradestationParser {
 	// set ticker data
 	ticker.setEquityDateTime(equityDateTime);
 	ticker.setEquity(equity);
-	ticker.setDailyEquityDateTime(dailyEquityDateTime);
-	ticker.setDailyEquity(dailyEquity);
 	ticker.setRunning(running);
 	ticker.setNumContracts(numContracts);
 	ticker.setRunningBar(runningBar);
@@ -242,16 +231,6 @@ public class TradestationParser {
 	    BigDecimal m = parser.getTicker('M', year).getEquity();
 	    BigDecimal u = parser.getTicker('U', year).getEquity();
 	    BigDecimal z = parser.getTicker('Z', year).getEquity();
-	    System.out.println(h + "," + m + "," + u + "," + z);
-	}
-
-	System.out.println("--------------------------");
-	System.out.println("DailyEquityMap");
-	for (int year = 17; year >= 6; year--) {
-	    BigDecimal h = parser.getTicker('H', year).getDailyEquity();
-	    BigDecimal m = parser.getTicker('M', year).getDailyEquity();
-	    BigDecimal u = parser.getTicker('U', year).getDailyEquity();
-	    BigDecimal z = parser.getTicker('Z', year).getDailyEquity();
 	    System.out.println(h + "," + m + "," + u + "," + z);
 	}
     }
