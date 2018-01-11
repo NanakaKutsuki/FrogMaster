@@ -29,6 +29,11 @@ public class NoStrategy extends AbstractStrategy {
     }
 
     @Override
+    public void rebalance() {
+	// do nothing
+    }
+
+    @Override
     public LocalDateTime getStartDateTime() {
 	return LocalDateTime.of(getStartDate(), LocalTime.MIDNIGHT);
     }

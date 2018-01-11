@@ -10,12 +10,14 @@ import org.kutsuki.frogmaster.Ticker;
 
 public class LongStrategy extends AbstractStrategy {
     private BigDecimal holding;
+    private BigDecimal lastPos;
     private LocalDateTime buyDateTime;
     private LocalDateTime sellDateTime;
 
     public LongStrategy(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap) {
 	super(ticker, barMap);
 	this.holding = null;
+	this.lastPos = null;
 	this.buyDateTime = LocalDateTime.of(getStartDate(), LocalTime.of(8, 0));
 	this.sellDateTime = LocalDateTime.of(getEndDate(), LocalTime.of(8, 0));
     }
@@ -24,6 +26,7 @@ public class LongStrategy extends AbstractStrategy {
     public void strategy(Bar bar) {
 	if (holding == null && bar.getDateTime().isEqual(buyDateTime)) {
 	    holding = bar.getClose();
+	    lastPos = bar.getClose();
 	}
     }
 
@@ -44,11 +47,22 @@ public class LongStrategy extends AbstractStrategy {
 
 	if (holding != null && bar.getDateTime().isEqual(sellDateTime)) {
 	    realized = bar.getClose().subtract(holding);
+	    addBankroll(realized);
 	    realized = payCommission(convertTicks(realized));
 	    holding = null;
+	    lastPos = null;
 	}
 
 	return realized;
+    }
+
+    @Override
+    public void rebalance() {
+	if (holding != null) {
+	    BigDecimal realized = getNextBar().getOpen().subtract(lastPos);
+	    addBankrollBar(realized);
+	    lastPos = getNextBar().getOpen();
+	}
     }
 
     @Override

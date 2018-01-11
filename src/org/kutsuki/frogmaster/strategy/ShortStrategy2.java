@@ -19,6 +19,7 @@ public class ShortStrategy2 extends AbstractStrategy {
     private BigDecimal highPrice;
     private BigDecimal lowPrice;
     private BigDecimal lastMom;
+    private BigDecimal lastPos;
     private Input input;
 
     public ShortStrategy2(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap) {
@@ -39,6 +40,7 @@ public class ShortStrategy2 extends AbstractStrategy {
 		if (holding == null && mom.compareTo(input.getMomST()) == -1
 			&& accel.compareTo(input.getAccelST()) == -1) {
 		    holding = getNextBar().getOpen();
+		    lastPos = getNextBar().getOpen();
 		    highPrice = bar.getClose().add(input.getUpAmount());
 		    lowPrice = bar.getClose().subtract(input.getDownAmount());
 		}
@@ -80,8 +82,11 @@ public class ShortStrategy2 extends AbstractStrategy {
 	if (holding != null) {
 	    if (isDay(bar) && isStopLoss(bar)) {
 		realized = holding.subtract(getNextBar().getOpen());
+		addBankroll(realized);
 		realized = payCommission(convertTicks(realized));
+
 		holding = null;
+		lastPos = null;
 	    }
 
 	    if (isLimit(getNextBar())) {
@@ -91,12 +96,24 @@ public class ShortStrategy2 extends AbstractStrategy {
 		}
 
 		realized = holding.subtract(gain);
+		addBankroll(realized);
 		realized = payCommission(convertTicks(realized));
+
 		holding = null;
+		lastPos = null;
 	    }
 	}
 
 	return realized;
+    }
+
+    @Override
+    public void rebalance() {
+	if (holding != null) {
+	    BigDecimal realized = lastPos.subtract(getNextBar().getOpen());
+	    addBankrollBar(realized);
+	    lastPos = getNextBar().getOpen();
+	}
     }
 
     @Override

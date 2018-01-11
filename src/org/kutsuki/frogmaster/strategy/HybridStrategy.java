@@ -19,6 +19,7 @@ public class HybridStrategy extends AbstractStrategy {
     private boolean initialized;
     private BigDecimal longPos;
     private BigDecimal shortPos;
+    private BigDecimal lastPos;
     private BigDecimal highPrice;
     private BigDecimal lowPrice;
     private BigDecimal lastMom;
@@ -31,6 +32,7 @@ public class HybridStrategy extends AbstractStrategy {
 	this.initialized = false;
 	this.input = Inputs2.getInputFromLastYear(ticker.getYear());
 	this.lastMom = null;
+	this.lastPos = null;
 	this.longPos = null;
 	this.shortPos = null;
     }
@@ -40,6 +42,7 @@ public class HybridStrategy extends AbstractStrategy {
 	if (!initialized) {
 	    if (bar.getDateTime().isEqual(buyDateTime)) {
 		longPos = getNextBar().getOpen();
+		lastPos = getNextBar().getOpen();
 		initialized = true;
 	    }
 	} else {
@@ -52,6 +55,7 @@ public class HybridStrategy extends AbstractStrategy {
 		    if (shortPos == null && mom.compareTo(input.getMomST()) == -1
 			    && accel.compareTo(input.getAccelST()) == -1) {
 			shortPos = getNextBar().getOpen();
+			lastPos = getNextBar().getOpen();
 			highPrice = bar.getClose().add(input.getUpAmount());
 			lowPrice = bar.getClose().subtract(input.getDownAmount());
 		    }
@@ -95,17 +99,21 @@ public class HybridStrategy extends AbstractStrategy {
 
 	if (longPos != null && shortPos != null) {
 	    BigDecimal realized = shortPos.subtract(longPos);
+	    addBankroll(realized);
 	    total = total.add(convertTicks(realized));
 	    total = payCommission(total);
+	    lastPos = shortPos;
 	    longPos = null;
 	}
 
 	if (longPos == null && shortPos != null) {
 	    if (isDay(bar) && isStopLoss(bar)) {
 		BigDecimal realized = shortPos.subtract(getNextBar().getOpen());
+		addBankroll(realized);
 		total = total.add(convertTicks(realized));
 		total = payCommission(total);
 		longPos = getNextBar().getOpen();
+		lastPos = getNextBar().getOpen();
 		shortPos = null;
 	    } else if (isLimit(getNextBar())) {
 		BigDecimal gain = lowPrice;
@@ -114,14 +122,30 @@ public class HybridStrategy extends AbstractStrategy {
 		}
 
 		BigDecimal realized = shortPos.subtract(gain);
+		addBankroll(realized);
 		total = total.add(convertTicks(realized));
 		total = payCommission(total);
 		longPos = gain;
+		lastPos = gain;
 		shortPos = null;
 	    }
 	}
 
 	return total;
+    }
+
+    @Override
+    public void rebalance() {
+	if (longPos != null) {
+	    BigDecimal realized = getNextBar().getOpen().subtract(lastPos);
+	    addBankrollBar(realized);
+	    lastPos = getNextBar().getOpen();
+	} else if (shortPos != null) {
+	    BigDecimal realized = lastPos.subtract(getNextBar().getOpen());
+	    addBankrollBar(realized);
+	    lastPos = getNextBar().getOpen();
+	}
+
     }
 
     @Override

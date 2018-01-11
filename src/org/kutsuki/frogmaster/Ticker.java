@@ -5,15 +5,19 @@ import java.math.RoundingMode;
 import java.time.LocalDateTime;
 
 public class Ticker {
+    public static final BigDecimal COST_PER_CONTRACT = new BigDecimal("18500");
+    private static final BigDecimal STARTING_BANKROLL = new BigDecimal("100000");
+    private static final String ES = "ES";
+
     private char month;
     private int year;
 
+    private BigDecimal bankrollBar;
+    private BigDecimal bankrollQuarterly;
     private BigDecimal equity;
-    private BigDecimal numContracts;
     private BigDecimal numContractsBar;
-    private BigDecimal running;
+    private BigDecimal numContractsQuarterly;
     private BigDecimal realized;
-    private BigDecimal runningBar;
     private LocalDateTime equityDateTime;
 
     public Ticker(char month, int year) {
@@ -21,13 +25,11 @@ public class Ticker {
 	this.year = year;
 
 	this.equity = null;
-	this.numContracts = Tradestation.STARTING_BANKROLL.divide(Tradestation.COST_PER_CONTRACT, 0,
-		RoundingMode.FLOOR);
-	this.numContractsBar = Tradestation.STARTING_BANKROLL.divide(Tradestation.COST_PER_CONTRACT, 0,
-		RoundingMode.FLOOR);
+	this.numContractsQuarterly = STARTING_BANKROLL.divide(COST_PER_CONTRACT, 0, RoundingMode.FLOOR);
+	this.numContractsBar = STARTING_BANKROLL.divide(COST_PER_CONTRACT, 0, RoundingMode.FLOOR);
 	this.realized = null;
-	this.running = Tradestation.STARTING_BANKROLL;
-	this.runningBar = Tradestation.STARTING_BANKROLL;
+	this.bankrollQuarterly = STARTING_BANKROLL;
+	this.bankrollBar = STARTING_BANKROLL;
 	this.equityDateTime = null;
     }
 
@@ -39,7 +41,7 @@ public class Ticker {
     public static String getKey(char month, int year) {
 	StringBuilder sb = new StringBuilder();
 
-	sb.append(Tradestation.ES);
+	sb.append(ES);
 	sb.append(month);
 
 	if (year < 10) {
@@ -78,12 +80,12 @@ public class Ticker {
 	this.equity = equity;
     }
 
-    public BigDecimal getNumContracts() {
-	return numContracts;
+    public BigDecimal getNumContractsQuarterly() {
+	return numContractsQuarterly;
     }
 
-    public void setNumContracts(BigDecimal numContracts) {
-	this.numContracts = numContracts;
+    public void setNumContractsQuarterly(BigDecimal numContractsQuarterly) {
+	this.numContractsQuarterly = numContractsQuarterly;
     }
 
     public BigDecimal getNumContractsBar() {
@@ -94,12 +96,12 @@ public class Ticker {
 	this.numContractsBar = numContractsBar;
     }
 
-    public BigDecimal getRunning() {
-	return running;
+    public BigDecimal getBankrollQuarterly() {
+	return bankrollQuarterly;
     }
 
-    public void setRunning(BigDecimal running) {
-	this.running = running;
+    public void setBankrollQuarterly(BigDecimal bankrollQuarterly) {
+	this.bankrollQuarterly = bankrollQuarterly;
     }
 
     public BigDecimal getRealized() {
@@ -110,12 +112,12 @@ public class Ticker {
 	this.realized = realized;
     }
 
-    public BigDecimal getRunningBar() {
-	return runningBar;
+    public BigDecimal getBankrollBar() {
+	return bankrollBar;
     }
 
-    public void setRunningBar(BigDecimal runningBar) {
-	this.runningBar = runningBar;
+    public void setBankrollBar(BigDecimal bankrollBar) {
+	this.bankrollBar = bankrollBar;
     }
 
     public LocalDateTime getEquityDateTime() {
