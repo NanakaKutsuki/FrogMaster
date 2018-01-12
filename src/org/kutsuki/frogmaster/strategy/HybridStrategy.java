@@ -26,8 +26,8 @@ public class HybridStrategy extends AbstractStrategy {
     private Input input;
     private LocalDateTime buyDateTime;
 
-    public HybridStrategy(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap) {
-	super(ticker, barMap);
+    public HybridStrategy(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap, BigDecimal bankrollBar) {
+	super(ticker, barMap, bankrollBar);
 	this.buyDateTime = LocalDateTime.of(getStartDate(), SEVEN_FIFTY_FIVE);
 	this.initialized = false;
 	this.input = Inputs2.getInputFromLastYear(ticker.getYear());
@@ -138,14 +138,19 @@ public class HybridStrategy extends AbstractStrategy {
     public void rebalance() {
 	if (longPos != null) {
 	    BigDecimal realized = getNextBar().getOpen().subtract(lastPos);
-	    addBankrollBar(realized);
-	    lastPos = getNextBar().getOpen();
+
+	    if (rebalancePrecheck(realized)) {
+		addBankrollBar(realized);
+		lastPos = getNextBar().getOpen();
+	    }
 	} else if (shortPos != null) {
 	    BigDecimal realized = lastPos.subtract(getNextBar().getOpen());
-	    addBankrollBar(realized);
-	    lastPos = getNextBar().getOpen();
-	}
 
+	    if (rebalancePrecheck(realized)) {
+		addBankrollBar(realized);
+		lastPos = getNextBar().getOpen();
+	    }
+	}
     }
 
     @Override

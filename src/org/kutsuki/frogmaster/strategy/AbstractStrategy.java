@@ -24,7 +24,6 @@ public abstract class AbstractStrategy {
     private BigDecimal bankroll;
     private BigDecimal bankrollBar;
     private BigDecimal numContracts;
-    private BigDecimal costPerContract;
     private int count;
     private int index;
     private LocalDate startDate;
@@ -46,7 +45,7 @@ public abstract class AbstractStrategy {
 
     public abstract void strategy(Bar bar);
 
-    public AbstractStrategy(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap) {
+    public AbstractStrategy(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap, BigDecimal bankrollBar) {
 	this.bankroll = BigDecimal.ZERO;
 	this.bankrollBar = BigDecimal.ZERO;
 	this.barMap = barMap;
@@ -59,6 +58,14 @@ public abstract class AbstractStrategy {
 	this.numContracts = BigDecimal.ONE;
 	this.startDate = calcStartDate(ticker);
 	Collections.sort(this.keyList);
+
+	if (ticker.getYear() > 8) {
+	    this.bankrollBar = bankrollBar;
+	    this.numContracts = bankrollBar.divide(Ticker.COST_PER_CONTRACT, 0, RoundingMode.FLOOR);
+	    if (numContracts.compareTo(BigDecimal.ONE) == -1) {
+		numContracts = BigDecimal.ONE;
+	    }
+	}
     }
 
     public void run() {
@@ -115,6 +122,9 @@ public abstract class AbstractStrategy {
 
 	// recalculate number of contracts
 	numContracts = bankrollBar.divide(Ticker.COST_PER_CONTRACT, 0, RoundingMode.FLOOR);
+	if (numContracts.compareTo(BigDecimal.ONE) == -1) {
+	    numContracts = BigDecimal.ONE;
+	}
 
 	// pay commission for rebuy
 	bankrollBar = bankrollBar.subtract(COMMISSION.add(SLIPPAGE).multiply(numContracts));
@@ -129,8 +139,25 @@ public abstract class AbstractStrategy {
 	return realized.subtract(COMMISSION.add(SLIPPAGE));
     }
 
+    public boolean rebalancePrecheck(BigDecimal realized) {
+	// calculate new projected bankroll for each bar
+	BigDecimal projected = bankrollBar.add(convertTicks(realized).multiply(numContracts));
+	projected = projected.subtract(COMMISSION.add(SLIPPAGE).multiply(numContracts));
+
+	// calculate new number of contracts
+	BigDecimal contracts = projected.divide(Ticker.COST_PER_CONTRACT, 0, RoundingMode.FLOOR);
+
+	// if the projected contracts is not the same as the current number of
+	// contracts, rebalance
+	return contracts.compareTo(numContracts) != 0;
+    }
+
     public BigDecimal getBankroll() {
 	return bankroll;
+    }
+
+    public BigDecimal getBankrollBar() {
+	return bankrollBar;
     }
 
     public LocalTime getEightAM() {
@@ -179,11 +206,6 @@ public abstract class AbstractStrategy {
 	count++;
 
 	return sb.toString();
-    }
-
-    public void setRunningBankroll(BigDecimal runningBankroll) {
-	this.bankrollBar = runningBankroll;
-	this.numContracts = runningBankroll.divide(Ticker.COST_PER_CONTRACT, 0, RoundingMode.FLOOR);
     }
 
     private LocalDate calcStartDate(Ticker ticker) {

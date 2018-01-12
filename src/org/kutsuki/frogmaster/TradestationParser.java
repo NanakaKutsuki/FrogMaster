@@ -15,8 +15,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.apache.commons.lang3.StringUtils;
-import org.kutsuki.frogmaster.strategy.HybridStrategy;
-import org.kutsuki.frogmaster.strategy.NoStrategy;
+import org.kutsuki.frogmaster.strategy.ShortStrategy2;
 
 public class TradestationParser {
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("MM/dd/yyyy");
@@ -93,24 +92,13 @@ public class TradestationParser {
 	BigDecimal lowestEquity = new BigDecimal(10000);
 	LocalDateTime equityDateTime = null;
 
-	// LongStrategy strategy1 = new LongStrategy(ticker, barMap);
-	// ShortStrategy2 strategy2 = new ShortStrategy2(ticker, barMap);
-	HybridStrategy strategy1 = new HybridStrategy(ticker, barMap);
-	NoStrategy strategy2 = new NoStrategy(ticker, barMap);
+	ShortStrategy2 strategy = new ShortStrategy2(ticker, barMap, bankrollBar);
+	// HybridStrategy strategy = new HybridStrategy(ticker, barMap, bankrollBar);
+	strategy.run();
 
-	if (ticker.getYear() > 8) {
-	    strategy1.setRunningBankroll(bankrollBar);
-	    strategy2.setRunningBankroll(bankrollBar);
-	}
-
-	strategy1.run();
-	strategy2.run();
-
-	for (LocalDateTime key : strategy1.getEquityMap().keySet()) {
-	    Equity e1 = strategy1.getEquityMap().get(key);
-	    Equity e2 = strategy2.getEquityMap().get(key);
-
-	    BigDecimal equity = e1.getRealized().add(e2.getRealized()).add(e1.getUnrealized()).add(e2.getUnrealized());
+	for (LocalDateTime key : strategy.getEquityMap().keySet()) {
+	    Equity e1 = strategy.getEquityMap().get(key);
+	    BigDecimal equity = e1.getRealized().add(e1.getUnrealized());
 
 	    // compare lowest equity found
 	    if (equity.compareTo(lowestEquity) == -1) {
@@ -120,7 +108,7 @@ public class TradestationParser {
 	}
 
 	// calculate quarterly bankroll
-	BigDecimal realized = strategy1.getBankroll().add(strategy2.getBankroll());
+	BigDecimal realized = strategy.getBankroll();
 	if (ticker.getYear() > 8) {
 	    bankroll = bankroll.add(realized.multiply(numContractsQuarterly));
 	    numContractsQuarterly = bankroll.divide(Ticker.COST_PER_CONTRACT, 0, RoundingMode.FLOOR);
@@ -132,7 +120,7 @@ public class TradestationParser {
 	ticker.setRealized(realized);
 	ticker.setBankrollQuarterly(bankroll);
 	ticker.setNumContractsQuarterly(numContractsQuarterly);
-	ticker.setBankrollBar(bankrollBar);
+	ticker.setBankrollBar(strategy.getBankrollBar());
 	tickerMap.put(ticker.toString(), ticker);
     }
 
@@ -169,7 +157,7 @@ public class TradestationParser {
 
     public static void main(String[] args) {
 	TradestationParser parser = new TradestationParser();
-	// parser.run('Z', 8);
+	// parser.run('H', 9);
 
 	for (int year = 6; year < 18; year++) {
 	    parser.run('H', year);
