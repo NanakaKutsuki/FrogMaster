@@ -1,36 +1,28 @@
 package org.kutsuki.frogmaster;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDateTime;
 
 public class Ticker {
-    public static final BigDecimal COST_PER_CONTRACT = new BigDecimal("18500");
     private static final BigDecimal STARTING_BANKROLL = new BigDecimal("100000");
     private static final String ES = "ES";
 
     private char month;
     private int year;
 
+    private BigDecimal bankroll;
     private BigDecimal bankrollBar;
-    private BigDecimal bankrollQuarterly;
     private BigDecimal equity;
+    private BigDecimal numContracts;
     private BigDecimal numContractsBar;
-    private BigDecimal numContractsQuarterly;
     private BigDecimal realized;
     private LocalDateTime equityDateTime;
 
     public Ticker(char month, int year) {
+	this.bankroll = STARTING_BANKROLL;
+	this.bankrollBar = STARTING_BANKROLL;
 	this.month = month;
 	this.year = year;
-
-	this.equity = null;
-	this.numContractsQuarterly = STARTING_BANKROLL.divide(COST_PER_CONTRACT, 0, RoundingMode.FLOOR);
-	this.numContractsBar = STARTING_BANKROLL.divide(COST_PER_CONTRACT, 0, RoundingMode.FLOOR);
-	this.realized = null;
-	this.bankrollQuarterly = STARTING_BANKROLL;
-	this.bankrollBar = STARTING_BANKROLL;
-	this.equityDateTime = null;
     }
 
     @Override
@@ -80,12 +72,12 @@ public class Ticker {
 	this.equity = equity;
     }
 
-    public BigDecimal getNumContractsQuarterly() {
-	return numContractsQuarterly;
+    public BigDecimal getNumContracts() {
+	return numContracts;
     }
 
-    public void setNumContractsQuarterly(BigDecimal numContractsQuarterly) {
-	this.numContractsQuarterly = numContractsQuarterly;
+    public void setNumContracts(BigDecimal numContracts) {
+	this.numContracts = numContracts;
     }
 
     public BigDecimal getNumContractsBar() {
@@ -96,12 +88,12 @@ public class Ticker {
 	this.numContractsBar = numContractsBar;
     }
 
-    public BigDecimal getBankrollQuarterly() {
-	return bankrollQuarterly;
+    public BigDecimal getBankroll() {
+	return bankroll;
     }
 
-    public void setBankrollQuarterly(BigDecimal bankrollQuarterly) {
-	this.bankrollQuarterly = bankrollQuarterly;
+    public void setBankroll(BigDecimal bankroll) {
+	this.bankroll = bankroll;
     }
 
     public BigDecimal getRealized() {

@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.TreeMap;
 
 import org.kutsuki.frogmaster.Bar;
-import org.kutsuki.frogmaster.Equity;
 import org.kutsuki.frogmaster.Ticker;
 
 public abstract class AbstractStrategy {
@@ -23,111 +22,118 @@ public abstract class AbstractStrategy {
 
     private BigDecimal bankroll;
     private BigDecimal bankrollBar;
-    private BigDecimal numContracts;
+    private BigDecimal numContractsBar;
+    private BigDecimal lowestEquity;
     private int count;
     private int index;
     private LocalDate startDate;
     private LocalDate endDate;
-    private LocalDateTime nextRebalance;
+    private LocalDateTime lowestEquityDateTime;
     private List<LocalDateTime> keyList;
     private TreeMap<LocalDateTime, Bar> barMap;
-    private TreeMap<LocalDateTime, Equity> equityMap;
 
-    public abstract BigDecimal getUnrealized(Bar bar);
+    public abstract BigDecimal getCostPerContract();
+
+    public abstract BigDecimal getMaintenanceMargin();
 
     public abstract BigDecimal getRealized(Bar bar);
+
+    public abstract BigDecimal getUnrealized(Bar bar);
 
     public abstract LocalDateTime getStartDateTime();
 
     public abstract LocalDateTime getEndDateTime();
 
-    public abstract void rebalance();
+    public abstract void rebalance(Bar bar);
 
     public abstract void strategy(Bar bar);
 
     public AbstractStrategy(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap, BigDecimal bankrollBar) {
 	this.bankroll = BigDecimal.ZERO;
-	this.bankrollBar = BigDecimal.ZERO;
+	this.bankrollBar = bankrollBar;
 	this.barMap = barMap;
 	this.count = 1;
 	this.endDate = calcEndDate(ticker);
-	this.equityMap = new TreeMap<LocalDateTime, Equity>();
 	this.index = 0;
 	this.keyList = new ArrayList<LocalDateTime>(barMap.keySet());
-	this.nextRebalance = LocalDateTime.MIN;
-	this.numContracts = BigDecimal.ONE;
+	this.lowestEquity = BigDecimal.valueOf(100000);
+	this.lowestEquityDateTime = barMap.firstKey();
+	this.numContractsBar = BigDecimal.ONE;
 	this.startDate = calcStartDate(ticker);
 	Collections.sort(this.keyList);
 
-	if (ticker.getYear() > 8) {
-	    this.bankrollBar = bankrollBar;
-	    this.numContracts = bankrollBar.divide(Ticker.COST_PER_CONTRACT, 0, RoundingMode.FLOOR);
-	    if (numContracts.compareTo(BigDecimal.ONE) == -1) {
-		numContracts = BigDecimal.ONE;
+	// calculate number onf contracts
+	if (getEndDate().getYear() > 2008) {
+	    this.numContractsBar = bankrollBar.divide(getCostPerContract(), 0, RoundingMode.FLOOR);
+	    if (numContractsBar.compareTo(BigDecimal.ONE) == -1) {
+		numContractsBar = BigDecimal.ONE;
 	    }
 	}
     }
 
     public void run() {
-	Equity prevEquity = new Equity(null);
-
 	for (LocalDateTime key = barMap.firstKey(); key.isBefore(barMap.lastKey())
 		|| key.isEqual(barMap.lastKey()); key = key.plusMinutes(5)) {
-	    boolean found = false;
 	    Bar bar = barMap.get(key);
 	    BigDecimal realized = BigDecimal.ZERO;
+	    BigDecimal unrealized = BigDecimal.ZERO;
 
 	    if (bar != null) {
 		if (!key.isBefore(getStartDateTime()) && !key.isAfter(getEndDateTime())) {
 		    strategy(bar);
 
-		    Equity equity = new Equity(key);
 		    realized = getRealized(bar);
-		    equity.setRealized(prevEquity.getRealized().add(realized));
-		    equity.setUnrealized(getUnrealized(bar));
+		    unrealized = getUnrealized(bar);
 
-		    equityMap.put(key, equity);
-		    prevEquity = equity;
-		    found = true;
+		    BigDecimal equity = getBankroll().add(unrealized);
+		    if (equity.compareTo(getLowestEquity()) == -1) {
+			this.lowestEquity = equity;
+			this.lowestEquityDateTime = key;
+		    }
+		}
+
+		if (getEndDate().getYear() > 2008) {
+		    // if numContracts is different and nothing realized
+		    BigDecimal contracts = getBankrollBar().divide(getCostPerContract(), 0, RoundingMode.FLOOR);
+		    if (contracts.compareTo(numContractsBar) != 0 && realized.compareTo(BigDecimal.ZERO) == 0) {
+			rebalance(bar);
+		    }
 		}
 
 		index++;
 	    }
 
-	    if (!found) {
-		equityMap.put(key, new Equity(key, prevEquity));
-	    }
-
-	    if (key.isAfter(nextRebalance) && realized.compareTo(BigDecimal.ZERO) == 0) {
-		rebalance();
-		nextRebalance = LocalDateTime.of(key.toLocalDate().plusDays(1), LocalTime.of(12, 0));
-	    }
+	    maintenanceMarginCheck(key, unrealized);
 	}
     }
 
     public void addBankroll(BigDecimal realized) {
-	bankroll = bankroll.add(convertTicks(realized));
-	bankroll = bankroll.subtract(COMMISSION.add(SLIPPAGE));
+	this.bankroll = getBankroll().add(convertTicks(realized));
+	this.bankroll = getBankroll().subtract(COMMISSION.add(SLIPPAGE));
 
-	bankrollBar = bankrollBar.add(convertTicks(realized).multiply(numContracts));
-	bankrollBar = bankrollBar.subtract(COMMISSION.add(SLIPPAGE).multiply(numContracts));
+	if (getEndDate().getYear() > 2008) {
+	    this.bankrollBar = getBankrollBar().add(convertTicks(realized).multiply(numContractsBar));
+	    this.bankrollBar = getBankrollBar().subtract(COMMISSION.add(SLIPPAGE).multiply(numContractsBar));
+	}
     }
 
-    public void addBankrollBar(BigDecimal realized) {
+    public void addAndRebalance(BigDecimal realized) {
 	// add running bankroll
-	bankrollBar = bankrollBar.add(convertTicks(realized).multiply(numContracts));
+	this.bankrollBar = getBankrollBar().add(convertTicks(realized).multiply(numContractsBar));
 
 	// pay commission for sale
-	bankrollBar = bankrollBar.subtract(COMMISSION.add(SLIPPAGE).multiply(numContracts));
+	this.bankrollBar = getBankrollBar().subtract(COMMISSION.add(SLIPPAGE).multiply(numContractsBar));
 
 	// recalculate number of contracts
-	numContracts = bankrollBar.divide(Ticker.COST_PER_CONTRACT, 0, RoundingMode.FLOOR);
-	if (numContracts.compareTo(BigDecimal.ONE) == -1) {
-	    numContracts = BigDecimal.ONE;
+	numContractsBar = getBankrollBar().divide(getCostPerContract(), 0, RoundingMode.FLOOR);
+	if (numContractsBar.compareTo(BigDecimal.ONE) == -1) {
+	    numContractsBar = BigDecimal.ONE;
 	}
 
 	// pay commission for rebuy
-	bankrollBar = bankrollBar.subtract(COMMISSION.add(SLIPPAGE).multiply(numContracts));
+	this.bankrollBar = getBankrollBar().subtract(COMMISSION.add(SLIPPAGE).multiply(numContractsBar));
+	// System.out.println(getEndDateTime() + " Rebalancing: " + bankrollBar + " " +
+	// numContractsBar);
     }
 
     public BigDecimal convertTicks(BigDecimal ticks) {
@@ -141,15 +147,17 @@ public abstract class AbstractStrategy {
 
     public boolean rebalancePrecheck(BigDecimal realized) {
 	// calculate new projected bankroll for each bar
-	BigDecimal projected = bankrollBar.add(convertTicks(realized).multiply(numContracts));
-	projected = projected.subtract(COMMISSION.add(SLIPPAGE).multiply(numContracts));
+	BigDecimal projected = getBankrollBar().add(convertTicks(realized).multiply(numContractsBar));
+	projected = projected.subtract(COMMISSION.add(SLIPPAGE).multiply(numContractsBar));
 
 	// calculate new number of contracts
-	BigDecimal contracts = projected.divide(Ticker.COST_PER_CONTRACT, 0, RoundingMode.FLOOR);
+	BigDecimal contracts = projected.divide(getCostPerContract(), 0, RoundingMode.FLOOR);
 
 	// if the projected contracts is not the same as the current number of
 	// contracts, rebalance
-	return contracts.compareTo(numContracts) != 0;
+
+	// TODO CURRENTLY ONLY REBALANCES UP
+	return contracts.compareTo(numContractsBar) == 1;
     }
 
     public BigDecimal getBankroll() {
@@ -168,8 +176,12 @@ public abstract class AbstractStrategy {
 	return endDate;
     }
 
-    public TreeMap<LocalDateTime, Equity> getEquityMap() {
-	return equityMap;
+    public BigDecimal getLowestEquity() {
+	return lowestEquity;
+    }
+
+    public LocalDateTime getLowestEquityDateTime() {
+	return lowestEquityDateTime;
     }
 
     public Bar getNextBar() {
@@ -202,7 +214,7 @@ public abstract class AbstractStrategy {
 	sb.append(getNextBar().getDateTime()).append(' ');
 	sb.append(name).append(' ');
 	sb.append(price).append(' ');
-	sb.append(bankroll);
+	sb.append(getBankroll());
 	count++;
 
 	return sb.toString();
@@ -225,7 +237,7 @@ public abstract class AbstractStrategy {
 	    date = LocalDate.of(ticker.getFullYear(), 9, 1);
 	    break;
 	default:
-	    throw new IllegalArgumentException("Bad Ticker!" + ticker);
+	    throw new IllegalStateException("Bad Ticker!" + ticker);
 	}
 
 	LocalDateTime dateTime = LocalDateTime.of(calcThirdDayOfWeek(date), EIGHT_AM);
@@ -282,5 +294,23 @@ public abstract class AbstractStrategy {
 	}
 
 	return thirdDayOfWeek;
+    }
+
+    private void maintenanceMarginCheck(LocalDateTime date, BigDecimal unrealized) {
+	// Only check starting in 2009
+	if (date.getYear() > 2008) {
+	    BigDecimal equity = getBankroll().add(unrealized).add(getCostPerContract());
+
+	    if (equity.compareTo(getMaintenanceMargin()) == -1) {
+		throw new IllegalStateException(
+			"Maintenance Margin Exceeded! " + date + " " + equity + " " + getMaintenanceMargin());
+	    }
+
+	    equity = getBankrollBar().add(unrealized).add(getCostPerContract()).multiply(numContractsBar);
+	    if (equity.compareTo(getMaintenanceMargin().multiply(numContractsBar)) == -1) {
+		throw new IllegalStateException("Maintenance Margin Exceeded! " + date + " " + equity + " "
+			+ getMaintenanceMargin() + " " + numContractsBar);
+	    }
+	}
     }
 }

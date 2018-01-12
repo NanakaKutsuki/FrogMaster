@@ -12,6 +12,8 @@ import org.kutsuki.frogmaster.Inputs2;
 import org.kutsuki.frogmaster.Ticker;
 
 public class ShortStrategy2 extends AbstractStrategy {
+    private static final BigDecimal COST_PER_CONTRACT = new BigDecimal("20500");
+    private static final BigDecimal MAINTENANCE_MARGIN = new BigDecimal("9000");
     private static final LocalTime START = LocalTime.of(7, 59);
     private static final LocalTime END = LocalTime.of(15, 45);
 
@@ -43,6 +45,16 @@ public class ShortStrategy2 extends AbstractStrategy {
     }
 
     @Override
+    public BigDecimal getCostPerContract() {
+	return COST_PER_CONTRACT;
+    }
+
+    @Override
+    public BigDecimal getMaintenanceMargin() {
+	return MAINTENANCE_MARGIN;
+    }
+
+    @Override
     public void strategy(Bar bar) {
 	if (longPos == null && bar.getDateTime().isEqual(buyDateTime)) {
 	    longPos = bar.getClose();
@@ -59,6 +71,7 @@ public class ShortStrategy2 extends AbstractStrategy {
 			&& accel.compareTo(input.getAccelST()) == -1) {
 		    shortPos = getNextBar().getOpen();
 		    lastShortPos = getNextBar().getOpen();
+
 		    highPrice = bar.getClose().add(input.getUpAmount());
 		    lowPrice = bar.getClose().subtract(input.getDownAmount());
 		}
@@ -68,42 +81,13 @@ public class ShortStrategy2 extends AbstractStrategy {
 	}
     }
 
-    private boolean isDay(Bar bar) {
-	return !bar.getDateTime().getDayOfWeek().equals(DayOfWeek.SATURDAY)
-		&& !bar.getDateTime().getDayOfWeek().equals(DayOfWeek.SUNDAY)
-		&& bar.getDateTime().isBefore(shortEndDateTime) && bar.getDateTime().toLocalTime().isAfter(START)
-		&& bar.getDateTime().toLocalTime().isBefore(END);
-    }
-
-    private boolean isStopLoss(Bar bar) {
-	return bar.getClose().compareTo(highPrice) >= 0;
-    }
-
-    private boolean isLimit(Bar bar) {
-	return bar.getLow().compareTo(lowPrice) <= 0;
-    }
-
-    @Override
-    public BigDecimal getUnrealized(Bar bar) {
-	BigDecimal unrealized = BigDecimal.ZERO;
-
-	if (longPos != null && !bar.getDateTime().isEqual(sellDateTime)) {
-	    unrealized = unrealized.add(bar.getClose().subtract(longPos));
-	}
-
-	if (shortPos != null && !(isDay(bar) && (isStopLoss(bar) || isLimit(bar)))) {
-	    unrealized = unrealized.add(shortPos.subtract(bar.getClose()));
-	}
-
-	return convertTicks(unrealized);
-    }
-
     @Override
     public BigDecimal getRealized(Bar bar) {
 	BigDecimal total = BigDecimal.ZERO;
 
 	if (longPos != null && bar.getDateTime().isEqual(sellDateTime)) {
 	    BigDecimal realized = bar.getClose().subtract(longPos);
+
 	    addBankroll(realized);
 	    total = total.add(convertTicks(realized));
 	    total = payCommission(total);
@@ -121,8 +105,6 @@ public class ShortStrategy2 extends AbstractStrategy {
 
 		shortPos = null;
 		lastShortPos = null;
-
-		System.out.println(debug("BuyLose", getNextBar().getOpen()));
 	    }
 
 	    if (isLimit(getNextBar())) {
@@ -145,27 +127,42 @@ public class ShortStrategy2 extends AbstractStrategy {
     }
 
     @Override
-    public void rebalance() {
-	BigDecimal realized = BigDecimal.ZERO;
+    public BigDecimal getUnrealized(Bar bar) {
+	BigDecimal unrealized = BigDecimal.ZERO;
 
 	if (longPos != null) {
-	    realized = realized.add(getNextBar().getOpen().subtract(lastLongPos));
+	    unrealized = unrealized.add(bar.getLow().subtract(longPos));
 	}
 
 	if (shortPos != null) {
-	    realized = realized.add(lastShortPos.subtract(getNextBar().getOpen()));
+	    unrealized = unrealized.add(shortPos.subtract(bar.getHigh()));
+	}
+
+	return convertTicks(unrealized);
+    }
+
+    @Override
+    public void rebalance(Bar bar) {
+	BigDecimal realized = BigDecimal.ZERO;
+
+	if (longPos != null) {
+	    realized = realized.add(bar.getClose().subtract(lastLongPos));
+	}
+
+	if (shortPos != null) {
+	    realized = realized.add(lastShortPos.subtract(bar.getClose()));
 	}
 
 	if (rebalancePrecheck(realized)) {
 	    if (longPos != null) {
-		lastLongPos = getNextBar().getOpen();
+		lastLongPos = bar.getClose();
 	    }
 
 	    if (shortPos != null) {
-		lastShortPos = getNextBar().getOpen();
+		lastShortPos = bar.getClose();
 	    }
 
-	    addBankrollBar(realized);
+	    addAndRebalance(realized);
 	}
     }
 
@@ -177,5 +174,20 @@ public class ShortStrategy2 extends AbstractStrategy {
     @Override
     public LocalDateTime getEndDateTime() {
 	return LocalDateTime.of(getEndDate(), getEightAM());
+    }
+
+    private boolean isDay(Bar bar) {
+	return !bar.getDateTime().getDayOfWeek().equals(DayOfWeek.SATURDAY)
+		&& !bar.getDateTime().getDayOfWeek().equals(DayOfWeek.SUNDAY)
+		&& bar.getDateTime().isBefore(shortEndDateTime) && bar.getDateTime().toLocalTime().isAfter(START)
+		&& bar.getDateTime().toLocalTime().isBefore(END);
+    }
+
+    private boolean isStopLoss(Bar bar) {
+	return bar.getClose().compareTo(highPrice) >= 0;
+    }
+
+    private boolean isLimit(Bar bar) {
+	return bar.getLow().compareTo(lowPrice) <= 0;
     }
 }

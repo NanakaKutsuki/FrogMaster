@@ -12,6 +12,8 @@ import org.kutsuki.frogmaster.Inputs2;
 import org.kutsuki.frogmaster.Ticker;
 
 public class HybridStrategy extends AbstractStrategy {
+    private static final BigDecimal COST_PER_CONTRACT = new BigDecimal("12500");
+    private static final BigDecimal MAINTENANCE_MARGIN = new BigDecimal("4500");
     private static final LocalTime SEVEN_FIFTY_FIVE = LocalTime.of(7, 55);
     private static final LocalTime START = LocalTime.of(7, 59);
     private static final LocalTime END = LocalTime.of(15, 45);
@@ -35,6 +37,16 @@ public class HybridStrategy extends AbstractStrategy {
 	this.lastPos = null;
 	this.longPos = null;
 	this.shortPos = null;
+    }
+
+    @Override
+    public BigDecimal getCostPerContract() {
+	return COST_PER_CONTRACT;
+    }
+
+    @Override
+    public BigDecimal getMaintenanceMargin() {
+	return MAINTENANCE_MARGIN;
     }
 
     @Override
@@ -64,33 +76,6 @@ public class HybridStrategy extends AbstractStrategy {
 		lastMom = mom;
 	    }
 	}
-    }
-
-    private boolean isDay(Bar bar) {
-	return !bar.getDateTime().getDayOfWeek().equals(DayOfWeek.SATURDAY)
-		&& !bar.getDateTime().getDayOfWeek().equals(DayOfWeek.SUNDAY)
-		&& bar.getDateTime().toLocalTime().isAfter(START) && bar.getDateTime().toLocalTime().isBefore(END);
-    }
-
-    private boolean isStopLoss(Bar bar) {
-	return bar.getClose().compareTo(highPrice) >= 0;
-    }
-
-    private boolean isLimit(Bar bar) {
-	return bar.getLow().compareTo(lowPrice) <= 0;
-    }
-
-    @Override
-    public BigDecimal getUnrealized(Bar bar) {
-	BigDecimal unrealized = BigDecimal.ZERO;
-
-	if (longPos != null && shortPos == null) {
-	    unrealized = bar.getLow().subtract(longPos);
-	} else if (shortPos != null && longPos == null && !(isDay(bar) && (isStopLoss(bar) || isLimit(bar)))) {
-	    unrealized = shortPos.subtract(bar.getHigh());
-	}
-
-	return convertTicks(unrealized);
     }
 
     @Override
@@ -135,20 +120,33 @@ public class HybridStrategy extends AbstractStrategy {
     }
 
     @Override
-    public void rebalance() {
+    public BigDecimal getUnrealized(Bar bar) {
+	BigDecimal unrealized = BigDecimal.ZERO;
+
 	if (longPos != null) {
-	    BigDecimal realized = getNextBar().getOpen().subtract(lastPos);
+	    unrealized = bar.getLow().subtract(longPos);
+	} else if (shortPos != null) {
+	    unrealized = shortPos.subtract(bar.getHigh());
+	}
+
+	return convertTicks(unrealized);
+    }
+
+    @Override
+    public void rebalance(Bar bar) {
+	if (longPos != null) {
+	    BigDecimal realized = bar.getClose().subtract(lastPos);
 
 	    if (rebalancePrecheck(realized)) {
-		addBankrollBar(realized);
-		lastPos = getNextBar().getOpen();
+		addAndRebalance(realized);
+		lastPos = bar.getClose();
 	    }
 	} else if (shortPos != null) {
-	    BigDecimal realized = lastPos.subtract(getNextBar().getOpen());
+	    BigDecimal realized = lastPos.subtract(bar.getClose());
 
 	    if (rebalancePrecheck(realized)) {
-		addBankrollBar(realized);
-		lastPos = getNextBar().getOpen();
+		addAndRebalance(realized);
+		lastPos = bar.getClose();
 	    }
 	}
     }
@@ -161,5 +159,19 @@ public class HybridStrategy extends AbstractStrategy {
     @Override
     public LocalDateTime getEndDateTime() {
 	return LocalDateTime.of(getEndDate(), LocalTime.of(9, 25));
+    }
+
+    private boolean isDay(Bar bar) {
+	return !bar.getDateTime().getDayOfWeek().equals(DayOfWeek.SATURDAY)
+		&& !bar.getDateTime().getDayOfWeek().equals(DayOfWeek.SUNDAY)
+		&& bar.getDateTime().toLocalTime().isAfter(START) && bar.getDateTime().toLocalTime().isBefore(END);
+    }
+
+    private boolean isStopLoss(Bar bar) {
+	return bar.getClose().compareTo(highPrice) >= 0;
+    }
+
+    private boolean isLimit(Bar bar) {
+	return bar.getLow().compareTo(lowPrice) <= 0;
     }
 }
