@@ -13,12 +13,14 @@ import org.kutsuki.frogmaster.Ticker;
 
 public class HybridStrategy extends AbstractStrategy {
     private static final BigDecimal COST_PER_CONTRACT = new BigDecimal("12500");
-    private static final BigDecimal MAINTENANCE_MARGIN = new BigDecimal("4500");
+    private static final LocalTime END = LocalTime.of(15, 45);
+    private static final LocalTime NINE_THIRTY = LocalTime.of(9, 30);
     private static final LocalTime SEVEN_FIFTY_FIVE = LocalTime.of(7, 55);
     private static final LocalTime START = LocalTime.of(7, 59);
-    private static final LocalTime END = LocalTime.of(15, 45);
 
     private boolean initialized;
+    private boolean marketShort;
+    private boolean marketBuy;
     private BigDecimal longPos;
     private BigDecimal shortPos;
     private BigDecimal lastPos;
@@ -36,6 +38,8 @@ public class HybridStrategy extends AbstractStrategy {
 	this.lastMom = null;
 	this.lastPos = null;
 	this.longPos = null;
+	this.marketShort = false;
+	this.marketBuy = false;
 	this.shortPos = null;
     }
 
@@ -45,18 +49,64 @@ public class HybridStrategy extends AbstractStrategy {
     }
 
     @Override
-    public BigDecimal getMaintenanceMargin() {
-	return MAINTENANCE_MARGIN;
+    public BigDecimal getStrategyMargin() {
+	BigDecimal margin = BigDecimal.ZERO;
+
+	if (longPos != null) {
+	    margin = margin.add(getMaintenanceMargin());
+	}
+
+	if (shortPos != null) {
+	    margin = margin.add(getMaintenanceMargin());
+	}
+
+	return margin;
+    }
+
+    @Override
+    public void resolveMarketOrders(Bar bar) {
+	if (marketBuy) {
+	    if (shortPos != null) {
+		addBankroll(shortPos.subtract(bar.getOpen()));
+	    }
+
+	    longPos = bar.getOpen();
+	    lastPos = bar.getOpen();
+	    shortPos = null;
+	    initialized = true;
+	    marketBuy = false;
+	}
+
+	if (marketShort) {
+	    shortPos = bar.getOpen();
+	    lastPos = bar.getOpen();
+
+	    if (longPos != null) {
+		addBankroll(shortPos.subtract(longPos));
+		lastPos = bar.getOpen();
+		longPos = null;
+	    }
+
+	    marketShort = false;
+	}
+
+	if (isLimit(bar)) {
+	    BigDecimal gain = lowPrice;
+	    if (lowPrice.compareTo(bar.getOpen()) == 1) {
+		gain = bar.getOpen();
+	    }
+
+	    addBankroll(shortPos.subtract(gain));
+	    longPos = gain;
+	    lastPos = gain;
+	    shortPos = null;
+	}
     }
 
     @Override
     public void strategy(Bar bar) {
 	if (!initialized) {
-	    if (bar.getDateTime().isEqual(buyDateTime)) {
-		longPos = getNextBar().getOpen();
-		lastPos = getNextBar().getOpen();
-		initialized = true;
-	    }
+	    marketBuy = bar.getDateTime().isEqual(buyDateTime);
 	} else {
 	    if (isDay(bar)) {
 		BigDecimal mom = bar.getClose().subtract(getPrevBar(8).getClose());
@@ -66,57 +116,16 @@ public class HybridStrategy extends AbstractStrategy {
 
 		    if (shortPos == null && mom.compareTo(input.getMomST()) == -1
 			    && accel.compareTo(input.getAccelST()) == -1) {
-			shortPos = getNextBar().getOpen();
-			lastPos = getNextBar().getOpen();
 			highPrice = bar.getClose().add(input.getUpAmount());
 			lowPrice = bar.getClose().subtract(input.getDownAmount());
+			marketShort = true;
 		    }
 		}
 
+		marketBuy = isStopLoss(bar);
 		lastMom = mom;
 	    }
 	}
-    }
-
-    @Override
-    public BigDecimal getRealized(Bar bar) {
-	BigDecimal total = BigDecimal.ZERO;
-
-	if (longPos != null && shortPos != null) {
-	    BigDecimal realized = shortPos.subtract(longPos);
-	    addBankroll(realized);
-	    total = total.add(convertTicks(realized));
-	    total = payCommission(total);
-	    lastPos = shortPos;
-	    longPos = null;
-	}
-
-	if (longPos == null && shortPos != null) {
-	    if (isDay(bar) && isStopLoss(bar)) {
-		BigDecimal realized = shortPos.subtract(getNextBar().getOpen());
-		addBankroll(realized);
-		total = total.add(convertTicks(realized));
-		total = payCommission(total);
-		longPos = getNextBar().getOpen();
-		lastPos = getNextBar().getOpen();
-		shortPos = null;
-	    } else if (isLimit(getNextBar())) {
-		BigDecimal gain = lowPrice;
-		if (lowPrice.compareTo(getNextBar().getOpen()) == 1) {
-		    gain = getNextBar().getOpen();
-		}
-
-		BigDecimal realized = shortPos.subtract(gain);
-		addBankroll(realized);
-		total = total.add(convertTicks(realized));
-		total = payCommission(total);
-		longPos = gain;
-		lastPos = gain;
-		shortPos = null;
-	    }
-	}
-
-	return total;
     }
 
     @Override
@@ -158,7 +167,7 @@ public class HybridStrategy extends AbstractStrategy {
 
     @Override
     public LocalDateTime getEndDateTime() {
-	return LocalDateTime.of(getEndDate(), LocalTime.of(9, 25));
+	return LocalDateTime.of(getEndDate(), NINE_THIRTY);
     }
 
     private boolean isDay(Bar bar) {
@@ -168,10 +177,10 @@ public class HybridStrategy extends AbstractStrategy {
     }
 
     private boolean isStopLoss(Bar bar) {
-	return bar.getClose().compareTo(highPrice) >= 0;
+	return shortPos != null && bar.getClose().compareTo(highPrice) >= 0;
     }
 
     private boolean isLimit(Bar bar) {
-	return bar.getLow().compareTo(lowPrice) <= 0;
+	return shortPos != null && bar.getLow().compareTo(lowPrice) <= 0;
     }
 }

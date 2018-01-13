@@ -17,8 +17,9 @@ import org.kutsuki.frogmaster.Ticker;
 public abstract class AbstractStrategy {
     private static final BigDecimal COMMISSION = new BigDecimal("5.38");
     private static final BigDecimal FIFTY = new BigDecimal("50");
-    private static final LocalTime EIGHT_AM = LocalTime.of(8, 0);
+    private static final BigDecimal MAINTENANCE_MARGIN = new BigDecimal("4500");
     private static final BigDecimal SLIPPAGE = new BigDecimal("0.50");
+    private static final LocalTime EIGHT_AM = LocalTime.of(8, 0);
 
     private BigDecimal bankroll;
     private BigDecimal bankrollBar;
@@ -34,9 +35,7 @@ public abstract class AbstractStrategy {
 
     public abstract BigDecimal getCostPerContract();
 
-    public abstract BigDecimal getMaintenanceMargin();
-
-    public abstract BigDecimal getRealized(Bar bar);
+    public abstract BigDecimal getStrategyMargin();
 
     public abstract BigDecimal getUnrealized(Bar bar);
 
@@ -45,6 +44,8 @@ public abstract class AbstractStrategy {
     public abstract LocalDateTime getEndDateTime();
 
     public abstract void rebalance(Bar bar);
+
+    public abstract void resolveMarketOrders(Bar bar);
 
     public abstract void strategy(Bar bar);
 
@@ -72,38 +73,40 @@ public abstract class AbstractStrategy {
     }
 
     public void run() {
-	for (LocalDateTime key = barMap.firstKey(); key.isBefore(barMap.lastKey())
-		|| key.isEqual(barMap.lastKey()); key = key.plusMinutes(5)) {
+	for (LocalDateTime key : keyList) {
 	    Bar bar = barMap.get(key);
-	    BigDecimal realized = BigDecimal.ZERO;
-	    BigDecimal unrealized = BigDecimal.ZERO;
 
-	    if (bar != null) {
-		if (!key.isBefore(getStartDateTime()) && !key.isAfter(getEndDateTime())) {
-		    strategy(bar);
+	    if (!key.isBefore(getStartDateTime()) && !key.isAfter(getEndDateTime())) {
+		// resolve market orders first
+		resolveMarketOrders(bar);
 
-		    realized = getRealized(bar);
-		    unrealized = getUnrealized(bar);
+		// run strategy
+		strategy(bar);
 
-		    BigDecimal equity = getBankroll().add(unrealized);
-		    if (equity.compareTo(getLowestEquity()) == -1) {
-			this.lowestEquity = equity;
-			this.lowestEquityDateTime = key;
-		    }
+		// calculate unrealized
+		BigDecimal unrealized = getUnrealized(bar);
+
+		// calculate equity
+		BigDecimal equity = getBankroll().add(unrealized);
+		if (equity.compareTo(getLowestEquity()) == -1) {
+		    this.lowestEquity = equity;
+		    this.lowestEquityDateTime = key;
 		}
 
+		// rebalance
 		if (getEndDate().getYear() > 2008) {
 		    // if numContracts is different and nothing realized
 		    BigDecimal contracts = getBankrollBar().divide(getCostPerContract(), 0, RoundingMode.FLOOR);
-		    if (contracts.compareTo(numContractsBar) != 0 && realized.compareTo(BigDecimal.ZERO) == 0) {
+		    if (contracts.compareTo(numContractsBar) != 0) {
 			rebalance(bar);
 		    }
 		}
 
-		index++;
+		// margin check
+		maintenanceMarginCheck(key, unrealized);
 	    }
 
-	    maintenanceMarginCheck(key, unrealized);
+	    index++;
 	}
     }
 
@@ -184,14 +187,8 @@ public abstract class AbstractStrategy {
 	return lowestEquityDateTime;
     }
 
-    public Bar getNextBar() {
-	Bar bar = null;
-
-	if (index + 1 < keyList.size()) {
-	    bar = barMap.get(keyList.get(index + 1));
-	}
-
-	return bar;
+    public BigDecimal getMaintenanceMargin() {
+	return MAINTENANCE_MARGIN;
     }
 
     public Bar getPrevBar(int length) {
@@ -208,10 +205,10 @@ public abstract class AbstractStrategy {
 	return startDate;
     }
 
-    public String debug(String name, BigDecimal price) {
+    public String debug(Bar bar, String name, BigDecimal price) {
 	StringBuilder sb = new StringBuilder();
 	sb.append(count).append('.').append(' ');
-	sb.append(getNextBar().getDateTime()).append(' ');
+	sb.append(bar.getDateTime()).append(' ');
 	sb.append(name).append(' ');
 	sb.append(price).append(' ');
 	sb.append(getBankroll());
@@ -301,15 +298,15 @@ public abstract class AbstractStrategy {
 	if (date.getYear() > 2008) {
 	    BigDecimal equity = getBankroll().add(unrealized).add(getCostPerContract());
 
-	    if (equity.compareTo(getMaintenanceMargin()) == -1) {
-		throw new IllegalStateException(
-			"Maintenance Margin Exceeded! " + date + " " + equity + " " + getMaintenanceMargin());
+	    if (equity.compareTo(getStrategyMargin()) == -1) {
+		throw new IllegalStateException("Maintenance Margin Exceeded! " + date + " " + getBankroll() + " "
+			+ unrealized + " " + getStrategyMargin());
 	    }
 
 	    equity = getBankrollBar().add(unrealized).add(getCostPerContract()).multiply(numContractsBar);
-	    if (equity.compareTo(getMaintenanceMargin().multiply(numContractsBar)) == -1) {
-		throw new IllegalStateException("Maintenance Margin Exceeded! " + date + " " + equity + " "
-			+ getMaintenanceMargin() + " " + numContractsBar);
+	    if (equity.compareTo(getStrategyMargin().multiply(numContractsBar)) == -1) {
+		throw new IllegalStateException("Maintenance Margin Exceeded! " + date + " " + getBankrollBar() + " "
+			+ getStrategyMargin() + " " + numContractsBar);
 	    }
 	}
     }
