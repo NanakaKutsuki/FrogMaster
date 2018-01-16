@@ -227,7 +227,7 @@ public class TradestationParser {
 
     public static void main(String[] args) {
 	TradestationParser parser = new TradestationParser();
-	// parser.run('M', 10);
+	// parser.run('H', 9);
 
 	for (int year = 6; year < 18; year++) {
 	    parser.run('H', year);
@@ -236,7 +236,7 @@ public class TradestationParser {
 	    parser.run('Z', year);
 	}
 
-	parser.printEquityDateTime();
+	// parser.printEquityDateTime();
 	parser.printRealized();
 	parser.printEquity();
 	parser.printRebalanceQuarterly();

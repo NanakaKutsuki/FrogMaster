@@ -95,11 +95,7 @@ public abstract class AbstractStrategy {
 
 		// rebalance
 		if (getEndDate().getYear() > 2008) {
-		    // if numContracts is different and nothing realized
-		    BigDecimal contracts = getBankrollBar().divide(getCostPerContract(), 0, RoundingMode.FLOOR);
-		    if (contracts.compareTo(numContractsBar) != 0) {
-			rebalance(bar);
-		    }
+		    rebalance(bar);
 		}
 
 		// margin check
@@ -135,8 +131,6 @@ public abstract class AbstractStrategy {
 
 	// pay commission for rebuy
 	this.bankrollBar = getBankrollBar().subtract(COMMISSION.add(SLIPPAGE).multiply(numContractsBar));
-	// System.out.println(getEndDateTime() + " Rebalancing: " + bankrollBar + " " +
-	// numContractsBar);
     }
 
     public BigDecimal convertTicks(BigDecimal ticks) {
@@ -297,17 +291,17 @@ public abstract class AbstractStrategy {
 	// Only check starting in 2009
 	if (date.getYear() > 2008) {
 	    BigDecimal equity = getBankroll().add(unrealized).add(getCostPerContract());
-
 	    if (equity.compareTo(getStrategyMargin()) == -1) {
 		throw new IllegalStateException("Maintenance Margin Exceeded! " + date + " " + getBankroll() + " "
 			+ unrealized + " " + getStrategyMargin());
 	    }
 
-	    equity = getBankrollBar().add(unrealized).add(getCostPerContract()).multiply(numContractsBar);
-	    if (equity.compareTo(getStrategyMargin().multiply(numContractsBar)) == -1) {
+	    BigDecimal equityBar = getBankrollBar().add(unrealized).add(getCostPerContract()).multiply(numContractsBar);
+	    if (equityBar.compareTo(getStrategyMargin().multiply(numContractsBar)) == -1) {
 		throw new IllegalStateException("Maintenance Margin Exceeded! " + date + " " + getBankrollBar() + " "
 			+ getStrategyMargin() + " " + numContractsBar);
 	    }
 	}
+
     }
 }
