@@ -94,6 +94,7 @@ public class HybridStrategy extends AbstractStrategy {
 	    shortPos = bar.getOpen();
 	    lastPos = bar.getOpen();
 	    marketShort = false;
+
 	}
 
 	if (isLimit(bar)) {
@@ -145,7 +146,7 @@ public class HybridStrategy extends AbstractStrategy {
 	    unrealized = shortPos.subtract(bar.getHigh());
 	}
 
-	return convertTicks(unrealized);
+	return unrealized;
     }
 
     @Override
@@ -158,7 +159,7 @@ public class HybridStrategy extends AbstractStrategy {
 	    unrealized = lastPos.subtract(bar.getHigh());
 	}
 
-	return convertTicks(unrealized);
+	return unrealized;
     }
 
     @Override
@@ -166,17 +167,17 @@ public class HybridStrategy extends AbstractStrategy {
 	if (longPos != null) {
 	    BigDecimal realized = bar.getClose().subtract(lastPos);
 
-	    if (rebalancePrecheck(realized)) {
+	    if (isRebalance(realized)) {
 		addBankrollBar(realized);
-		rebalance(realized);
+		rebalance();
 		lastPos = bar.getClose();
 	    }
 	} else if (shortPos != null) {
 	    BigDecimal realized = lastPos.subtract(bar.getClose());
 
-	    if (rebalancePrecheck(realized)) {
+	    if (isRebalance(realized)) {
 		addBankrollBar(realized);
-		rebalance(realized);
+		rebalance();
 		lastPos = bar.getClose();
 	    }
 	}

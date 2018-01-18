@@ -26,7 +26,6 @@ public abstract class AbstractStrategy {
     private BigDecimal numContractsBar;
     private BigDecimal lowestEquity;
     private BigDecimal lowestEquityBar;
-    private int hour;
     private int index;
     private LocalDate startDate;
     private LocalDate endDate;
@@ -61,7 +60,6 @@ public abstract class AbstractStrategy {
 	this.barMap = barMap;
 	this.dateTime = null;
 	this.endDate = calcEndDate(ticker);
-	this.hour = 14;
 	this.index = 0;
 	this.keyList = new ArrayList<LocalDateTime>(barMap.keySet());
 	this.lowestEquity = BigDecimal.valueOf(100000);
@@ -93,7 +91,7 @@ public abstract class AbstractStrategy {
 		strategy(bar);
 
 		// calculate unrealized
-		BigDecimal unrealized = getUnrealized(bar);
+		BigDecimal unrealized = convertTicks(getUnrealized(bar));
 
 		// calculate equity
 		BigDecimal equity = getBankroll().add(unrealized);
@@ -106,12 +104,12 @@ public abstract class AbstractStrategy {
 		if (getEndDate().getYear() > 2008
 			&& (key.getDayOfWeek().equals(DayOfWeek.TUESDAY)
 				|| key.getDayOfWeek().equals(DayOfWeek.THURSDAY))
-			&& key.getHour() == hour && key.getMinute() == 0) {
+			&& key.getHour() == 14 && key.getMinute() == 0) {
 		    checkRebalance(bar);
 		}
 
 		// calculate unrealizedBar after rebalance
-		BigDecimal unrealizedBar = getUnrealizedBar(bar);
+		BigDecimal unrealizedBar = convertTicks(getUnrealizedBar(bar));
 
 		// margin check
 		maintenanceMarginCheck(unrealized);
@@ -134,27 +132,7 @@ public abstract class AbstractStrategy {
 	}
     }
 
-    public BigDecimal convertTicks(BigDecimal ticks) {
-	return ticks.multiply(FIFTY);
-    }
-
-    public BigDecimal payCommission(BigDecimal realized) {
-	// convertTicks first!
-	return realized.subtract(COMMISSION.add(SLIPPAGE));
-    }
-
-    public void rebalance(BigDecimal realized) {
-	// recalculate number of contracts
-	numContractsBar = getBankrollBar().divide(getCostPerContractBar(), 0, RoundingMode.FLOOR);
-	if (numContractsBar.compareTo(BigDecimal.ONE) == -1) {
-	    numContractsBar = BigDecimal.ONE;
-	}
-
-	// pay commission for rebuy
-	this.bankrollBar = getBankrollBar().subtract(COMMISSION.add(SLIPPAGE).multiply(numContractsBar));
-    }
-
-    public boolean rebalancePrecheck(BigDecimal realized) {
+    public boolean isRebalance(BigDecimal realized) {
 	// calculate new projected bankroll for each bar
 	BigDecimal projected = getBankrollBar().add(convertTicks(realized).multiply(numContractsBar));
 	projected = projected.subtract(COMMISSION.add(SLIPPAGE).multiply(numContractsBar));
@@ -212,8 +190,15 @@ public abstract class AbstractStrategy {
 	return startDate;
     }
 
-    public void setHour(int hour) {
-	this.hour = hour;
+    public void rebalance() {
+	// recalculate number of contracts
+	numContractsBar = getBankrollBar().divide(getCostPerContractBar(), 0, RoundingMode.FLOOR);
+	if (numContractsBar.compareTo(BigDecimal.ONE) == -1) {
+	    numContractsBar = BigDecimal.ONE;
+	}
+
+	// pay commission for rebuy
+	this.bankrollBar = getBankrollBar().subtract(COMMISSION.add(SLIPPAGE).multiply(numContractsBar));
     }
 
     private LocalDate calcStartDate(Ticker ticker) {
@@ -290,6 +275,10 @@ public abstract class AbstractStrategy {
 	}
 
 	return thirdDayOfWeek;
+    }
+
+    private BigDecimal convertTicks(BigDecimal ticks) {
+	return ticks.multiply(FIFTY);
     }
 
     private void maintenanceMarginCheck(BigDecimal unrealized) {

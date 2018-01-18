@@ -71,7 +71,7 @@ public class LongStrategy extends AbstractStrategy {
 	    unrealized = bar.getLow().subtract(longPos);
 	}
 
-	return convertTicks(unrealized);
+	return unrealized;
     }
 
     @Override
@@ -82,7 +82,7 @@ public class LongStrategy extends AbstractStrategy {
 	    unrealized = bar.getLow().subtract(lastLongPos);
 	}
 
-	return convertTicks(unrealized);
+	return unrealized;
     }
 
     @Override
@@ -93,13 +93,13 @@ public class LongStrategy extends AbstractStrategy {
 	    realized = realized.add(bar.getClose().subtract(lastLongPos));
 	}
 
-	if (rebalancePrecheck(realized)) {
+	if (isRebalance(realized)) {
 	    if (longPos != null) {
 		lastLongPos = bar.getClose();
 	    }
 
 	    addBankrollBar(realized);
-	    rebalance(realized);
+	    rebalance();
 	}
     }
 

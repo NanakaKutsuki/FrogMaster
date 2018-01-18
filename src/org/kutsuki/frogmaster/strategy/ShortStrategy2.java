@@ -148,7 +148,7 @@ public class ShortStrategy2 extends AbstractStrategy {
 	    unrealized = unrealized.add(shortPos.subtract(bar.getHigh()));
 	}
 
-	return convertTicks(unrealized);
+	return unrealized;
     }
 
     @Override
@@ -163,7 +163,7 @@ public class ShortStrategy2 extends AbstractStrategy {
 	    unrealized = unrealized.add(lastShortPos.subtract(bar.getHigh()));
 	}
 
-	return convertTicks(unrealized);
+	return unrealized;
     }
 
     @Override
@@ -178,7 +178,7 @@ public class ShortStrategy2 extends AbstractStrategy {
 	    realized = realized.add(lastShortPos.subtract(bar.getClose()));
 	}
 
-	if (rebalancePrecheck(realized)) {
+	if (isRebalance(realized)) {
 	    if (longPos != null) {
 		lastLongPos = bar.getClose();
 	    }
@@ -188,7 +188,7 @@ public class ShortStrategy2 extends AbstractStrategy {
 	    }
 
 	    addBankrollBar(realized);
-	    rebalance(realized);
+	    rebalance();
 	}
     }
 

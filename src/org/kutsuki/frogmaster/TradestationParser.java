@@ -233,7 +233,6 @@ public class TradestationParser {
 
     public static void main(String[] args) {
 	TradestationParser parser = new TradestationParser();
-	// parser.run('H', 9);
 
 	for (int year = 6; year <= YEAR; year++) {
 	    parser.run('H', year);
