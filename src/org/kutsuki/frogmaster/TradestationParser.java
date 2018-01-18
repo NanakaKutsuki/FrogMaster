@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.apache.commons.lang3.StringUtils;
-import org.kutsuki.frogmaster.strategy.HybridStrategy;
+import org.kutsuki.frogmaster.strategy.LongStrategy;
 
 public class TradestationParser {
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("MM/dd/yyyy");
@@ -95,8 +95,9 @@ public class TradestationParser {
 	    BigDecimal bankrollBar = prevTicker.getBankrollBar();
 	    BigDecimal numContracts = prevTicker.getNumContracts();
 
+	    LongStrategy strategy = new LongStrategy(ticker, barMap, bankrollBar);
 	    // ShortStrategy2 strategy = new ShortStrategy2(ticker, barMap, bankrollBar);
-	    HybridStrategy strategy = new HybridStrategy(ticker, barMap, bankrollBar);
+	    // HybridStrategy strategy = new HybridStrategy(ticker, barMap, bankrollBar);
 	    strategy.run();
 
 	    // calculate quarterly bankroll
