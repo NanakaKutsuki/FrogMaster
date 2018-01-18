@@ -68,6 +68,7 @@ public class HybridStrategy extends AbstractStrategy {
 	if (marketBuy) {
 	    if (shortPos != null) {
 		addBankroll(shortPos.subtract(bar.getOpen()));
+		addBankrollBar(lastPos.subtract(bar.getOpen()));
 	    }
 
 	    longPos = bar.getOpen();
@@ -78,15 +79,14 @@ public class HybridStrategy extends AbstractStrategy {
 	}
 
 	if (marketShort) {
-	    shortPos = bar.getOpen();
-	    lastPos = bar.getOpen();
-
 	    if (longPos != null) {
-		addBankroll(shortPos.subtract(longPos));
-		lastPos = bar.getOpen();
+		addBankroll(bar.getOpen().subtract(longPos));
+		addBankrollBar(bar.getOpen().subtract(lastPos));
 		longPos = null;
 	    }
 
+	    shortPos = bar.getOpen();
+	    lastPos = bar.getOpen();
 	    marketShort = false;
 	}
 
@@ -97,6 +97,7 @@ public class HybridStrategy extends AbstractStrategy {
 	    }
 
 	    addBankroll(shortPos.subtract(gain));
+	    addBankrollBar(lastPos.subtract(gain));
 	    longPos = gain;
 	    lastPos = gain;
 	    shortPos = null;
@@ -142,19 +143,34 @@ public class HybridStrategy extends AbstractStrategy {
     }
 
     @Override
-    public void rebalance(Bar bar) {
+    public BigDecimal getUnrealizedBar(Bar bar) {
+	BigDecimal unrealized = BigDecimal.ZERO;
+
+	if (longPos != null) {
+	    unrealized = bar.getLow().subtract(lastPos);
+	} else if (shortPos != null) {
+	    unrealized = lastPos.subtract(bar.getHigh());
+	}
+
+	return convertTicks(unrealized);
+    }
+
+    @Override
+    public void checkRebalance(Bar bar) {
 	if (longPos != null) {
 	    BigDecimal realized = bar.getClose().subtract(lastPos);
 
 	    if (rebalancePrecheck(realized)) {
-		addAndRebalance(realized);
+		addBankrollBar(realized);
+		rebalance(realized);
 		lastPos = bar.getClose();
 	    }
 	} else if (shortPos != null) {
 	    BigDecimal realized = lastPos.subtract(bar.getClose());
 
 	    if (rebalancePrecheck(realized)) {
-		addAndRebalance(realized);
+		addBankrollBar(realized);
+		rebalance(realized);
 		lastPos = bar.getClose();
 	    }
 	}

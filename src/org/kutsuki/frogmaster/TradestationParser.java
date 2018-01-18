@@ -1,6 +1,7 @@
 package org.kutsuki.frogmaster;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -20,6 +21,7 @@ import org.kutsuki.frogmaster.strategy.HybridStrategy;
 public class TradestationParser {
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("MM/dd/yyyy");
     private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm");
+    private static final int YEAR = LocalDate.now().getYear() - 2000;
     private static final String DIR = "C:/Users/Matcha Green/Desktop/ES/";
     private static final String TXT = ".txt";
 
@@ -28,7 +30,7 @@ public class TradestationParser {
     public TradestationParser() {
 	this.tickerMap = new HashMap<String, Ticker>();
 
-	for (int year = 6; year < 18; year++) {
+	for (int year = 6; year <= YEAR; year++) {
 	    Ticker h = new Ticker('H', year);
 	    Ticker m = new Ticker('M', year);
 	    Ticker u = new Ticker('U', year);
@@ -49,70 +51,74 @@ public class TradestationParser {
 	sb.append(DIR);
 	sb.append(ticker);
 	sb.append(TXT);
+	File file = new File(sb.toString());
 
-	try (BufferedReader br = new BufferedReader(new FileReader(sb.toString()))) {
-	    // skip first line
-	    br.readLine();
+	if (file.exists()) {
+	    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+		// skip first line
+		br.readLine();
 
-	    String line = null;
-	    while ((line = br.readLine()) != null) {
-		String[] split = StringUtils.split(line, ',');
+		String line = null;
+		while ((line = br.readLine()) != null) {
+		    String[] split = StringUtils.split(line, ',');
 
-		try {
-		    LocalDate date = LocalDate.parse(split[0], DATE_FORMAT);
-		    LocalTime time = LocalTime.parse(split[1], TIME_FORMAT);
-		    BigDecimal open = new BigDecimal(split[2]);
-		    BigDecimal high = new BigDecimal(split[3]);
-		    BigDecimal low = new BigDecimal(split[4]);
-		    BigDecimal close = new BigDecimal(split[5]);
-		    int up = Integer.parseInt(split[6]);
-		    int down = Integer.parseInt(split[7]);
+		    try {
+			LocalDate date = LocalDate.parse(split[0], DATE_FORMAT);
+			LocalTime time = LocalTime.parse(split[1], TIME_FORMAT);
+			BigDecimal open = new BigDecimal(split[2]);
+			BigDecimal high = new BigDecimal(split[3]);
+			BigDecimal low = new BigDecimal(split[4]);
+			BigDecimal close = new BigDecimal(split[5]);
+			int up = Integer.parseInt(split[6]);
+			int down = Integer.parseInt(split[7]);
 
-		    Bar bar = new Bar();
-		    bar.setDateTime(LocalDateTime.of(date, time));
-		    bar.setOpen(open);
-		    bar.setHigh(high);
-		    bar.setLow(low);
-		    bar.setClose(close);
-		    bar.setUp(up);
-		    bar.setDown(down);
+			Bar bar = new Bar();
+			bar.setDateTime(LocalDateTime.of(date, time));
+			bar.setOpen(open);
+			bar.setHigh(high);
+			bar.setLow(low);
+			bar.setClose(close);
+			bar.setUp(up);
+			bar.setDown(down);
 
-		    barMap.put(bar.getDateTime(), bar);
-		} catch (DateTimeParseException | NumberFormatException e) {
-		    e.printStackTrace();
+			barMap.put(bar.getDateTime(), bar);
+		    } catch (DateTimeParseException | NumberFormatException e) {
+			e.printStackTrace();
+		    }
 		}
-	    }
-	} catch (IOException e) {
-	    e.printStackTrace();
-	}
-
-	Ticker prevTicker = getPrevTicker(ticker);
-	BigDecimal bankroll = prevTicker.getBankroll();
-	BigDecimal bankrollBar = prevTicker.getBankrollBar();
-	BigDecimal numContracts = prevTicker.getNumContracts();
-
-	// ShortStrategy2 strategy = new ShortStrategy2(ticker, barMap, bankrollBar);
-	HybridStrategy strategy = new HybridStrategy(ticker, barMap, bankrollBar);
-	strategy.run();
-
-	// calculate quarterly bankroll
-	if (ticker.getYear() > 8) {
-	    if (numContracts == null) {
-		numContracts = prevTicker.getBankroll().divide(strategy.getCostPerContract(), 0, RoundingMode.FLOOR);
+	    } catch (IOException e) {
+		e.printStackTrace();
 	    }
 
-	    bankroll = bankroll.add(strategy.getBankroll().multiply(numContracts));
-	    numContracts = bankroll.divide(strategy.getCostPerContract(), 0, RoundingMode.FLOOR);
-	}
+	    Ticker prevTicker = getPrevTicker(ticker);
+	    BigDecimal bankroll = prevTicker.getBankroll();
+	    BigDecimal bankrollBar = prevTicker.getBankrollBar();
+	    BigDecimal numContracts = prevTicker.getNumContracts();
 
-	// set ticker data
-	ticker.setEquityDateTime(strategy.getLowestEquityDateTime());
-	ticker.setEquity(strategy.getLowestEquity());
-	ticker.setRealized(strategy.getBankroll());
-	ticker.setBankroll(bankroll);
-	ticker.setNumContracts(numContracts);
-	ticker.setBankrollBar(strategy.getBankrollBar());
-	tickerMap.put(ticker.toString(), ticker);
+	    // ShortStrategy2 strategy = new ShortStrategy2(ticker, barMap, bankrollBar);
+	    HybridStrategy strategy = new HybridStrategy(ticker, barMap, bankrollBar);
+	    strategy.run();
+
+	    // calculate quarterly bankroll
+	    if (ticker.getYear() > 8) {
+		if (numContracts == null) {
+		    numContracts = prevTicker.getBankroll().divide(strategy.getCostPerContract(), 0,
+			    RoundingMode.FLOOR);
+		}
+
+		bankroll = bankroll.add(strategy.getBankroll().multiply(numContracts));
+		numContracts = bankroll.divide(strategy.getCostPerContract(), 0, RoundingMode.FLOOR);
+	    }
+
+	    // set ticker data
+	    ticker.setEquityDateTime(strategy.getLowestEquityDateTime());
+	    ticker.setEquity(strategy.getLowestEquity());
+	    ticker.setRealized(strategy.getBankroll());
+	    ticker.setBankroll(bankroll);
+	    ticker.setNumContracts(numContracts);
+	    ticker.setBankrollBar(strategy.getBankrollBar());
+	    tickerMap.put(ticker.toString(), ticker);
+	}
     }
 
     public Ticker getTicker(char month, int year) {
@@ -121,7 +127,7 @@ public class TradestationParser {
 
     public void printEquityDateTime() {
 	System.out.println("Lowest Equity Dates");
-	for (int year = 17; year >= 6; year--) {
+	for (int year = YEAR; year >= 6; year--) {
 	    Ticker h = getTicker('H', year);
 	    Ticker m = getTicker('M', year);
 	    Ticker u = getTicker('U', year);
@@ -153,7 +159,7 @@ public class TradestationParser {
     public void printRealized() {
 	System.out.println("--------------------------");
 	System.out.println("Realized");
-	for (int year = 17; year >= 6; year--) {
+	for (int year = YEAR; year >= 6; year--) {
 	    BigDecimal h = getTicker('H', year).getRealized();
 	    BigDecimal m = getTicker('M', year).getRealized();
 	    BigDecimal u = getTicker('U', year).getRealized();
@@ -165,7 +171,7 @@ public class TradestationParser {
     public void printEquity() {
 	System.out.println("--------------------------");
 	System.out.println("Lowest Equity");
-	for (int year = 17; year >= 6; year--) {
+	for (int year = YEAR; year >= 6; year--) {
 	    BigDecimal h = getTicker('H', year).getEquity();
 	    BigDecimal m = getTicker('M', year).getEquity();
 	    BigDecimal u = getTicker('U', year).getEquity();
@@ -177,7 +183,7 @@ public class TradestationParser {
     public void printRebalanceQuarterly() {
 	System.out.println("--------------------------");
 	System.out.println("Bankroll - Rebalance each Quarter");
-	for (int year = 17; year >= 9; year--) {
+	for (int year = YEAR; year >= 9; year--) {
 	    BigDecimal h = getTicker('H', year).getBankroll();
 	    BigDecimal m = getTicker('M', year).getBankroll();
 	    BigDecimal u = getTicker('U', year).getBankroll();
@@ -189,7 +195,7 @@ public class TradestationParser {
     public void printRebalanceBar() {
 	System.out.println("--------------------------");
 	System.out.println("Bankroll - Rebalance each Bar");
-	for (int year = 17; year >= 9; year--) {
+	for (int year = YEAR; year >= 9; year--) {
 	    BigDecimal h = getTicker('H', year).getBankrollBar();
 	    BigDecimal m = getTicker('M', year).getBankrollBar();
 	    BigDecimal u = getTicker('U', year).getBankrollBar();
@@ -229,7 +235,7 @@ public class TradestationParser {
 	TradestationParser parser = new TradestationParser();
 	// parser.run('H', 9);
 
-	for (int year = 6; year < 18; year++) {
+	for (int year = 6; year <= YEAR; year++) {
 	    parser.run('H', year);
 	    parser.run('M', year);
 	    parser.run('U', year);

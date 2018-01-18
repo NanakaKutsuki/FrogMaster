@@ -12,7 +12,7 @@ import org.kutsuki.frogmaster.Inputs2;
 import org.kutsuki.frogmaster.Ticker;
 
 public class ShortStrategy2 extends AbstractStrategy {
-    private static final BigDecimal COST_PER_CONTRACT = new BigDecimal("20000");
+    private static final BigDecimal COST_PER_CONTRACT = new BigDecimal("22000");
     private static final LocalTime START = LocalTime.of(7, 59);
     private static final LocalTime END = LocalTime.of(15, 45);
 
@@ -71,6 +71,7 @@ public class ShortStrategy2 extends AbstractStrategy {
     public void resolveMarketOrders(Bar bar) {
 	if (longPos != null && bar.getDateTime().isEqual(sellDateTime)) {
 	    addBankroll(bar.getClose().subtract(longPos));
+	    addBankrollBar(bar.getClose().subtract(lastLongPos));
 	    longPos = null;
 	    lastLongPos = null;
 	}
@@ -83,6 +84,7 @@ public class ShortStrategy2 extends AbstractStrategy {
 
 	if (marketBuyToCover) {
 	    addBankroll(shortPos.subtract(bar.getOpen()));
+	    addBankrollBar(lastShortPos.subtract(bar.getOpen()));
 	    shortPos = null;
 	    lastShortPos = null;
 	    marketBuyToCover = false;
@@ -95,6 +97,7 @@ public class ShortStrategy2 extends AbstractStrategy {
 	    }
 
 	    addBankroll(shortPos.subtract(gain));
+	    addBankrollBar(lastShortPos.subtract(gain));
 
 	    shortPos = null;
 	    lastShortPos = null;
@@ -143,7 +146,22 @@ public class ShortStrategy2 extends AbstractStrategy {
     }
 
     @Override
-    public void rebalance(Bar bar) {
+    public BigDecimal getUnrealizedBar(Bar bar) {
+	BigDecimal unrealized = BigDecimal.ZERO;
+
+	if (longPos != null) {
+	    unrealized = unrealized.add(bar.getLow().subtract(lastLongPos));
+	}
+
+	if (shortPos != null) {
+	    unrealized = unrealized.add(lastShortPos.subtract(bar.getHigh()));
+	}
+
+	return convertTicks(unrealized);
+    }
+
+    @Override
+    public void checkRebalance(Bar bar) {
 	BigDecimal realized = BigDecimal.ZERO;
 
 	if (longPos != null) {
@@ -163,7 +181,8 @@ public class ShortStrategy2 extends AbstractStrategy {
 		lastShortPos = bar.getClose();
 	    }
 
-	    addAndRebalance(realized);
+	    addBankrollBar(realized);
+	    rebalance(realized);
 	}
     }
 
