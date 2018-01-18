@@ -12,7 +12,8 @@ import org.kutsuki.frogmaster.Inputs2;
 import org.kutsuki.frogmaster.Ticker;
 
 public class ShortStrategy2 extends AbstractStrategy {
-    private static final BigDecimal COST_PER_CONTRACT = new BigDecimal("22000");
+    private static final BigDecimal COST_PER_CONTRACT = new BigDecimal("20000");
+    private static final BigDecimal COST_PER_CONTRACT_BAR = new BigDecimal("14500");
     private static final LocalTime START = LocalTime.of(7, 59);
     private static final LocalTime END = LocalTime.of(15, 45);
 
@@ -50,6 +51,11 @@ public class ShortStrategy2 extends AbstractStrategy {
     @Override
     public BigDecimal getCostPerContract() {
 	return COST_PER_CONTRACT;
+    }
+
+    @Override
+    public BigDecimal getCostPerContractBar() {
+	return COST_PER_CONTRACT_BAR;
     }
 
     @Override

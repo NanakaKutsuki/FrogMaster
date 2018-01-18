@@ -9,6 +9,7 @@ import org.kutsuki.frogmaster.Ticker;
 
 public class LongStrategy extends AbstractStrategy {
     private static final BigDecimal COST_PER_CONTRACT = new BigDecimal("20000");
+    private static final BigDecimal COST_PER_CONTRACT_BAR = new BigDecimal("10500");
 
     private BigDecimal lastLongPos;
     private BigDecimal longPos;
@@ -26,6 +27,11 @@ public class LongStrategy extends AbstractStrategy {
     @Override
     public BigDecimal getCostPerContract() {
 	return COST_PER_CONTRACT;
+    }
+
+    @Override
+    public BigDecimal getCostPerContractBar() {
+	return COST_PER_CONTRACT_BAR;
     }
 
     @Override
