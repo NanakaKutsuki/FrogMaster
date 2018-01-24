@@ -19,6 +19,7 @@ public abstract class AbstractStrategy {
     private static final BigDecimal FIFTY = new BigDecimal("50");
     private static final BigDecimal MAINTENANCE_MARGIN = new BigDecimal("4800");
     private static final BigDecimal SLIPPAGE = new BigDecimal("0.50");
+    private static final int HOUR = 14; // 14 optimal, 23 least optimal
     private static final LocalTime EIGHT_AM = LocalTime.of(8, 0);
 
     private BigDecimal bankroll;
@@ -104,7 +105,7 @@ public abstract class AbstractStrategy {
 		if (getEndDate().getYear() > 2008
 			&& (key.getDayOfWeek().equals(DayOfWeek.TUESDAY)
 				|| key.getDayOfWeek().equals(DayOfWeek.THURSDAY))
-			&& key.getHour() == 14 && key.getMinute() == 0) {
+			&& key.getHour() == HOUR && key.getMinute() == 0) {
 		    checkRebalance(bar);
 		}
 
