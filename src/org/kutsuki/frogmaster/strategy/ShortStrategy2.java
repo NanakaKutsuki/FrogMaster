@@ -46,16 +46,12 @@ public class ShortStrategy2 extends AbstractStrategy {
 	this.shortPos = null;
 	this.sellDateTime = getEndDateTime();
 	this.shortEndDateTime = LocalDateTime.of(getEndDate(), LocalTime.MIDNIGHT);
+	setCostPerContractBar(COST_PER_CONTRACT_BAR);
     }
 
     @Override
     public BigDecimal getCostPerContract() {
 	return COST_PER_CONTRACT;
-    }
-
-    @Override
-    public BigDecimal getCostPerContractBar() {
-	return COST_PER_CONTRACT_BAR;
     }
 
     @Override

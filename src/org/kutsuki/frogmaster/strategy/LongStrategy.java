@@ -22,16 +22,12 @@ public class LongStrategy extends AbstractStrategy {
 	this.lastLongPos = null;
 	this.longPos = null;
 	this.sellDateTime = getEndDateTime();
+	setCostPerContractBar(COST_PER_CONTRACT_BAR);
     }
 
     @Override
     public BigDecimal getCostPerContract() {
 	return COST_PER_CONTRACT;
-    }
-
-    @Override
-    public BigDecimal getCostPerContractBar() {
-	return COST_PER_CONTRACT_BAR;
     }
 
     @Override

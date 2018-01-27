@@ -19,14 +19,15 @@ public abstract class AbstractStrategy {
     private static final BigDecimal FIFTY = new BigDecimal("50");
     private static final BigDecimal MAINTENANCE_MARGIN = new BigDecimal("4800");
     private static final BigDecimal SLIPPAGE = new BigDecimal("0.50");
-    private static final int HOUR = 14; // 14 optimal, 23 least optimal
     private static final LocalTime EIGHT_AM = LocalTime.of(8, 0);
 
     private BigDecimal bankroll;
     private BigDecimal bankrollBar;
-    private BigDecimal numContractsBar;
+    private BigDecimal costPerContractBar;
     private BigDecimal lowestEquity;
     private BigDecimal lowestEquityBar;
+    private BigDecimal numContractsBar;
+    private int hour;
     private int index;
     private LocalDate startDate;
     private LocalDate endDate;
@@ -36,8 +37,6 @@ public abstract class AbstractStrategy {
     private TreeMap<LocalDateTime, Bar> barMap;
 
     public abstract BigDecimal getCostPerContract();
-
-    public abstract BigDecimal getCostPerContractBar();
 
     public abstract BigDecimal getStrategyMargin();
 
@@ -62,6 +61,7 @@ public abstract class AbstractStrategy {
 	this.dateTime = null;
 	this.endDate = calcEndDate(ticker);
 	this.index = 0;
+	this.hour = 7;
 	this.keyList = new ArrayList<LocalDateTime>(barMap.keySet());
 	this.lowestEquity = BigDecimal.valueOf(100000);
 	this.lowestEquityBar = BigDecimal.valueOf(100000);
@@ -69,14 +69,6 @@ public abstract class AbstractStrategy {
 	this.numContractsBar = BigDecimal.ONE;
 	this.startDate = calcStartDate(ticker);
 	Collections.sort(this.keyList);
-
-	// calculate number onf contracts
-	if (getEndDate().getYear() > 2008) {
-	    this.numContractsBar = bankrollBar.divide(getCostPerContractBar(), 0, RoundingMode.FLOOR);
-	    if (numContractsBar.compareTo(BigDecimal.ONE) == -1) {
-		numContractsBar = BigDecimal.ONE;
-	    }
-	}
     }
 
     public void run() {
@@ -105,7 +97,7 @@ public abstract class AbstractStrategy {
 		if (getEndDate().getYear() > 2008
 			&& (key.getDayOfWeek().equals(DayOfWeek.TUESDAY)
 				|| key.getDayOfWeek().equals(DayOfWeek.THURSDAY))
-			&& key.getHour() == HOUR && key.getMinute() == 0) {
+			&& key.getHour() == hour && key.getMinute() == 0) {
 		    checkRebalance(bar);
 		}
 
@@ -139,7 +131,7 @@ public abstract class AbstractStrategy {
 	projected = projected.subtract(COMMISSION.add(SLIPPAGE).multiply(numContractsBar));
 
 	// calculate new number of contracts
-	BigDecimal contracts = projected.divide(getCostPerContractBar(), 0, RoundingMode.FLOOR);
+	BigDecimal contracts = projected.divide(costPerContractBar, 0, RoundingMode.FLOOR);
 
 	// rebalance if number of contracts is different
 	return contracts.compareTo(numContractsBar) != 0;
@@ -193,13 +185,29 @@ public abstract class AbstractStrategy {
 
     public void rebalance() {
 	// recalculate number of contracts
-	numContractsBar = getBankrollBar().divide(getCostPerContractBar(), 0, RoundingMode.FLOOR);
+	numContractsBar = getBankrollBar().divide(costPerContractBar, 0, RoundingMode.FLOOR);
 	if (numContractsBar.compareTo(BigDecimal.ONE) == -1) {
 	    numContractsBar = BigDecimal.ONE;
 	}
 
 	// pay commission for rebuy
 	this.bankrollBar = getBankrollBar().subtract(COMMISSION.add(SLIPPAGE).multiply(numContractsBar));
+    }
+
+    public void setCostPerContractBar(BigDecimal costPerContractBar) {
+	this.costPerContractBar = costPerContractBar;
+
+	// calculate number onf contracts
+	if (getEndDate().getYear() > 2008) {
+	    this.numContractsBar = bankrollBar.divide(costPerContractBar, 0, RoundingMode.FLOOR);
+	    if (numContractsBar.compareTo(BigDecimal.ONE) == -1) {
+		numContractsBar = BigDecimal.ONE;
+	    }
+	}
+    }
+
+    public void setHour(int hour) {
+	this.hour = hour;
     }
 
     private LocalDate calcStartDate(Ticker ticker) {
