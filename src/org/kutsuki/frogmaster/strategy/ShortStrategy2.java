@@ -8,7 +8,7 @@ import java.util.TreeMap;
 
 import org.kutsuki.frogmaster.Bar;
 import org.kutsuki.frogmaster.Input;
-import org.kutsuki.frogmaster.Inputs2;
+import org.kutsuki.frogmaster.ShortInputs;
 import org.kutsuki.frogmaster.Ticker;
 
 public class ShortStrategy2 extends AbstractStrategy {
@@ -35,7 +35,7 @@ public class ShortStrategy2 extends AbstractStrategy {
 	super(ticker, barMap, bankrollBar);
 	this.buyDateTime = LocalDateTime.of(getStartDate(), getEightAM());
 	this.highPrice = null;
-	this.input = Inputs2.getInputFromLastYear(ticker.getYear());
+	this.input = ShortInputs.getInputFromLastYear(ticker.getYear());
 	this.marketShort = false;
 	this.marketBuyToCover = false;
 	this.lastLongPos = null;

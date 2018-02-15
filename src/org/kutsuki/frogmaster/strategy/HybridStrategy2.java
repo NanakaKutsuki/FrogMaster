@@ -1,25 +1,27 @@
 package org.kutsuki.frogmaster.strategy;
 
 import java.math.BigDecimal;
-import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.TreeMap;
 
 import org.kutsuki.frogmaster.Bar;
+import org.kutsuki.frogmaster.HybridInputs2;
 import org.kutsuki.frogmaster.Input;
-import org.kutsuki.frogmaster.ShortInputs;
 import org.kutsuki.frogmaster.Ticker;
 
-public class HybridStrategy extends AbstractStrategy {
-    private static final BigDecimal COST_PER_CONTRACT = new BigDecimal("12500");
-    private static final BigDecimal COST_PER_CONTRACT_BAR = new BigDecimal("9700");
+public class HybridStrategy2 extends AbstractStrategy {
+    private static final BigDecimal COST_PER_CONTRACT = new BigDecimal("16000");
+    private static final BigDecimal COST_PER_CONTRACT_BAR = new BigDecimal("10000");
     private static final LocalTime END = LocalTime.of(15, 45);
     private static final LocalTime NINE_THIRTY = LocalTime.of(9, 30);
     private static final LocalTime SEVEN_FIFTY_FIVE = LocalTime.of(7, 55);
     private static final LocalTime START = LocalTime.of(7, 59);
 
     private boolean initialized;
+    private boolean coverLong;
+    private boolean coverLose;
+    private boolean coverShort;
     private boolean marketShort;
     private boolean marketBuy;
     private BigDecimal longPos;
@@ -31,12 +33,16 @@ public class HybridStrategy extends AbstractStrategy {
     private Input input;
     private LocalDateTime buyDateTime;
 
-    public HybridStrategy(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap, BigDecimal bankrollBar) {
+    public HybridStrategy2(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap, BigDecimal bankrollBar) {
 	super(ticker, barMap, bankrollBar);
 	this.buyDateTime = LocalDateTime.of(getStartDate(), SEVEN_FIFTY_FIVE);
+	this.coverLong = false;
+	this.coverLose = false;
+	this.coverShort = false;
 	this.initialized = false;
-	this.input = ShortInputs.getInputFromLastYear(ticker.getYear());
-	this.lastMom = null;
+	// this.input = HybridInputs2.getInputFromLastYear(ticker.getYear());
+	this.input = HybridInputs2.getInputFromLastYear(18);
+	this.lastMom = BigDecimal.ZERO;
 	this.lastPos = null;
 	this.longPos = null;
 	this.marketShort = false;
@@ -67,15 +73,43 @@ public class HybridStrategy extends AbstractStrategy {
 
     @Override
     public void resolveMarketOrders(Bar bar) {
+	if (coverShort) {
+	    shortPos = bar.getOpen();
+	    lastPos = bar.getOpen();
+	    coverShort = false;
+	    marketShort = false;
+	}
+
+	if (coverLong) {
+	    longPos = bar.getOpen();
+	    lastPos = bar.getOpen();
+	    coverLong = false;
+	    marketBuy = false;
+	}
+
+	if (coverLose) {
+	    addBankroll(shortPos.subtract(bar.getOpen()));
+	    addBankrollBar(lastPos.subtract(bar.getOpen()));
+
+	    shortPos = bar.getOpen();
+	    lastPos = bar.getOpen();
+	    coverLose = false;
+	}
+
 	if (marketBuy) {
 	    if (shortPos != null) {
 		addBankroll(shortPos.subtract(bar.getOpen()));
 		addBankrollBar(lastPos.subtract(bar.getOpen()));
+
+		longPos = bar.getOpen();
+		lastPos = bar.getOpen();
+		shortPos = null;
+	    } else {
+		longPos = bar.getOpen();
+		lastPos = bar.getOpen();
+		shortPos = null;
 	    }
 
-	    longPos = bar.getOpen();
-	    lastPos = bar.getOpen();
-	    shortPos = null;
 	    initialized = true;
 	    marketBuy = false;
 	}
@@ -90,7 +124,6 @@ public class HybridStrategy extends AbstractStrategy {
 	    shortPos = bar.getOpen();
 	    lastPos = bar.getOpen();
 	    marketShort = false;
-
 	}
 
 	if (isLimit(bar)) {
@@ -101,9 +134,19 @@ public class HybridStrategy extends AbstractStrategy {
 
 	    addBankroll(shortPos.subtract(gain));
 	    addBankrollBar(lastPos.subtract(gain));
-	    longPos = gain;
-	    lastPos = gain;
 	    shortPos = null;
+
+	    BigDecimal mom = bar.getClose().subtract(getPrevBar(8).getClose());
+	    BigDecimal accel = mom.subtract(lastMom);
+	    lastMom = mom;
+
+	    if (mom.compareTo(input.getMomST()) == -1 && accel.compareTo(input.getAccelST()) == -1) {
+		highPrice = bar.getClose().add(input.getUpAmount());
+		lowPrice = bar.getClose().subtract(input.getDownAmount());
+		coverShort = true;
+	    } else {
+		coverLong = true;
+	    }
 	}
     }
 
@@ -114,19 +157,27 @@ public class HybridStrategy extends AbstractStrategy {
 	} else {
 	    if (isDay(bar)) {
 		BigDecimal mom = bar.getClose().subtract(getPrevBar(8).getClose());
+		BigDecimal accel = mom.subtract(lastMom);
 
-		if (lastMom != null) {
-		    BigDecimal accel = mom.subtract(lastMom);
+		if (shortPos == null && mom.compareTo(input.getMomST()) == -1
+			&& accel.compareTo(input.getAccelST()) == -1) {
+		    highPrice = bar.getClose().add(input.getUpAmount());
+		    lowPrice = bar.getClose().subtract(input.getDownAmount());
+		    marketShort = true;
+		}
 
-		    if (shortPos == null && mom.compareTo(input.getMomST()) == -1
+		if (!marketBuy) {
+		    marketBuy = isStopLoss(bar);
+
+		    if (marketBuy && mom.compareTo(input.getMomST()) == -1
 			    && accel.compareTo(input.getAccelST()) == -1) {
 			highPrice = bar.getClose().add(input.getUpAmount());
 			lowPrice = bar.getClose().subtract(input.getDownAmount());
-			marketShort = true;
+			marketBuy = false;
+			coverLose = true;
 		    }
 		}
 
-		marketBuy = isStopLoss(bar);
 		lastMom = mom;
 	    }
 	}
@@ -190,9 +241,7 @@ public class HybridStrategy extends AbstractStrategy {
     }
 
     private boolean isDay(Bar bar) {
-	return !bar.getDateTime().getDayOfWeek().equals(DayOfWeek.SATURDAY)
-		&& !bar.getDateTime().getDayOfWeek().equals(DayOfWeek.SUNDAY)
-		&& bar.getDateTime().toLocalTime().isAfter(START) && bar.getDateTime().toLocalTime().isBefore(END);
+	return bar.getDateTime().toLocalTime().isAfter(START) && bar.getDateTime().toLocalTime().isBefore(END);
     }
 
     private boolean isStopLoss(Bar bar) {

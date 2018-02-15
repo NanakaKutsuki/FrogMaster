@@ -11,18 +11,20 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
 import org.apache.commons.lang3.StringUtils;
-import org.kutsuki.frogmaster.strategy.HybridStrategy;
+import org.kutsuki.frogmaster.strategy.HybridStrategy2;
 
 public class TradestationParserOptim {
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("MM/dd/yyyy");
     private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm");
     private static final int YEAR = 17;
-    private static final String DIR = "C:/Users/Matcha Green/Desktop/ES/";
+    private static final String DIR = "C:/Users/Scraper/Desktop/ES/";
     private static final String TXT = ".txt";
 
     private Map<String, Ticker> tickerMap;
@@ -96,7 +98,7 @@ public class TradestationParserOptim {
 	    BigDecimal numContracts = prevTicker.getNumContracts();
 
 	    // ShortStrategy2 strategy = new ShortStrategy2(ticker, barMap, bankrollBar);
-	    HybridStrategy strategy = new HybridStrategy(ticker, barMap, bankrollBar);
+	    HybridStrategy2 strategy = new HybridStrategy2(ticker, barMap, bankrollBar);
 	    strategy.setHour(hour);
 	    strategy.setCostPerContractBar(costPerContractBar);
 	    strategy.run();
@@ -125,85 +127,6 @@ public class TradestationParserOptim {
 
     public Ticker getTicker(char month, int year) {
 	return tickerMap.get(Ticker.getKey(month, year));
-    }
-
-    public void printEquityDateTime() {
-	System.out.println("Lowest Equity Dates");
-	for (int year = YEAR; year >= 6; year--) {
-	    Ticker h = getTicker('H', year);
-	    Ticker m = getTicker('M', year);
-	    Ticker u = getTicker('U', year);
-	    Ticker z = getTicker('Z', year);
-
-	    LocalDateTime hDate = h.getEquityDateTime();
-	    LocalDateTime uDate = u.getEquityDateTime();
-	    LocalDateTime mDate = m.getEquityDateTime();
-	    LocalDateTime zDate = z.getEquityDateTime();
-
-	    if (hDate != null) {
-		System.out.println(h + "," + hDate.toLocalDate() + "," + hDate.toLocalTime());
-	    }
-
-	    if (mDate != null) {
-		System.out.println(m + "," + mDate.toLocalDate() + "," + mDate.toLocalTime());
-	    }
-
-	    if (uDate != null) {
-		System.out.println(u + "," + uDate.toLocalDate() + "," + uDate.toLocalTime());
-	    }
-
-	    if (zDate != null) {
-		System.out.println(z + "," + zDate.toLocalDate() + "," + zDate.toLocalTime());
-	    }
-	}
-    }
-
-    public void printRealized() {
-	System.out.println("--------------------------");
-	System.out.println("Realized");
-	for (int year = YEAR; year >= 6; year--) {
-	    BigDecimal h = getTicker('H', year).getRealized();
-	    BigDecimal m = getTicker('M', year).getRealized();
-	    BigDecimal u = getTicker('U', year).getRealized();
-	    BigDecimal z = getTicker('Z', year).getRealized();
-	    System.out.println(h + "," + m + "," + u + "," + z);
-	}
-    }
-
-    public void printEquity() {
-	System.out.println("--------------------------");
-	System.out.println("Lowest Equity");
-	for (int year = YEAR; year >= 6; year--) {
-	    BigDecimal h = getTicker('H', year).getEquity();
-	    BigDecimal m = getTicker('M', year).getEquity();
-	    BigDecimal u = getTicker('U', year).getEquity();
-	    BigDecimal z = getTicker('Z', year).getEquity();
-	    System.out.println(h + "," + m + "," + u + "," + z);
-	}
-    }
-
-    public void printRebalanceQuarterly() {
-	System.out.println("--------------------------");
-	System.out.println("Bankroll - Rebalance each Quarter");
-	for (int year = YEAR; year >= 9; year--) {
-	    BigDecimal h = getTicker('H', year).getBankroll();
-	    BigDecimal m = getTicker('M', year).getBankroll();
-	    BigDecimal u = getTicker('U', year).getBankroll();
-	    BigDecimal z = getTicker('Z', year).getBankroll();
-	    System.out.println(h + "," + m + "," + u + "," + z);
-	}
-    }
-
-    public void printRebalanceBar() {
-	System.out.println("--------------------------");
-	System.out.println("Bankroll - Rebalance each Bar");
-	for (int year = YEAR; year >= 9; year--) {
-	    BigDecimal h = getTicker('H', year).getBankrollBar();
-	    BigDecimal m = getTicker('M', year).getBankrollBar();
-	    BigDecimal u = getTicker('U', year).getBankrollBar();
-	    BigDecimal z = getTicker('Z', year).getBankrollBar();
-	    System.out.println(h + "," + m + "," + u + "," + z);
-	}
     }
 
     private Ticker getPrevTicker(Ticker ticker) {
@@ -235,10 +158,11 @@ public class TradestationParserOptim {
 
     public static void main(String[] args) {
 	TradestationParserOptim parser = new TradestationParserOptim();
+	List<BigDecimal> costPerContractBarList = new ArrayList<BigDecimal>();
 
 	for (int hour = 0; hour < 24; hour++) {
 	    if (hour != 18) {
-		BigDecimal costPerContractBar = new BigDecimal("12000");
+		BigDecimal costPerContractBar = new BigDecimal("10000");
 		boolean found = false;
 		while (!found) {
 		    try {
@@ -256,11 +180,17 @@ public class TradestationParserOptim {
 		}
 
 		System.out.println(parser.getTicker('Z', 17).getBankrollBar());
+		costPerContractBarList.add(costPerContractBar);
 	    } else {
 		System.out.println('X');
+		costPerContractBarList.add(BigDecimal.ZERO);
 	    }
 	}
 
 	System.out.println("done!");
+
+	for (BigDecimal bd : costPerContractBarList) {
+	    System.out.println(bd);
+	}
     }
 }

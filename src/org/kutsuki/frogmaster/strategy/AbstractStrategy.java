@@ -17,7 +17,7 @@ import org.kutsuki.frogmaster.Ticker;
 public abstract class AbstractStrategy {
     private static final BigDecimal COMMISSION = new BigDecimal("5.38");
     private static final BigDecimal FIFTY = new BigDecimal("50");
-    private static final BigDecimal MAINTENANCE_MARGIN = new BigDecimal("4800");
+    private static final BigDecimal MAINTENANCE_MARGIN = new BigDecimal("5800");
     private static final BigDecimal SLIPPAGE = new BigDecimal("0.50");
     private static final LocalTime EIGHT_AM = LocalTime.of(8, 0);
 
@@ -61,7 +61,7 @@ public abstract class AbstractStrategy {
 	this.dateTime = null;
 	this.endDate = calcEndDate(ticker);
 	this.index = 0;
-	this.hour = 7;
+	this.hour = 10;
 	this.keyList = new ArrayList<LocalDateTime>(barMap.keySet());
 	this.lowestEquity = BigDecimal.valueOf(100000);
 	this.lowestEquityBar = BigDecimal.valueOf(100000);

@@ -16,13 +16,13 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.apache.commons.lang3.StringUtils;
-import org.kutsuki.frogmaster.strategy.HybridStrategy;
+import org.kutsuki.frogmaster.strategy.HybridStrategy2;
 
 public class TradestationParser {
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("MM/dd/yyyy");
     private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm");
     private static final int YEAR = LocalDate.now().getYear() - 2000;
-    private static final String DIR = "C:/Users/Matcha Green/Desktop/ES/";
+    private static final String DIR = "C:/Users/Scraper/Desktop/ES/";
     private static final String TXT = ".txt";
 
     private Map<String, Ticker> tickerMap;
@@ -96,7 +96,7 @@ public class TradestationParser {
 	    BigDecimal numContracts = prevTicker.getNumContracts();
 
 	    // ShortStrategy2 strategy = new ShortStrategy2(ticker, barMap, bankrollBar);
-	    HybridStrategy strategy = new HybridStrategy(ticker, barMap, bankrollBar);
+	    HybridStrategy2 strategy = new HybridStrategy2(ticker, barMap, bankrollBar);
 	    strategy.run();
 
 	    // calculate quarterly bankroll
