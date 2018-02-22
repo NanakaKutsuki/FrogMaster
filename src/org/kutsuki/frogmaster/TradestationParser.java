@@ -242,9 +242,9 @@ public class TradestationParser {
 	}
 
 	// parser.printEquityDateTime();
-	// parser.printRealized();
-	// parser.printEquity();
+	parser.printRealized();
+	parser.printEquity();
 	// parser.printRebalanceQuarterly();
-	parser.printRebalanceBar();
+	// parser.printRebalanceBar();
     }
 }

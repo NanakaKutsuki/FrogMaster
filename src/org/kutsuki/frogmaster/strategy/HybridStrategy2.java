@@ -40,8 +40,7 @@ public class HybridStrategy2 extends AbstractStrategy {
 	this.coverLose = false;
 	this.coverShort = false;
 	this.initialized = false;
-	// this.input = HybridInputs2.getInputFromLastYear(ticker.getYear());
-	this.input = HybridInputs2.getInputFromLastYear(18);
+	this.input = HybridInputs2.getInputFromLastYear(ticker.getYear());
 	this.lastMom = BigDecimal.ZERO;
 	this.lastPos = null;
 	this.longPos = null;
