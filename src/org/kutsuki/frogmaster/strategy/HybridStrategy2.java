@@ -11,16 +11,15 @@ import org.kutsuki.frogmaster.Input;
 import org.kutsuki.frogmaster.Ticker;
 
 public class HybridStrategy2 extends AbstractStrategy {
-    private static final BigDecimal COST_PER_CONTRACT = new BigDecimal("2500000");
+    private static final BigDecimal COST_PER_CONTRACT = new BigDecimal("17000");
     private static final BigDecimal COST_PER_CONTRACT_BAR = new BigDecimal("2500000");
     private static final LocalTime END = LocalTime.of(15, 45);
-    private static final LocalTime NINE_THIRTY = LocalTime.of(9, 30);
+    private static final LocalTime NINE_THIRTYFIVE = LocalTime.of(9, 35);
     private static final LocalTime NINE_TWENTYFIVE = LocalTime.of(9, 25);
     private static final LocalTime START = LocalTime.of(9, 29);
 
     private boolean initialized;
     private boolean coverLong;
-    private boolean coverLose;
     private boolean coverShort;
     private boolean marketShort;
     private boolean marketBuy;
@@ -37,7 +36,6 @@ public class HybridStrategy2 extends AbstractStrategy {
 	super(ticker, barMap, bankrollBar);
 	this.buyDateTime = LocalDateTime.of(getStartDate(), NINE_TWENTYFIVE);
 	this.coverLong = false;
-	this.coverLose = false;
 	this.coverShort = false;
 	this.initialized = false;
 	this.input = HybridInputs2.getInputFromLastYear(ticker.getYear());
@@ -84,15 +82,6 @@ public class HybridStrategy2 extends AbstractStrategy {
 	    lastPos = bar.getOpen();
 	    coverLong = false;
 	    marketBuy = false;
-	}
-
-	if (coverLose) {
-	    addBankroll(shortPos.subtract(bar.getOpen()));
-	    addBankrollBar(lastPos.subtract(bar.getOpen()));
-
-	    shortPos = bar.getOpen();
-	    lastPos = bar.getOpen();
-	    coverLose = false;
 	}
 
 	if (marketBuy) {
@@ -163,19 +152,15 @@ public class HybridStrategy2 extends AbstractStrategy {
 		    highPrice = bar.getClose().add(input.getUpAmount());
 		    lowPrice = bar.getClose().subtract(input.getDownAmount());
 		    marketShort = true;
-
-		    // System.out.println(bar.getDateTime() + " " + up + " " + down);
 		}
 
-		if (!marketBuy) {
-		    marketBuy = isStopLoss(bar);
-
-		    if (marketBuy && mom.compareTo(input.getMomST()) == -1
-			    && accel.compareTo(input.getAccelST()) == -1) {
+		if (!marketBuy && isStopLoss(bar)) {
+		    if (mom.compareTo(input.getMomST()) == -1 && accel.compareTo(input.getAccelST()) == -1) {
 			highPrice = bar.getClose().add(input.getUpAmount());
 			lowPrice = bar.getClose().subtract(input.getDownAmount());
 			marketBuy = false;
-			coverLose = true;
+		    } else {
+			marketBuy = true;
 		    }
 		}
 
@@ -238,7 +223,7 @@ public class HybridStrategy2 extends AbstractStrategy {
 
     @Override
     public LocalDateTime getEndDateTime() {
-	return LocalDateTime.of(getEndDate(), NINE_THIRTY);
+	return LocalDateTime.of(getEndDate(), NINE_THIRTYFIVE);
     }
 
     private boolean isDay(Bar bar) {
