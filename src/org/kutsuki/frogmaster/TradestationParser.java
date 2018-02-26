@@ -241,10 +241,10 @@ public class TradestationParser {
 	    parser.run('Z', year);
 	}
 
-	parser.printEquityDateTime();
+	// parser.printEquityDateTime();
 	parser.printRealized();
 	parser.printEquity();
-	// parser.printRebalanceQuarterly();
-	// parser.printRebalanceBar();
+	parser.printRebalanceQuarterly();
+	parser.printRebalanceBar();
     }
 }
