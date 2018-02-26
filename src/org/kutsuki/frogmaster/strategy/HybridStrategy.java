@@ -6,11 +6,11 @@ import java.time.LocalTime;
 import java.util.TreeMap;
 
 import org.kutsuki.frogmaster.Bar;
-import org.kutsuki.frogmaster.HybridInputs2;
+import org.kutsuki.frogmaster.HybridInputs;
 import org.kutsuki.frogmaster.Input;
 import org.kutsuki.frogmaster.Ticker;
 
-public class HybridStrategy2 extends AbstractStrategy {
+public class HybridStrategy extends AbstractStrategy {
     private static final BigDecimal COST_PER_CONTRACT = new BigDecimal("17000");
     private static final BigDecimal COST_PER_CONTRACT_BAR = new BigDecimal("2500000");
     private static final LocalTime END = LocalTime.of(15, 45);
@@ -32,13 +32,13 @@ public class HybridStrategy2 extends AbstractStrategy {
     private Input input;
     private LocalDateTime buyDateTime;
 
-    public HybridStrategy2(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap, BigDecimal bankrollBar) {
+    public HybridStrategy(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap, BigDecimal bankrollBar) {
 	super(ticker, barMap, bankrollBar);
 	this.buyDateTime = LocalDateTime.of(getStartDate(), NINE_TWENTYFIVE);
 	this.coverLong = false;
 	this.coverShort = false;
 	this.initialized = false;
-	this.input = HybridInputs2.getInputFromLastYear(ticker.getYear());
+	this.input = HybridInputs.getInputFromLastYear(ticker.getYear());
 	this.lastMom = BigDecimal.ZERO;
 	this.lastPos = null;
 	this.longPos = null;

@@ -18,7 +18,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.apache.commons.lang3.StringUtils;
-import org.kutsuki.frogmaster.strategy.HybridStrategy2;
+import org.kutsuki.frogmaster.strategy.HybridStrategy;
 
 public class TradestationParserOptim {
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("MM/dd/yyyy");
@@ -98,7 +98,7 @@ public class TradestationParserOptim {
 	    BigDecimal numContracts = prevTicker.getNumContracts();
 
 	    // ShortStrategy2 strategy = new ShortStrategy2(ticker, barMap, bankrollBar);
-	    HybridStrategy2 strategy = new HybridStrategy2(ticker, barMap, bankrollBar);
+	    HybridStrategy strategy = new HybridStrategy(ticker, barMap, bankrollBar);
 	    strategy.setHour(hour);
 	    strategy.setCostPerContractBar(costPerContractBar);
 	    strategy.run();

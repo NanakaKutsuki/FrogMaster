@@ -3,7 +3,7 @@ package org.kutsuki.frogmaster;
 import java.util.HashMap;
 import java.util.Map;
 
-public class HybridInputs2 {
+public class HybridInputs {
     private final static Map<Integer, Input> INPUT_MAP = new HashMap<Integer, Input>();
 
     static {
@@ -22,7 +22,7 @@ public class HybridInputs2 {
 	INPUT_MAP.put(17, new Input("-6.25", "-1.5", "8.25", "10"));
     }
 
-    private HybridInputs2() {
+    private HybridInputs() {
 	// private constructor
     }
 
