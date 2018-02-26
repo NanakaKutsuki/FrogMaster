@@ -119,4 +119,5 @@ public class Ticker {
     public void setEquityDateTime(LocalDateTime equityDateTime) {
 	this.equityDateTime = equityDateTime;
     }
+
 }

@@ -80,8 +80,8 @@ public class TradestationParserOptim {
 			bar.setHigh(high);
 			bar.setLow(low);
 			bar.setClose(close);
-			bar.setUp(up);
-			bar.setDown(down);
+			bar.setUpTicks(up);
+			bar.setDownTicks(down);
 
 			barMap.put(bar.getDateTime(), bar);
 		    } catch (DateTimeParseException | NumberFormatException e) {

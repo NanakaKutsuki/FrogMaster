@@ -9,8 +9,8 @@ public class Bar implements Comparable<Bar> {
     private BigDecimal high;
     private BigDecimal low;
     private BigDecimal close;
-    private int up;
-    private int down;
+    private int upTicks;
+    private int downTicks;
 
     @Override
     public int compareTo(Bar other) {
@@ -25,8 +25,8 @@ public class Bar implements Comparable<Bar> {
 	sb.append(getHigh()).append(',');
 	sb.append(getLow()).append(',');
 	sb.append(getClose()).append(',');
-	sb.append(getUp()).append(',');
-	sb.append(getDown());
+	sb.append(getUpTicks()).append(',');
+	sb.append(getDownTicks());
 
 	return sb.toString();
     }
@@ -71,20 +71,19 @@ public class Bar implements Comparable<Bar> {
 	this.close = close;
     }
 
-    public int getUp() {
-	return up;
+    public int getUpTicks() {
+	return upTicks;
     }
 
-    public void setUp(int up) {
-	this.up = up;
+    public void setUpTicks(int upTicks) {
+	this.upTicks = upTicks;
     }
 
-    public int getDown() {
-	return down;
+    public int getDownTicks() {
+	return downTicks;
     }
 
-    public void setDown(int down) {
-	this.down = down;
+    public void setDownTicks(int downTicks) {
+	this.downTicks = downTicks;
     }
-
 }
