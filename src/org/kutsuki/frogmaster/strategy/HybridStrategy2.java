@@ -1,0 +1,274 @@
+package org.kutsuki.frogmaster.strategy;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.TreeMap;
+
+import org.kutsuki.frogmaster.Bar;
+import org.kutsuki.frogmaster.HybridInputs2;
+import org.kutsuki.frogmaster.Input;
+import org.kutsuki.frogmaster.Ticker;
+
+public class HybridStrategy2 extends AbstractStrategy {
+    private static final BigDecimal COST_PER_CONTRACT = new BigDecimal("16000");
+    private static final BigDecimal COST_PER_CONTRACT_BAR = new BigDecimal("10200");
+    private static final LocalTime END = LocalTime.of(15, 44);
+    private static final LocalTime NINE_THIRTYFIVE = LocalTime.of(9, 35);
+    private static final LocalTime NINE_TWENTYFIVE = LocalTime.of(9, 25);
+    private static final LocalTime START = LocalTime.of(9, 29);
+
+    private boolean initialized;
+    private boolean coverLong;
+    private boolean coverShort;
+    private boolean marketShort;
+    private boolean marketBuy;
+    private BigDecimal longPos;
+    private BigDecimal shortPos;
+    private BigDecimal lastPos;
+    private BigDecimal highPrice;
+    private BigDecimal lowPrice;
+    private BigDecimal lastMom;
+    private Input input;
+    private LocalDateTime buyDateTime;
+
+    public HybridStrategy2(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap, BigDecimal bankrollBar) {
+	super(ticker, barMap, bankrollBar);
+	this.buyDateTime = LocalDateTime.of(getStartDate(), NINE_TWENTYFIVE);
+	this.coverLong = false;
+	this.coverShort = false;
+	this.initialized = false;
+	this.input = HybridInputs2.getInputFromLastYear(ticker.getYear());
+	this.lastMom = null;
+	this.lastPos = null;
+	this.longPos = null;
+	this.marketShort = false;
+	this.marketBuy = false;
+	this.shortPos = null;
+	setCostPerContractBar(COST_PER_CONTRACT_BAR);
+    }
+
+    @Override
+    public BigDecimal getCostPerContract() {
+	return COST_PER_CONTRACT;
+    }
+
+    @Override
+    public BigDecimal getStrategyMargin() {
+	BigDecimal margin = BigDecimal.ZERO;
+
+	if (longPos != null) {
+	    margin = margin.add(getMaintenanceMargin());
+	}
+
+	if (shortPos != null) {
+	    margin = margin.add(getMaintenanceMargin());
+	}
+
+	return margin;
+    }
+
+    @Override
+    public void resolveMarketOrders(Bar bar) {
+	if (coverShort) {
+	    shortPos = bar.getOpen();
+	    lastPos = bar.getOpen();
+	    coverShort = false;
+	    marketShort = false;
+
+	    count++;
+	    System.out.println(count + " " + bar.getDateTime() + " ShortWin " + shortPos);
+	}
+
+	if (coverLong) {
+	    longPos = bar.getOpen();
+	    lastPos = bar.getOpen();
+	    coverLong = false;
+	    marketBuy = false;
+
+	    count++;
+	    System.out.println(count + " " + bar.getDateTime() + " LongWin " + longPos);
+	}
+
+	if (marketBuy) {
+	    if (shortPos != null) {
+		addBankroll(shortPos.subtract(bar.getOpen()));
+		addBankrollBar(lastPos.subtract(bar.getOpen()));
+
+		longPos = bar.getOpen();
+		lastPos = bar.getOpen();
+		shortPos = null;
+
+		System.out.println(count + " " + bar.getDateTime() + " LongLose " + longPos + " " + getBankroll());
+		count++;
+		System.out.println(count + " " + bar.getDateTime() + " LongLose " + longPos);
+	    } else {
+		longPos = bar.getOpen();
+		lastPos = bar.getOpen();
+		shortPos = null;
+
+		count++;
+		System.out.println(count + " " + bar.getDateTime() + " Long " + longPos);
+	    }
+
+	    initialized = true;
+	    marketBuy = false;
+	}
+
+	if (marketShort) {
+	    if (longPos != null) {
+		addBankroll(bar.getOpen().subtract(longPos));
+		addBankrollBar(bar.getOpen().subtract(lastPos));
+		longPos = null;
+	    }
+
+	    shortPos = bar.getOpen();
+	    lastPos = bar.getOpen();
+	    marketShort = false;
+
+	    System.out.println(count + " " + bar.getDateTime() + " Short " + shortPos + " " + getBankroll());
+	    count++;
+	    System.out.println(count + " " + bar.getDateTime() + " Short " + shortPos);
+	}
+
+	if (isLimit(bar)) {
+	    BigDecimal gain = lowPrice;
+	    if (lowPrice.compareTo(bar.getOpen()) == 1) {
+		gain = bar.getOpen();
+	    }
+
+	    addBankroll(shortPos.subtract(gain));
+	    addBankrollBar(lastPos.subtract(gain));
+	    shortPos = null;
+
+	    System.out.println(count + " " + bar.getDateTime() + " CoverWin " + gain + " " + getBankroll());
+
+	    BigDecimal mom = bar.getClose().subtract(getPrevBar(8).getClose());
+	    BigDecimal accel = mom.subtract(lastMom);
+	    // do not set lastMom
+
+	    if (mom.compareTo(input.getMomRE()) == -1 && accel.compareTo(input.getAccelST()) == -1) {
+		highPrice = bar.getClose().add(input.getUpAmount());
+		lowPrice = bar.getClose().subtract(input.getDownAmount());
+		coverShort = true;
+	    } else {
+		coverLong = true;
+	    }
+	}
+    }
+
+    private int count = 0;
+
+    @Override
+    public void strategy(Bar bar) {
+	if (!initialized) {
+	    marketBuy = bar.getDateTime().isEqual(buyDateTime);
+	    lastMom = bar.getClose().subtract(getPrevBar(8).getClose());
+	} else {
+	    if (isDay(bar.getDateTime().toLocalTime())) {
+		BigDecimal mom = bar.getClose().subtract(getPrevBar(8).getClose());
+		BigDecimal accel = mom.subtract(lastMom);
+		lastMom = mom;
+
+		if (shortPos == null && mom.compareTo(input.getMomST()) == -1
+			&& accel.compareTo(input.getAccelST()) == -1) {
+		    highPrice = bar.getClose().add(input.getUpAmount());
+		    lowPrice = bar.getClose().subtract(input.getDownAmount());
+		    marketShort = true;
+		}
+
+		if (!marketBuy && isStopLoss(bar)) {
+		    if (mom.compareTo(input.getMomST()) == -1 && accel.compareTo(input.getAccelST()) == -1) {
+			highPrice = bar.getClose().add(input.getUpAmount());
+			lowPrice = bar.getClose().subtract(input.getDownAmount());
+			marketBuy = false;
+		    } else {
+			marketBuy = true;
+		    }
+		}
+	    } else if (bar.getDateTime().toLocalTime().isBefore(START) && isStopLoss(bar)) {
+		marketBuy = true;
+	    } else if (bar.getDateTime().toLocalTime().isBefore(START)
+		    || (bar.getDateTime().toLocalTime().isAfter(END) && shortPos == null)) {
+		BigDecimal mom = bar.getClose().subtract(getPrevBar(8).getClose());
+		BigDecimal accel = mom.subtract(lastMom);
+		lastMom = mom;
+
+		if (!coverShort && shortPos == null && accel.compareTo(input.getAccelAH()) == -1) {
+		    highPrice = bar.getClose().add(input.getUpAmountAH());
+		    lowPrice = bar.getClose().subtract(input.getDownAmountAH());
+		    marketShort = true;
+		}
+	    }
+	}
+    }
+
+    @Override
+    public BigDecimal getUnrealized(Bar bar) {
+	BigDecimal unrealized = BigDecimal.ZERO;
+
+	if (longPos != null) {
+	    unrealized = bar.getLow().subtract(longPos);
+	} else if (shortPos != null) {
+	    unrealized = shortPos.subtract(bar.getHigh());
+	}
+
+	return unrealized;
+    }
+
+    @Override
+    public BigDecimal getUnrealizedBar(Bar bar) {
+	BigDecimal unrealized = BigDecimal.ZERO;
+
+	if (longPos != null) {
+	    unrealized = bar.getLow().subtract(lastPos);
+	} else if (shortPos != null) {
+	    unrealized = lastPos.subtract(bar.getHigh());
+	}
+
+	return unrealized;
+    }
+
+    @Override
+    public void checkRebalance(Bar bar) {
+	if (longPos != null) {
+	    BigDecimal realized = bar.getClose().subtract(lastPos);
+
+	    if (isRebalance(realized)) {
+		addBankrollBar(realized);
+		rebalance();
+		lastPos = bar.getClose();
+	    }
+	} else if (shortPos != null) {
+	    BigDecimal realized = lastPos.subtract(bar.getClose());
+
+	    if (isRebalance(realized)) {
+		addBankrollBar(realized);
+		rebalance();
+		lastPos = bar.getClose();
+	    }
+	}
+    }
+
+    @Override
+    public LocalDateTime getStartDateTime() {
+	return LocalDateTime.of(getStartDate(), NINE_TWENTYFIVE);
+    }
+
+    @Override
+    public LocalDateTime getEndDateTime() {
+	return LocalDateTime.of(getEndDate(), NINE_THIRTYFIVE);
+    }
+
+    private boolean isDay(LocalTime time) {
+	return time.isAfter(START) && time.isBefore(END);
+    }
+
+    private boolean isStopLoss(Bar bar) {
+	return shortPos != null && bar.getClose().compareTo(highPrice) >= 0;
+    }
+
+    private boolean isLimit(Bar bar) {
+	return shortPos != null && bar.getLow().compareTo(lowPrice) <= 0;
+    }
+}
