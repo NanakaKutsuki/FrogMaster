@@ -18,12 +18,12 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.apache.commons.lang3.StringUtils;
-import org.kutsuki.frogmaster.strategy.HybridStrategy;
+import org.kutsuki.frogmaster.strategy.HybridStrategy2;
 
 public class TradestationParserOptim {
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("MM/dd/yyyy");
     private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm");
-    private static final int YEAR = 17;
+    private static final int YEAR = 18;
     private static final String DIR = "C:/Users/Scraper/Desktop/ES/";
     private static final String TXT = ".txt";
 
@@ -98,7 +98,7 @@ public class TradestationParserOptim {
 	    BigDecimal numContracts = prevTicker.getNumContracts();
 
 	    // ShortStrategy2 strategy = new ShortStrategy2(ticker, barMap, bankrollBar);
-	    HybridStrategy strategy = new HybridStrategy(ticker, barMap, bankrollBar);
+	    HybridStrategy2 strategy = new HybridStrategy2(ticker, barMap, bankrollBar);
 	    strategy.setHour(hour);
 	    strategy.setCostPerContractBar(costPerContractBar);
 	    strategy.run();
@@ -162,7 +162,7 @@ public class TradestationParserOptim {
 
 	for (int hour = 0; hour < 24; hour++) {
 	    if (hour != 18) {
-		BigDecimal costPerContractBar = new BigDecimal("10000");
+		BigDecimal costPerContractBar = new BigDecimal("7000");
 		boolean found = false;
 		while (!found) {
 		    try {

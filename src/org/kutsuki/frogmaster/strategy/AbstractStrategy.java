@@ -23,6 +23,7 @@ public abstract class AbstractStrategy {
 
     private BigDecimal bankroll;
     private BigDecimal bankrollBar;
+    private BigDecimal bankrollDay;
     private BigDecimal costPerContractBar;
     private BigDecimal lowestEquity;
     private BigDecimal lowestEquityBar;
@@ -57,11 +58,12 @@ public abstract class AbstractStrategy {
     public AbstractStrategy(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap, BigDecimal bankrollBar) {
 	this.bankroll = BigDecimal.ZERO;
 	this.bankrollBar = bankrollBar;
+	this.bankrollDay = BigDecimal.ZERO;
 	this.barMap = barMap;
 	this.dateTime = null;
 	this.endDate = calcEndDate(ticker);
 	this.index = 0;
-	this.hour = 10;
+	this.hour = 14;
 	this.keyList = new ArrayList<LocalDateTime>(barMap.keySet());
 	this.lowestEquity = BigDecimal.valueOf(100000);
 	this.lowestEquityBar = BigDecimal.valueOf(100000);
@@ -72,11 +74,21 @@ public abstract class AbstractStrategy {
     }
 
     public void run() {
+	LocalDate yesterday = LocalDate.MIN;
 	for (LocalDateTime key : keyList) {
 	    Bar bar = barMap.get(key);
 	    dateTime = key;
 
 	    if (!key.isBefore(getStartDateTime()) && !key.isAfter(getEndDateTime())) {
+		if (!key.toLocalDate().isEqual(yesterday)) {
+		    if (bankrollDay.compareTo(BigDecimal.valueOf(-500)) == -1) {
+			System.out.println(yesterday + "," + bankrollDay);
+		    }
+
+		    bankrollDay = BigDecimal.ZERO;
+		    yesterday = key.toLocalDate();
+		}
+
 		// resolve market orders first
 		resolveMarketOrders(bar);
 
@@ -116,6 +128,8 @@ public abstract class AbstractStrategy {
     public void addBankroll(BigDecimal realized) {
 	this.bankroll = getBankroll().add(convertTicks(realized));
 	this.bankroll = getBankroll().subtract(COMMISSION.add(SLIPPAGE));
+	this.bankrollDay = bankrollDay.add(convertTicks(realized));
+	this.bankrollDay = bankrollDay.subtract(COMMISSION.add(SLIPPAGE));
     }
 
     public void addBankrollBar(BigDecimal realized) {
@@ -187,7 +201,7 @@ public abstract class AbstractStrategy {
 	// recalculate number of contracts
 	numContractsBar = getBankrollBar().divide(costPerContractBar, 0, RoundingMode.FLOOR);
 	if (numContractsBar.compareTo(BigDecimal.ONE) == -1) {
-	    numContractsBar = BigDecimal.ONE;
+	    throw new IllegalStateException("Margin Bar Exceeded need to at least afford 1");
 	}
 
 	// pay commission for rebuy
@@ -200,8 +214,9 @@ public abstract class AbstractStrategy {
 	// calculate number onf contracts
 	if (getEndDate().getYear() > 2008) {
 	    this.numContractsBar = bankrollBar.divide(costPerContractBar, 0, RoundingMode.FLOOR);
+
 	    if (numContractsBar.compareTo(BigDecimal.ONE) == -1) {
-		numContractsBar = BigDecimal.ONE;
+		throw new IllegalStateException("Margin Bar Exceeded! Need at least one!");
 	    }
 	}
     }
@@ -294,6 +309,7 @@ public abstract class AbstractStrategy {
 	// Only check starting in 2009
 	if (dateTime.getYear() > 2008) {
 	    BigDecimal equity = getBankroll().add(unrealized).add(getCostPerContract());
+
 	    if (equity.compareTo(getStrategyMargin()) == -1) {
 		throw new IllegalStateException("Maintenance Margin Exceeded! " + dateTime + " " + getBankroll() + " "
 			+ unrealized + " " + getStrategyMargin());
@@ -312,6 +328,11 @@ public abstract class AbstractStrategy {
 	if (equityBar.compareTo(getStrategyMargin().multiply(numContractsBar)) == -1) {
 	    throw new IllegalStateException("Margin Bar Exceeded! " + dateTime + " " + getBankrollBar() + " "
 		    + unrealizedBar + " " + getStrategyMargin() + " " + numContractsBar);
+
+	}
+
+	if (getBankrollBar().compareTo(MAINTENANCE_MARGIN) == -1) {
+	    throw new IllegalStateException("Margin Bar Exceeded! 5800");
 	}
     }
 }

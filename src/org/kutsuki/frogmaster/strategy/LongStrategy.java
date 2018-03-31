@@ -9,7 +9,7 @@ import org.kutsuki.frogmaster.Ticker;
 
 public class LongStrategy extends AbstractStrategy {
     private static final BigDecimal COST_PER_CONTRACT = new BigDecimal("20000");
-    private static final BigDecimal COST_PER_CONTRACT_BAR = new BigDecimal("16000");
+    private static final BigDecimal COST_PER_CONTRACT_BAR = new BigDecimal("21000");
 
     private BigDecimal lastLongPos;
     private BigDecimal longPos;
@@ -64,7 +64,7 @@ public class LongStrategy extends AbstractStrategy {
 	BigDecimal unrealized = BigDecimal.ZERO;
 
 	if (longPos != null) {
-	    unrealized = bar.getLow().subtract(longPos);
+	    unrealized = bar.getClose().subtract(longPos);
 	}
 
 	return unrealized;
@@ -75,7 +75,7 @@ public class LongStrategy extends AbstractStrategy {
 	BigDecimal unrealized = BigDecimal.ZERO;
 
 	if (longPos != null) {
-	    unrealized = bar.getLow().subtract(lastLongPos);
+	    unrealized = bar.getClose().subtract(lastLongPos);
 	}
 
 	return unrealized;

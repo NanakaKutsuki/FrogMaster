@@ -1,21 +1,40 @@
 package org.kutsuki.frogmaster;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.math.BigDecimal;
 
 public class HybridInputs2 {
-    private final static Map<Integer, Input> INPUT_MAP = new HashMap<Integer, Input>();
+    private final static Input INPUT;
 
     static {
-	INPUT_MAP.put(17, new Input("-6.25", "-1.5", "8.25", "10", "-12", "-11", "26", "37"));
+	INPUT = new Input("-6.25", "-1.5", "8.25", "10");
+	INPUT.setMomRE(new BigDecimal("-5"));
+	INPUT.setUpAmountRE(new BigDecimal("12.75"));
+	INPUT.setDownAmountRE(new BigDecimal("10.75"));
+	INPUT.setLongSafety(new BigDecimal("35"));
+	INPUT.setUpAmountT(new BigDecimal("9.75"));
+	INPUT.setDownAmountT(new BigDecimal("9.5"));
+	INPUT.setLongSafetyAH(new BigDecimal("26.75"));
+	INPUT.setUpAmountT2(new BigDecimal("8.5"));
+	INPUT.setDownAmountT2(new BigDecimal("13"));
+	INPUT.setMomREAH(new BigDecimal("-14.25"));
+	INPUT.setAccelREAH(new BigDecimal("-5.5"));
+	INPUT.setUpAmountREAH(new BigDecimal("9.5"));
+	INPUT.setDownAmountREAH(new BigDecimal("14"));
+	INPUT.setMomCore(new BigDecimal("14.25"));
+	INPUT.setUpAmountCore(new BigDecimal("26"));
+	INPUT.setDownAmountCore(new BigDecimal("15.5"));
+	INPUT.setAccelAH(new BigDecimal("-13"));
+	INPUT.setUpAmountAH(new BigDecimal("15.75"));
+	INPUT.setDownAmountAH(new BigDecimal("10"));
+	INPUT.setMomBeat(new BigDecimal("19"));
+	INPUT.setAccelBeat(new BigDecimal("18.75"));
     }
 
     private HybridInputs2() {
 	// private constructor
     }
 
-    public static Input getInputFromLastYear(int thisYear) {
-	// return INPUT_MAP.get(thisYear - 1);
-	return INPUT_MAP.get(17);
+    public static Input getInput() {
+	return INPUT;
     }
 }
