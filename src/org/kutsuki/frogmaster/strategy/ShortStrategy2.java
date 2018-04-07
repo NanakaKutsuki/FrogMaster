@@ -31,8 +31,8 @@ public class ShortStrategy2 extends AbstractStrategy {
     private LocalDateTime sellDateTime;
     private LocalDateTime shortEndDateTime;
 
-    public ShortStrategy2(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap, BigDecimal bankrollBar) {
-	super(ticker, barMap, bankrollBar);
+    public ShortStrategy2(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap) {
+	super(ticker, barMap);
 	this.buyDateTime = LocalDateTime.of(getStartDate(), getEightAM());
 	this.highPrice = null;
 	this.input = ShortInputs.getInputFromLastYear(ticker.getYear());

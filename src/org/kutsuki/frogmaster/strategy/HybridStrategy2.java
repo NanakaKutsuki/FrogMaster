@@ -11,8 +11,8 @@ import org.kutsuki.frogmaster.Input;
 import org.kutsuki.frogmaster.Ticker;
 
 public class HybridStrategy2 extends AbstractStrategy {
-    private static final BigDecimal COST_PER_CONTRACT = new BigDecimal("17500");
-    private static final BigDecimal COST_PER_CONTRACT_BAR = new BigDecimal("12000");
+    private static final BigDecimal COST_PER_CONTRACT = new BigDecimal("14200");
+    private static final BigDecimal COST_PER_CONTRACT_BAR = new BigDecimal("9000");
     private static final LocalTime END = LocalTime.of(15, 44);
     private static final LocalTime NINE_THIRTYFIVE = LocalTime.of(9, 35);
     private static final LocalTime NINE_THIRTY = LocalTime.of(9, 30);
@@ -37,8 +37,8 @@ public class HybridStrategy2 extends AbstractStrategy {
     private Input input;
     private LocalDateTime buyDateTime;
 
-    public HybridStrategy2(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap, BigDecimal bankrollBar) {
-	super(ticker, barMap, bankrollBar);
+    public HybridStrategy2(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap) {
+	super(ticker, barMap);
 	this.buyDateTime = LocalDateTime.of(getStartDate(), NINE_TWENTYFIVE);
 	this.initialized = false;
 	this.input = HybridInputs2.getInput();
@@ -142,12 +142,9 @@ public class HybridStrategy2 extends AbstractStrategy {
 			highPrice = bar.getClose().add(input.getUpAmountT());
 			lowPrice = bar.getClose().subtract(input.getDownAmountT());
 			marketShort = true;
-
-			/// NEWWWW
-
-		    } else if (longPrice.subtract(bar.getClose()).compareTo(BigDecimal.valueOf(20)) == 1) {
-			highPrice = bar.getClose().add(BigDecimal.valueOf(6));
-			lowPrice = bar.getClose().subtract(BigDecimal.valueOf(10));
+		    } else if (longPrice.subtract(bar.getClose()).compareTo(input.getLongBeating()) == 1) {
+			highPrice = bar.getClose().add(input.getUpAmountB());
+			lowPrice = bar.getClose().subtract(input.getDownAmountB());
 			marketShort = true;
 		    }
 		} else if (shortPos != null) {
@@ -189,6 +186,10 @@ public class HybridStrategy2 extends AbstractStrategy {
 		    } else if (bar.getClose().compareTo(longPrice.add(input.getLongSafetyAH())) == 1) {
 			highPrice = bar.getClose().add(input.getUpAmountT2());
 			lowPrice = bar.getClose().subtract(input.getDownAmountT2());
+			marketShort = true;
+		    } else if (longPrice.subtract(bar.getClose()).compareTo(input.getLongBeatingAH()) == 1) {
+			highPrice = bar.getClose().add(input.getUpAmountB2());
+			lowPrice = bar.getClose().subtract(input.getDownAmountB2());
 			marketShort = true;
 		    }
 		} else if (shortPos != null) {

@@ -55,9 +55,9 @@ public abstract class AbstractStrategy {
 
     public abstract void strategy(Bar bar);
 
-    public AbstractStrategy(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap, BigDecimal bankrollBar) {
+    public AbstractStrategy(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap) {
 	this.bankroll = BigDecimal.ZERO;
-	this.bankrollBar = bankrollBar;
+	this.bankrollBar = BigDecimal.valueOf(100000);
 	this.bankrollDay = BigDecimal.ZERO;
 	this.barMap = barMap;
 	this.dateTime = null;
@@ -74,21 +74,11 @@ public abstract class AbstractStrategy {
     }
 
     public void run() {
-	LocalDate yesterday = LocalDate.MIN;
 	for (LocalDateTime key : keyList) {
 	    Bar bar = barMap.get(key);
 	    dateTime = key;
 
 	    if (!key.isBefore(getStartDateTime()) && !key.isAfter(getEndDateTime())) {
-		if (!key.toLocalDate().isEqual(yesterday)) {
-		    if (bankrollDay.compareTo(BigDecimal.valueOf(-500)) == -1) {
-			System.out.println(yesterday + "," + bankrollDay);
-		    }
-
-		    bankrollDay = BigDecimal.ZERO;
-		    yesterday = key.toLocalDate();
-		}
-
 		// resolve market orders first
 		resolveMarketOrders(bar);
 
@@ -200,9 +190,6 @@ public abstract class AbstractStrategy {
     public void rebalance() {
 	// recalculate number of contracts
 	numContractsBar = getBankrollBar().divide(costPerContractBar, 0, RoundingMode.FLOOR);
-	if (numContractsBar.compareTo(BigDecimal.ONE) == -1) {
-	    throw new IllegalStateException("Margin Bar Exceeded need to at least afford 1");
-	}
 
 	// pay commission for rebuy
 	this.bankrollBar = getBankrollBar().subtract(COMMISSION.add(SLIPPAGE).multiply(numContractsBar));
@@ -319,7 +306,7 @@ public abstract class AbstractStrategy {
     }
 
     private void maintenanceMarginCheckBar(BigDecimal unrealizedBar) {
-	if (getBankrollBar().compareTo(BigDecimal.ZERO) == -1) {
+	if (getBankrollBar().compareTo(MAINTENANCE_MARGIN) == -1) {
 	    throw new IllegalStateException(
 		    "Out of Money! " + dateTime + " " + getBankrollBar() + " " + numContractsBar);
 	}
@@ -329,10 +316,6 @@ public abstract class AbstractStrategy {
 	    throw new IllegalStateException("Margin Bar Exceeded! " + dateTime + " " + getBankrollBar() + " "
 		    + unrealizedBar + " " + getStrategyMargin() + " " + numContractsBar);
 
-	}
-
-	if (getBankrollBar().compareTo(MAINTENANCE_MARGIN) == -1) {
-	    throw new IllegalStateException("Margin Bar Exceeded! 5800");
 	}
     }
 }

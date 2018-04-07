@@ -94,11 +94,10 @@ public class TradestationParserOptim {
 
 	    Ticker prevTicker = getPrevTicker(ticker);
 	    BigDecimal bankroll = prevTicker.getBankroll();
-	    BigDecimal bankrollBar = prevTicker.getBankrollBar();
 	    BigDecimal numContracts = prevTicker.getNumContracts();
 
-	    // ShortStrategy2 strategy = new ShortStrategy2(ticker, barMap, bankrollBar);
-	    HybridStrategy2 strategy = new HybridStrategy2(ticker, barMap, bankrollBar);
+	    // ShortStrategy2 strategy = new ShortStrategy2(ticker, barMap);
+	    HybridStrategy2 strategy = new HybridStrategy2(ticker, barMap);
 	    strategy.setHour(hour);
 	    strategy.setCostPerContractBar(costPerContractBar);
 	    strategy.run();

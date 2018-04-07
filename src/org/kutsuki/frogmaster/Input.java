@@ -28,6 +28,12 @@ public class Input {
     private BigDecimal downAmountAH;
     private BigDecimal momBeat;
     private BigDecimal accelBeat;
+    private BigDecimal longBeating;
+    private BigDecimal upAmountB;
+    private BigDecimal downAmountB;
+    private BigDecimal longBeatingAH;
+    private BigDecimal upAmountB2;
+    private BigDecimal downAmountB2;
 
     public Input(String momST, String accelST, String upAmount, String downAmount) {
 	this.momST = new BigDecimal(momST);
@@ -138,6 +144,54 @@ public class Input {
 
     public void setDownAmountT2(BigDecimal downAmountT2) {
 	this.downAmountT2 = downAmountT2;
+    }
+
+    public BigDecimal getLongBeating() {
+	return longBeating;
+    }
+
+    public void setLongBeating(BigDecimal longBeating) {
+	this.longBeating = longBeating;
+    }
+
+    public BigDecimal getUpAmountB() {
+	return upAmountB;
+    }
+
+    public void setUpAmountB(BigDecimal upAmountB) {
+	this.upAmountB = upAmountB;
+    }
+
+    public BigDecimal getDownAmountB() {
+	return downAmountB;
+    }
+
+    public void setDownAmountB(BigDecimal downAmountB) {
+	this.downAmountB = downAmountB;
+    }
+
+    public BigDecimal getLongBeatingAH() {
+	return longBeatingAH;
+    }
+
+    public void setLongBeatingAH(BigDecimal longBeatingAH) {
+	this.longBeatingAH = longBeatingAH;
+    }
+
+    public BigDecimal getUpAmountB2() {
+	return upAmountB2;
+    }
+
+    public void setUpAmountB2(BigDecimal upAmountB2) {
+	this.upAmountB2 = upAmountB2;
+    }
+
+    public BigDecimal getDownAmountB2() {
+	return downAmountB2;
+    }
+
+    public void setDownAmountB2(BigDecimal downAmountB2) {
+	this.downAmountB2 = downAmountB2;
     }
 
     public BigDecimal getMomREAH() {

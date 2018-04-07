@@ -16,8 +16,8 @@ public class LongStrategy extends AbstractStrategy {
     private LocalDateTime buyDateTime;
     private LocalDateTime sellDateTime;
 
-    public LongStrategy(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap, BigDecimal bankrollBar) {
-	super(ticker, barMap, bankrollBar);
+    public LongStrategy(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap) {
+	super(ticker, barMap);
 	this.buyDateTime = LocalDateTime.of(getStartDate(), getEightAM());
 	this.lastLongPos = null;
 	this.longPos = null;

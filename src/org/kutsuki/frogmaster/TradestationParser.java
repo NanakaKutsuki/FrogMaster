@@ -92,11 +92,10 @@ public class TradestationParser {
 
 	    Ticker prevTicker = getPrevTicker(ticker);
 	    BigDecimal bankroll = prevTicker.getBankroll();
-	    BigDecimal bankrollBar = prevTicker.getBankrollBar();
 	    BigDecimal numContracts = prevTicker.getNumContracts();
 
-	    // LongStrategy strategy = new LongStrategy(ticker, barMap, bankrollBar);
-	    HybridStrategy2 strategy = new HybridStrategy2(ticker, barMap, bankrollBar);
+	    // LongStrategy strategy = new LongStrategy(ticker, barMap);
+	    HybridStrategy2 strategy = new HybridStrategy2(ticker, barMap);
 	    strategy.run();
 
 	    // calculate quarterly bankroll
@@ -233,7 +232,7 @@ public class TradestationParser {
 
     public static void main(String[] args) {
 	TradestationParser parser = new TradestationParser();
-	// parser.run('U', 7);
+	// parser.run('Z', 8);
 
 	for (int year = 6; year <= YEAR; year++) {
 	    parser.run('H', year);
@@ -246,6 +245,6 @@ public class TradestationParser {
 	parser.printRealized();
 	parser.printEquity();
 	// parser.printRebalanceQuarterly();
-	// parser.printRebalanceBar();
+	parser.printRebalanceBar();
     }
 }

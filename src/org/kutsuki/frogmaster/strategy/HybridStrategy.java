@@ -32,8 +32,8 @@ public class HybridStrategy extends AbstractStrategy {
     private Input input;
     private LocalDateTime buyDateTime;
 
-    public HybridStrategy(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap, BigDecimal bankrollBar) {
-	super(ticker, barMap, bankrollBar);
+    public HybridStrategy(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap) {
+	super(ticker, barMap);
 	this.buyDateTime = LocalDateTime.of(getStartDate(), NINE_TWENTYFIVE);
 	this.coverLong = false;
 	this.coverShort = false;
