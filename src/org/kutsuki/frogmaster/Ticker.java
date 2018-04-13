@@ -4,120 +4,120 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 public class Ticker {
-    private static final BigDecimal STARTING_BANKROLL = new BigDecimal("100000");
-    private static final String ES = "ES";
+	private static final BigDecimal STARTING_BANKROLL = new BigDecimal("100000");
+	private static final String ES = "ES";
 
-    private char month;
-    private int year;
+	private char month;
+	private int year;
 
-    private BigDecimal bankroll;
-    private BigDecimal bankrollBar;
-    private BigDecimal equity;
-    private BigDecimal numContracts;
-    private BigDecimal numContractsBar;
-    private BigDecimal realized;
-    private LocalDateTime equityDateTime;
+	private BigDecimal bankroll;
+	private BigDecimal bankrollBar;
+	private BigDecimal equity;
+	private BigDecimal numContracts;
+	private BigDecimal numContractsBar;
+	private BigDecimal realized;
+	private LocalDateTime equityDateTime;
 
-    public Ticker(char month, int year) {
-	this.bankroll = STARTING_BANKROLL;
-	this.bankrollBar = STARTING_BANKROLL;
-	this.month = month;
-	this.year = year;
-    }
-
-    @Override
-    public String toString() {
-	return Ticker.getKey(getMonth(), getYear());
-    }
-
-    public static String getKey(char month, int year) {
-	StringBuilder sb = new StringBuilder();
-
-	sb.append(ES);
-	sb.append(month);
-
-	if (year < 10) {
-	    sb.append(0);
-	}
-	sb.append(year);
-
-	return sb.toString();
-    }
-
-    public int getFullYear() {
-	int fullYear = -1;
-
-	if (getYear() >= 97) {
-	    fullYear = 1900 + getYear();
-	} else {
-	    fullYear = 2000 + getYear();
+	public Ticker(char month, int year) {
+		this.bankroll = STARTING_BANKROLL;
+		this.bankrollBar = STARTING_BANKROLL;
+		this.month = month;
+		this.year = year;
 	}
 
-	return fullYear;
-    }
+	@Override
+	public String toString() {
+		return Ticker.getKey(getMonth(), getYear());
+	}
 
-    public char getMonth() {
-	return month;
-    }
+	public static String getKey(char month, int year) {
+		StringBuilder sb = new StringBuilder();
 
-    public int getYear() {
-	return year;
-    }
+		sb.append(ES);
+		sb.append(month);
 
-    public BigDecimal getEquity() {
-	return equity;
-    }
+		if (year < 10) {
+			sb.append(0);
+		}
+		sb.append(year);
 
-    public void setEquity(BigDecimal equity) {
-	this.equity = equity;
-    }
+		return sb.toString();
+	}
 
-    public BigDecimal getNumContracts() {
-	return numContracts;
-    }
+	public int getFullYear() {
+		int fullYear = -1;
 
-    public void setNumContracts(BigDecimal numContracts) {
-	this.numContracts = numContracts;
-    }
+		if (getYear() >= 97) {
+			fullYear = 1900 + getYear();
+		} else {
+			fullYear = 2000 + getYear();
+		}
 
-    public BigDecimal getNumContractsBar() {
-	return numContractsBar;
-    }
+		return fullYear;
+	}
 
-    public void setNumContractsBar(BigDecimal numContractsBar) {
-	this.numContractsBar = numContractsBar;
-    }
+	public char getMonth() {
+		return month;
+	}
 
-    public BigDecimal getBankroll() {
-	return bankroll;
-    }
+	public int getYear() {
+		return year;
+	}
 
-    public void setBankroll(BigDecimal bankroll) {
-	this.bankroll = bankroll;
-    }
+	public BigDecimal getEquity() {
+		return equity;
+	}
 
-    public BigDecimal getRealized() {
-	return realized;
-    }
+	public void setEquity(BigDecimal equity) {
+		this.equity = equity;
+	}
 
-    public void setRealized(BigDecimal realized) {
-	this.realized = realized;
-    }
+	public BigDecimal getNumContracts() {
+		return numContracts;
+	}
 
-    public BigDecimal getBankrollBar() {
-	return bankrollBar;
-    }
+	public void setNumContracts(BigDecimal numContracts) {
+		this.numContracts = numContracts;
+	}
 
-    public void setBankrollBar(BigDecimal bankrollBar) {
-	this.bankrollBar = bankrollBar;
-    }
+	public BigDecimal getNumContractsBar() {
+		return numContractsBar;
+	}
 
-    public LocalDateTime getEquityDateTime() {
-	return equityDateTime;
-    }
+	public void setNumContractsBar(BigDecimal numContractsBar) {
+		this.numContractsBar = numContractsBar;
+	}
 
-    public void setEquityDateTime(LocalDateTime equityDateTime) {
-	this.equityDateTime = equityDateTime;
-    }
+	public BigDecimal getBankroll() {
+		return bankroll;
+	}
+
+	public void setBankroll(BigDecimal bankroll) {
+		this.bankroll = bankroll;
+	}
+
+	public BigDecimal getRealized() {
+		return realized;
+	}
+
+	public void setRealized(BigDecimal realized) {
+		this.realized = realized;
+	}
+
+	public BigDecimal getBankrollBar() {
+		return bankrollBar;
+	}
+
+	public void setBankrollBar(BigDecimal bankrollBar) {
+		this.bankrollBar = bankrollBar;
+	}
+
+	public LocalDateTime getEquityDateTime() {
+		return equityDateTime;
+	}
+
+	public void setEquityDateTime(LocalDateTime equityDateTime) {
+		this.equityDateTime = equityDateTime;
+	}
 
 }
