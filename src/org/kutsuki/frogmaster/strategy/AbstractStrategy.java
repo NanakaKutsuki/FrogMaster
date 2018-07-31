@@ -22,7 +22,9 @@ public abstract class AbstractStrategy {
 
     private BigDecimal bankroll;
     private BigDecimal lowestEquity;
+    private BigDecimal highY;
     private int index;
+    private int lastYear;
     private LocalDate startDate;
     private LocalDate endDate;
     private LocalDateTime dateTime;
@@ -50,6 +52,7 @@ public abstract class AbstractStrategy {
 	this.dateTime = null;
 	this.endDate = calcEndDate(ticker);
 	this.index = 0;
+	this.lastYear = 0;
 	this.keyList = new ArrayList<LocalDateTime>(barMap.keySet());
 	this.lowestEquity = BigDecimal.valueOf(100000);
 	this.lowestEquityDateTime = barMap.firstKey();
@@ -57,10 +60,23 @@ public abstract class AbstractStrategy {
 	Collections.sort(this.keyList);
     }
 
+    public BigDecimal highY(int year) {
+	return highY;
+    }
+
     public void run() {
 	for (LocalDateTime key : keyList) {
 	    Bar bar = barMap.get(key);
 	    dateTime = key;
+
+	    if (dateTime.getYear() > lastYear) {
+		highY = bar.getHigh();
+		lastYear = dateTime.getYear();
+	    }
+
+	    if (bar.getHigh().compareTo(highY) == 1) {
+		highY = bar.getHigh();
+	    }
 
 	    if (!key.isBefore(getStartDateTime()) && !key.isAfter(getEndDateTime())) {
 		// resolve market orders first
@@ -134,6 +150,10 @@ public abstract class AbstractStrategy {
 	LocalDate date = null;
 
 	switch (ticker.getMonth()) {
+	case 'A':
+	    // hard coded for @ES
+	    date = LocalDate.of(2005, 12, 1);
+	    break;
 	case 'H':
 	    date = LocalDate.of(ticker.getFullYear() - 1, 12, 1);
 	    break;
@@ -162,6 +182,10 @@ public abstract class AbstractStrategy {
 	LocalDate date = null;
 
 	switch (ticker.getMonth()) {
+	case 'A':
+	    // hard coded for @ES
+	    date = LocalDate.of(2018, 6, 1);
+	    break;
 	case 'H':
 	    date = LocalDate.of(ticker.getFullYear(), 3, 1);
 	    break;

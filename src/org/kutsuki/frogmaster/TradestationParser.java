@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -16,7 +15,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.apache.commons.lang3.StringUtils;
-import org.kutsuki.frogmaster.strategy.HybridStrategy2;
+import org.kutsuki.frogmaster.strategy.HybridStrategyCore;
 
 public class TradestationParser {
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("MM/dd/yyyy");
@@ -90,31 +89,16 @@ public class TradestationParser {
 		e.printStackTrace();
 	    }
 
-	    Ticker prevTicker = getPrevTicker(ticker);
-	    BigDecimal bankroll = prevTicker.getBankroll();
-	    BigDecimal numContracts = prevTicker.getNumContracts();
-
 	    // LongStrategy2 strategy = new LongStrategy2(ticker, barMap);
-	    HybridStrategy2 strategy = new HybridStrategy2(ticker, barMap);
+	    // HybridStrategyOG strategy = new HybridStrategyOG(ticker, barMap);
+	    // TheLyon strategy = new TheLyon(ticker, barMap);
+	    HybridStrategyCore strategy = new HybridStrategyCore(ticker, barMap);
 	    strategy.run();
-
-	    // calculate quarterly bankroll
-	    if (ticker.getYear() > 8) {
-		if (numContracts == null) {
-		    numContracts = prevTicker.getBankroll().divide(strategy.getCostPerContract(), 0,
-			    RoundingMode.FLOOR);
-		}
-
-		bankroll = bankroll.add(strategy.getBankroll().multiply(numContracts));
-		numContracts = bankroll.divide(strategy.getCostPerContract(), 0, RoundingMode.FLOOR);
-	    }
 
 	    // set ticker data
 	    ticker.setEquityDateTime(strategy.getLowestEquityDateTime());
 	    ticker.setEquity(strategy.getLowestEquity());
 	    ticker.setRealized(strategy.getBankroll());
-	    ticker.setBankroll(bankroll);
-	    ticker.setNumContracts(numContracts);
 	    tickerMap.put(ticker.toString(), ticker);
 	}
     }
@@ -178,48 +162,9 @@ public class TradestationParser {
 	}
     }
 
-    public void printRebalanceQuarterly() {
-	System.out.println("--------------------------");
-	System.out.println("Bankroll - Rebalance each Quarter");
-	for (int year = YEAR; year >= 9; year--) {
-	    BigDecimal h = getTicker('H', year).getBankroll();
-	    BigDecimal m = getTicker('M', year).getBankroll();
-	    BigDecimal u = getTicker('U', year).getBankroll();
-	    BigDecimal z = getTicker('Z', year).getBankroll();
-	    System.out.println(h + "," + m + "," + u + "," + z);
-	}
-    }
-
-    private Ticker getPrevTicker(Ticker ticker) {
-	Ticker prevTicker = null;
-
-	switch (ticker.getMonth()) {
-	case 'H':
-	    prevTicker = getTicker('Z', ticker.getYear() - 1);
-	    break;
-	case 'M':
-	    prevTicker = getTicker('H', ticker.getYear());
-	    break;
-	case 'U':
-	    prevTicker = getTicker('M', ticker.getYear());
-	    break;
-	case 'Z':
-	    prevTicker = getTicker('U', ticker.getYear());
-	    break;
-	default:
-	    throw new IllegalStateException("Previous Ticker not found: " + ticker);
-	}
-
-	if (prevTicker == null) {
-	    prevTicker = new Ticker('X', -1);
-	}
-
-	return prevTicker;
-    }
-
     public static void main(String[] args) {
 	TradestationParser parser = new TradestationParser();
-	// parser.run('M', 10);
+	// parser.run('H', 6);
 
 	for (int year = 6; year <= YEAR; year++) {
 	    parser.run('H', year);
@@ -228,7 +173,7 @@ public class TradestationParser {
 	    parser.run('Z', year);
 	}
 
-	// parser.printEquityDateTime();
+	parser.printEquityDateTime();
 	parser.printRealized();
 	parser.printEquity();
     }

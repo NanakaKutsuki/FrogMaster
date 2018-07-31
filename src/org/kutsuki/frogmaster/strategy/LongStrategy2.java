@@ -9,8 +9,8 @@ import org.kutsuki.frogmaster.Bar;
 import org.kutsuki.frogmaster.Ticker;
 
 public class LongStrategy2 extends AbstractStrategy {
-    private static final BigDecimal COST_PER_CONTRACT = new BigDecimal("12000");
-    private static final BigDecimal LONG_SAFETY = new BigDecimal("46.75");
+    private static final BigDecimal COST_PER_CONTRACT = new BigDecimal("16000");
+    private static final BigDecimal LONG_BEATING = new BigDecimal("99.25");
     private static final BigDecimal STOP_LIMIT = new BigDecimal("14.25");
     private static final LocalTime START_TIME = LocalTime.of(18, 25);
     private static final LocalTime END_TIME = LocalTime.of(16, 00);
@@ -85,8 +85,16 @@ public class LongStrategy2 extends AbstractStrategy {
 	    stopPrice = bar.getClose().subtract(STOP_LIMIT);
 	} else if ((time.isAfter(START_TIME) && time.isBefore(LocalTime.MAX))
 		|| ((time.equals(LocalTime.MIN) || time.isAfter(LocalTime.MIN)) && time.isBefore(END_TIME))) {
-	    if (bar.getClose().compareTo(longPrice.add(LONG_SAFETY)) == 1) {
-		marketSell = true;
+	    // if (longPos != null && bar.getClose().compareTo(longPrice.add(LONG_SAFETY))
+	    // == 1) {
+	    // marketSell = true;
+	    // stopPrice = null;
+	    // }
+
+	    if (longPos == null && longPrice.subtract(bar.getClose()).compareTo(LONG_BEATING) == 1) {
+		marketBuy = true;
+		longPrice = bar.getClose();
+		stopPrice = bar.getClose().subtract(STOP_LIMIT);
 	    }
 	} else if (longPos != null) {
 	    marketSell = true;
