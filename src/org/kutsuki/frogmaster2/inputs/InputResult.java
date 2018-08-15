@@ -1,9 +1,7 @@
-package org.kutsuki.frogmaster2.core;
+package org.kutsuki.frogmaster2.inputs;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-
-import org.kutsuki.frogmaster2.inputs.Input;
 
 public class InputResult {
     private static final BigDecimal HUNDRED = BigDecimal.valueOf(100);

@@ -14,10 +14,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import org.kutsuki.frogmaster2.core.Bar;
-import org.kutsuki.frogmaster2.core.InputResult;
-import org.kutsuki.frogmaster2.core.InputSearch;
 import org.kutsuki.frogmaster2.core.Ticker;
 import org.kutsuki.frogmaster2.inputs.Input;
+import org.kutsuki.frogmaster2.inputs.InputResult;
+import org.kutsuki.frogmaster2.inputs.InputSearch;
 
 public class TradestationSearch extends AbstractParser {
     private static final int YEAR = LocalDate.now().getYear() - 2000;

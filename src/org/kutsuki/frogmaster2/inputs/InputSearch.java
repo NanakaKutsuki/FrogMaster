@@ -1,11 +1,12 @@
-package org.kutsuki.frogmaster2.core;
+package org.kutsuki.frogmaster2.inputs;
 
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.Callable;
 
-import org.kutsuki.frogmaster2.inputs.Input;
+import org.kutsuki.frogmaster2.core.Bar;
+import org.kutsuki.frogmaster2.core.Ticker;
 import org.kutsuki.frogmaster2.strategy.HybridStrategyOG;
 
 public class InputSearch implements Callable<InputResult> {
