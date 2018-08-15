@@ -7,6 +7,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.kutsuki.frogmaster2.core.Bar;
+import org.kutsuki.frogmaster2.core.Ticker;
 import org.kutsuki.frogmaster2.inputs.HybridInputsOG;
 import org.kutsuki.frogmaster2.inputs.Input;
 import org.kutsuki.frogmaster2.strategy.HybridStrategyOG;

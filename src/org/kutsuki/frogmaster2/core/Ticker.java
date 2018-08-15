@@ -1,4 +1,4 @@
-package org.kutsuki.frogmaster2;
+package org.kutsuki.frogmaster2.core;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;

@@ -9,8 +9,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.TreeMap;
 
-import org.kutsuki.frogmaster2.Bar;
-import org.kutsuki.frogmaster2.Ticker;
+import org.kutsuki.frogmaster2.core.Bar;
+import org.kutsuki.frogmaster2.core.Ticker;
 
 public abstract class AbstractStrategy {
     private static final boolean PRINT_TRADES = false;

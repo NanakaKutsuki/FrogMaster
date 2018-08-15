@@ -13,6 +13,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import org.kutsuki.frogmaster2.core.Bar;
+import org.kutsuki.frogmaster2.core.InputResult;
+import org.kutsuki.frogmaster2.core.InputSearch;
+import org.kutsuki.frogmaster2.core.Ticker;
 import org.kutsuki.frogmaster2.inputs.Input;
 
 public class TradestationSearch extends AbstractParser {

@@ -4,6 +4,8 @@ import java.io.File;
 import java.time.LocalDateTime;
 import java.util.TreeMap;
 
+import org.kutsuki.frogmaster2.core.Bar;
+import org.kutsuki.frogmaster2.core.Ticker;
 import org.kutsuki.frogmaster2.inputs.HybridInputsOG;
 import org.kutsuki.frogmaster2.inputs.Input;
 import org.kutsuki.frogmaster2.strategy.HybridStrategyOG;

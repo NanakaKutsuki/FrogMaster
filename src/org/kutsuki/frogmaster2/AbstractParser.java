@@ -12,6 +12,8 @@ import java.time.format.DateTimeParseException;
 import java.util.TreeMap;
 
 import org.apache.commons.lang3.StringUtils;
+import org.kutsuki.frogmaster2.core.Bar;
+import org.kutsuki.frogmaster2.core.Ticker;
 
 public abstract class AbstractParser {
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("MM/dd/yyyy");

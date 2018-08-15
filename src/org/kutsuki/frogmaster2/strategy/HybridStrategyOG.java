@@ -4,8 +4,8 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.TreeMap;
 
-import org.kutsuki.frogmaster2.Bar;
-import org.kutsuki.frogmaster2.Ticker;
+import org.kutsuki.frogmaster2.core.Bar;
+import org.kutsuki.frogmaster2.core.Ticker;
 import org.kutsuki.frogmaster2.inputs.Input;
 
 public class HybridStrategyOG extends AbstractStrategy {
