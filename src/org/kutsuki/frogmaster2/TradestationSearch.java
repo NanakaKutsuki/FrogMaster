@@ -71,6 +71,7 @@ public class TradestationSearch extends AbstractParser {
 	    tickerBarMap.put(z, load(getFile(z)));
 	}
 
+	// setup inputs
 	List<Future<InputResult>> futureList = new ArrayList<>();
 	for (int mom = -1000; mom <= -0; mom += 25) {
 	    for (int accel = -1000; accel <= -0; accel += 25) {
@@ -87,12 +88,12 @@ public class TradestationSearch extends AbstractParser {
 	// shutdown
 	es.shutdown();
 
-	System.out.println("Starting: " + futureList.size() + " tests with " + cores + " cores!");
+	System.out.println("Starting " + futureList.size() + " tests with " + cores + " cores!");
 
 	TradestationStatus status = new TradestationStatus(futureList.size());
-	InputResult first = new InputResult(null, Integer.MIN_VALUE);
-	InputResult second = new InputResult(null, Integer.MIN_VALUE);
-	InputResult third = new InputResult(null, Integer.MIN_VALUE);
+	InputResult first = new InputResult(null, -1);
+	InputResult second = new InputResult(null, -1);
+	InputResult third = new InputResult(null, -1);
 	for (Future<InputResult> future : futureList) {
 	    try {
 		InputResult result = future.get();
