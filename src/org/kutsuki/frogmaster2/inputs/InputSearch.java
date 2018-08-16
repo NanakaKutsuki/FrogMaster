@@ -21,14 +21,19 @@ public class InputSearch implements Callable<InputResult> {
     @Override
     public InputResult call() {
 	int realized = 0;
+	int equity = Integer.MAX_VALUE;
 
 	for (Ticker ticker : tickerBarMap.keySet()) {
 	    HybridStrategyOG strategy = new HybridStrategyOG(ticker, tickerBarMap.get(ticker), input);
 	    strategy.run();
 	    realized += strategy.getBankroll();
+
+	    if (strategy.getLowestEquity() < equity) {
+		equity = strategy.getLowestEquity();
+	    }
 	}
 
-	return new InputResult(input, realized);
+	return new InputResult(input, realized, equity);
     }
 
 }

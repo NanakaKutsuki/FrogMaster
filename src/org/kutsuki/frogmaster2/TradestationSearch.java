@@ -78,7 +78,7 @@ public class TradestationSearch extends AbstractParser {
 	// setup inputs
 	List<Future<InputResult>> futureList = new ArrayList<>();
 	for (int mom = -1000; mom <= -0; mom += 25) {
-	    for (int accel = -1000; accel <= -0; accel += 25) {
+	    for (int accel = -500; accel <= -0; accel += 25) {
 		for (int up = 100; up <= 1500; up += 25) {
 		    for (int down = 100; down <= 1500; down += 25) {
 			Input input = new Input(mom, accel, up, down);
@@ -95,9 +95,13 @@ public class TradestationSearch extends AbstractParser {
 	System.out.println("Starting " + futureList.size() + " tests with " + cores + " cores!");
 
 	TradestationStatus status = new TradestationStatus(futureList.size());
-	InputResult first = new InputResult(null, -1);
-	InputResult second = new InputResult(null, -1);
-	InputResult third = new InputResult(null, -1);
+	InputResult first = new InputResult(null, -1, Integer.MAX_VALUE);
+	InputResult second = new InputResult(null, -1, Integer.MAX_VALUE);
+	InputResult third = new InputResult(null, -1, Integer.MAX_VALUE);
+
+	InputResult firstEquity = new InputResult(null, -1, Integer.MAX_VALUE);
+	InputResult secondEquity = new InputResult(null, -1, Integer.MAX_VALUE);
+	InputResult thirdEquity = new InputResult(null, -1, Integer.MAX_VALUE);
 	for (Future<InputResult> future : futureList) {
 	    try {
 		InputResult result = future.get();
@@ -108,14 +112,24 @@ public class TradestationSearch extends AbstractParser {
 		    second = first;
 		    first = result;
 		}
+
+		if (result.getEquity() <= first.getEquity()) {
+		    thirdEquity = secondEquity;
+		    secondEquity = firstEquity;
+		    firstEquity = result;
+		}
 	    } catch (InterruptedException | ExecutionException e) {
 		e.printStackTrace();
 	    }
 	}
 
-	System.out.println("1. " + first);
-	System.out.println("2. " + second);
-	System.out.println("3. " + third);
+	System.out.println("Realized 1. " + first);
+	System.out.println("Realized 2. " + second);
+	System.out.println("Realized 3. " + third);
+
+	System.out.println("Lowest Equity 1. " + firstEquity);
+	System.out.println("Lowest Equity 2. " + secondEquity);
+	System.out.println("Lowest Equity 3. " + thirdEquity);
     }
 
     public static void main(String[] args) {
