@@ -77,8 +77,8 @@ public class TradestationSearch extends AbstractParser {
 
 	// setup inputs
 	List<Future<InputResult>> futureList = new ArrayList<>();
-	for (int mom = -1000; mom <= -0; mom += 25) {
-	    for (int accel = -500; accel <= -0; accel += 25) {
+	for (int mom = -700; mom <= -500; mom += 25) {
+	    for (int accel = -200; accel <= -0; accel += 25) {
 		for (int up = 100; up <= 1500; up += 25) {
 		    for (int down = 100; down <= 1500; down += 25) {
 			Input input = new Input(mom, accel, up, down);
@@ -89,19 +89,24 @@ public class TradestationSearch extends AbstractParser {
 	    }
 	}
 
+	// test
+	// Input input = HybridInputsOG.getInput();
+	// Future<InputResult> f = es.submit(new InputSearch(tickerBarMap, input));
+	// futureList.add(f);
+
 	// shutdown
 	es.shutdown();
 
 	System.out.println("Starting " + futureList.size() + " tests with " + cores + " cores!");
 
 	TradestationStatus status = new TradestationStatus(futureList.size());
-	InputResult first = new InputResult(null, -1, Integer.MAX_VALUE);
-	InputResult second = new InputResult(null, -1, Integer.MAX_VALUE);
-	InputResult third = new InputResult(null, -1, Integer.MAX_VALUE);
+	InputResult first = new InputResult();
+	InputResult second = new InputResult();
+	InputResult third = new InputResult();
 
-	InputResult firstEquity = new InputResult(null, -1, Integer.MAX_VALUE);
-	InputResult secondEquity = new InputResult(null, -1, Integer.MAX_VALUE);
-	InputResult thirdEquity = new InputResult(null, -1, Integer.MAX_VALUE);
+	InputResult firstEquity = new InputResult();
+	InputResult secondEquity = new InputResult();
+	InputResult thirdEquity = new InputResult();
 	for (Future<InputResult> future : futureList) {
 	    try {
 		InputResult result = future.get();
@@ -113,7 +118,7 @@ public class TradestationSearch extends AbstractParser {
 		    first = result;
 		}
 
-		if (result.getEquity() <= first.getEquity()) {
+		if (result.getLowestEquity() >= first.getLowestEquity()) {
 		    thirdEquity = secondEquity;
 		    secondEquity = firstEquity;
 		    firstEquity = result;
@@ -130,6 +135,11 @@ public class TradestationSearch extends AbstractParser {
 	System.out.println("Lowest Equity 1. " + firstEquity);
 	System.out.println("Lowest Equity 2. " + secondEquity);
 	System.out.println("Lowest Equity 3. " + thirdEquity);
+
+	// Realized 1. $241594.52 $-8581.50 Inputs: (-625, -125, 900, 1050)
+	// Realized 2. $238568.08 $-6936.02 Inputs: (-625, -150, 1075, 925)
+	// Realized 3. $233873.68 $-8656.50 Inputs: (-625, -150, 900, 1050)
+
     }
 
     public static void main(String[] args) {

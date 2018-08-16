@@ -20,6 +20,7 @@ public abstract class AbstractStrategy {
     private static final int SLIPPAGE = 50;
     private static final LocalTime EIGHT_AM = LocalTime.of(8, 0);
 
+    private boolean marginCheck;
     private boolean marketBuy;
     private boolean marketSellShort;
     private int bankroll;
@@ -52,6 +53,7 @@ public abstract class AbstractStrategy {
 	this.keyList = new ArrayList<LocalDateTime>(barMap.keySet());
 	this.lowestEquity = Integer.MAX_VALUE;
 	this.marketPosition = 0;
+	this.marginCheck = true;
 	Collections.sort(this.keyList);
 
 	if (!barMap.isEmpty()) {
@@ -89,6 +91,10 @@ public abstract class AbstractStrategy {
 
 	    index++;
 	}
+    }
+
+    public void disableMarginCheck() {
+	marginCheck = false;
     }
 
     public int getBankroll() {
@@ -259,7 +265,7 @@ public abstract class AbstractStrategy {
 
     private void maintenanceMarginCheck(int unrealized) {
 	// Only check starting in 2009
-	if (dateTime.getYear() > 2008) {
+	if (dateTime.getYear() > 2008 && marginCheck) {
 	    int equity = getBankroll() + unrealized + getCostPerContract();
 
 	    if (equity < getStrategyMargin()) {

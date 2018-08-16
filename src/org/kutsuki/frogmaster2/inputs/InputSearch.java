@@ -25,6 +25,7 @@ public class InputSearch implements Callable<InputResult> {
 
 	for (Ticker ticker : tickerBarMap.keySet()) {
 	    HybridStrategyOG strategy = new HybridStrategyOG(ticker, tickerBarMap.get(ticker), input);
+	    strategy.disableMarginCheck();
 	    strategy.run();
 	    realized += strategy.getBankroll();
 

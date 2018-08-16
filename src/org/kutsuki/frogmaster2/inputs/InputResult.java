@@ -8,12 +8,18 @@ public class InputResult {
 
     private Input input;
     private int realized;
-    private int equity;
+    private int lowestEquity;
+
+    public InputResult() {
+	this.input = null;
+	this.realized = Integer.MIN_VALUE;
+	this.lowestEquity = 0;
+    }
 
     public InputResult(Input input, int realized, int equity) {
 	this.input = input;
 	this.realized = realized;
-	this.equity = equity;
+	this.lowestEquity = equity;
     }
 
     @Override
@@ -23,7 +29,7 @@ public class InputResult {
 	bd = bd.divide(HUNDRED, 2, RoundingMode.HALF_UP);
 	sb.append('$').append(bd).append(' ');
 
-	bd = new BigDecimal(equity);
+	bd = new BigDecimal(lowestEquity);
 	bd = bd.divide(HUNDRED, 2, RoundingMode.HALF_UP);
 	sb.append('$').append(bd).append(' ');
 
@@ -47,7 +53,7 @@ public class InputResult {
 	return realized;
     }
 
-    public int getEquity() {
-	return equity;
+    public int getLowestEquity() {
+	return lowestEquity;
     }
 }
