@@ -18,8 +18,8 @@ import org.kutsuki.frogmaster2.inputs.InputSearch;
 
 public class TradestationSearch extends AbstractParser {
     private static final File WINDOWS_FILE = new File(
-	    "C:/Users/" + System.getProperty("user.name") + "/Desktop/ES/atEs.txt");
-    private static final File UNIX_FILE = new File("ES/atEs.txt");
+	    "C:/Users/" + System.getProperty("user.name") + "/Desktop/atEs.txt");
+    private static final File UNIX_FILE = new File("atEs.txt");
 
     private ExecutorService es;
     private int cores;
@@ -91,7 +91,6 @@ public class TradestationSearch extends AbstractParser {
 		    second = first;
 		    first = result;
 		}
-
 	    } catch (InterruptedException | ExecutionException e) {
 		e.printStackTrace();
 	    }
