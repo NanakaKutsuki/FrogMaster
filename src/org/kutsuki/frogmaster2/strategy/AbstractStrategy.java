@@ -14,10 +14,10 @@ import org.kutsuki.frogmaster2.core.Ticker;
 
 public abstract class AbstractStrategy {
     private static final boolean PRINT_TRADES = false;
-    private static final int COMMISSION = 538;
+    private static final int COMMISSION = 269;
     private static final int FIFTY = 50;
     private static final int MAINTENANCE_MARGIN = 560000;
-    private static final int SLIPPAGE = 50;
+    private static final int SLIPPAGE = 25;
     private static final LocalTime EIGHT_AM = LocalTime.of(8, 0);
 
     private boolean marginCheck;
@@ -29,6 +29,7 @@ public abstract class AbstractStrategy {
     private int index;
     private int marketPosition;
     private int positionPrice;
+    private int unrealized;
     private LocalDate startDate;
     private LocalDate endDate;
     private LocalDateTime dateTime;
@@ -54,6 +55,7 @@ public abstract class AbstractStrategy {
 	this.lowestEquity = Integer.MAX_VALUE;
 	this.marketPosition = 0;
 	this.marginCheck = true;
+	this.unrealized = 0;
 	Collections.sort(this.keyList);
 
 	if (!barMap.isEmpty()) {
@@ -76,7 +78,7 @@ public abstract class AbstractStrategy {
 		strategy(bar);
 
 		// calculate unrealized
-		int unrealized = getUnrealized(bar);
+		calcUnrealized(bar);
 
 		// calculate equity
 		int equity = getBankroll() + unrealized;
@@ -86,7 +88,7 @@ public abstract class AbstractStrategy {
 		}
 
 		// margin check
-		maintenanceMarginCheck(unrealized);
+		maintenanceMarginCheck();
 	    }
 
 	    index++;
@@ -139,6 +141,10 @@ public abstract class AbstractStrategy {
 	return startDate;
     }
 
+    public int getUnrealized() {
+	return unrealized;
+    }
+
     public void marketBuy() {
 	marketBuy = true;
     }
@@ -149,8 +155,7 @@ public abstract class AbstractStrategy {
 
     private void addBankroll(int realized) {
 	this.bankroll += convertTicks(realized);
-	this.bankroll -= COMMISSION;
-	this.bankroll -= SLIPPAGE;
+	this.bankroll -= COMMISSION + SLIPPAGE + COMMISSION + SLIPPAGE;
     }
 
     private LocalDate calcStartDate(Ticker ticker) {
@@ -191,7 +196,7 @@ public abstract class AbstractStrategy {
 	switch (ticker.getMonth()) {
 	case 'A':
 	    // hard coded for @ES
-	    date = LocalDate.of(2018, 6, 1);
+	    date = barMap.lastKey().toLocalDate();
 	    break;
 	case 'H':
 	    date = LocalDate.of(ticker.getFullYear(), 3, 1);
@@ -237,6 +242,16 @@ public abstract class AbstractStrategy {
 	return thirdDayOfWeek;
     }
 
+    private void calcUnrealized(Bar bar) {
+	if (getMarketPosition() == 1) {
+	    unrealized = convertTicks(bar.getClose() - positionPrice);
+	    unrealized -= COMMISSION + SLIPPAGE;
+	} else if (getMarketPosition() == -1) {
+	    unrealized = convertTicks(positionPrice - bar.getClose());
+	    unrealized -= COMMISSION + SLIPPAGE;
+	}
+    }
+
     private int convertTicks(int ticks) {
 	return ticks * FIFTY;
     }
@@ -251,19 +266,7 @@ public abstract class AbstractStrategy {
 	return margin;
     }
 
-    private int getUnrealized(Bar bar) {
-	int unrealized = 0;
-
-	if (getMarketPosition() == 1) {
-	    unrealized = bar.getClose() - positionPrice;
-	} else if (getMarketPosition() == -1) {
-	    unrealized = positionPrice - bar.getClose();
-	}
-
-	return convertTicks(unrealized);
-    }
-
-    private void maintenanceMarginCheck(int unrealized) {
+    private void maintenanceMarginCheck() {
 	// Only check starting in 2009
 	if (dateTime.getYear() > 2008 && marginCheck) {
 	    int equity = getBankroll() + unrealized + getCostPerContract();

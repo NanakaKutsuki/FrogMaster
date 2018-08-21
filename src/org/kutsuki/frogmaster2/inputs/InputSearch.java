@@ -1,6 +1,7 @@
 package org.kutsuki.frogmaster2.inputs;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.Callable;
 
@@ -9,25 +10,34 @@ import org.kutsuki.frogmaster2.core.Ticker;
 import org.kutsuki.frogmaster2.strategy.HybridStrategyOG;
 
 public class InputSearch implements Callable<InputResult> {
-    private static final Ticker TICKER = new Ticker('A', 6);
-
     private Input input;
+    private Map<Ticker, TreeMap<LocalDateTime, Bar>> tickerBarMap;
 
-    private TreeMap<LocalDateTime, Bar> barMap;
-
-    public InputSearch(TreeMap<LocalDateTime, Bar> barMap, Input input) {
+    public InputSearch(Map<Ticker, TreeMap<LocalDateTime, Bar>> tickerBarMap, Input input) {
 	this.input = input;
-	this.barMap = barMap;
+	this.tickerBarMap = tickerBarMap;
     }
 
     @Override
     public InputResult call() {
+	int realized = 0;
+	int unrealized = 0;
+	int equity = Integer.MAX_VALUE;
 
-	HybridStrategyOG strategy = new HybridStrategyOG(TICKER, barMap, input);
-	strategy.disableMarginCheck();
-	strategy.run();
+	for (Ticker ticker : tickerBarMap.keySet()) {
+	    HybridStrategyOG strategy = new HybridStrategyOG(ticker, tickerBarMap.get(ticker), input);
+	    strategy.disableMarginCheck();
+	    strategy.run();
 
-	return new InputResult(input, strategy.getBankroll());
+	    realized += strategy.getBankroll();
+	    unrealized += strategy.getUnrealized();
+
+	    if (strategy.getLowestEquity() < equity) {
+		equity = strategy.getLowestEquity();
+	    }
+	}
+
+	return new InputResult(input, realized, unrealized, equity);
     }
 
 }
