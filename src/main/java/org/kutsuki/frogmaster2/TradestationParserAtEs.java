@@ -6,12 +6,12 @@ import java.util.TreeMap;
 
 import org.kutsuki.frogmaster2.core.Bar;
 import org.kutsuki.frogmaster2.core.Ticker;
-import org.kutsuki.frogmaster2.inputs.HybridInputsOG;
+import org.kutsuki.frogmaster2.inputs.HybridInputsCore;
 import org.kutsuki.frogmaster2.inputs.Input;
-import org.kutsuki.frogmaster2.strategy.HybridStrategyOG;
+import org.kutsuki.frogmaster2.strategy.HybridStrategyCore;
 
 public class TradestationParserAtEs extends AbstractParser {
-    private static final String FILE_NAME = "C:/Users/" + System.getProperty("user.name") + "Desktop/atEs.txt";
+    private static final String FILE_NAME = "C:/Users/" + System.getProperty("user.name") + "/Desktop/atES.txt";
 
     private Ticker ticker;
 
@@ -29,17 +29,19 @@ public class TradestationParserAtEs extends AbstractParser {
 	TreeMap<LocalDateTime, Bar> barMap = load(file);
 
 	if (file.exists()) {
-	    Input input = HybridInputsOG.getInput();
-	    HybridStrategyOG strategy = new HybridStrategyOG(ticker, barMap, input);
+	    Input input = HybridInputsCore.getInput();
+	    HybridStrategyCore strategy = new HybridStrategyCore(ticker, barMap, input);
 	    strategy.run();
 
 	    // set ticker data
 	    ticker.setRealized(strategy.getBankroll());
+	    ticker.setEquity(strategy.getUnrealized());
 	}
     }
 
     public void printSummary() {
 	System.out.println("Realized: " + ticker.getRealized());
+	System.out.println("Unrealized: " + ticker.getEquity());
     }
 
     public static void main(String[] args) {

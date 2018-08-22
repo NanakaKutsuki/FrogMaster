@@ -22,6 +22,8 @@ public abstract class AbstractStrategy {
 
     private boolean marginCheck;
     private boolean marketBuy;
+    private boolean marketBuyToCover;
+    private boolean marketSell;
     private boolean marketSellShort;
     private int bankroll;
     private int count = 0;
@@ -149,6 +151,14 @@ public abstract class AbstractStrategy {
 	marketBuy = true;
     }
 
+    public void marketBuyToCover() {
+	marketBuyToCover = true;
+    }
+
+    public void marketSell() {
+	marketSell = true;
+    }
+
     public void marketSellShort() {
 	marketSellShort = true;
     }
@@ -249,6 +259,8 @@ public abstract class AbstractStrategy {
 	} else if (getMarketPosition() == -1) {
 	    unrealized = convertTicks(positionPrice - bar.getClose());
 	    unrealized -= COMMISSION + SLIPPAGE;
+	} else {
+	    unrealized = 0;
 	}
     }
 
@@ -300,6 +312,34 @@ public abstract class AbstractStrategy {
 	    positionPrice = bar.getOpen();
 	    marketPosition = 1;
 	    marketBuy = false;
+	} else if (marketBuyToCover) {
+	    if (marketPosition == -1) {
+		addBankroll(positionPrice - bar.getOpen());
+
+		if (PRINT_TRADES) {
+		    System.out
+			    .println(count + " " + bar.getDateTime() + " Cover " + bar.getOpen() + " " + getBankroll());
+		    count++;
+		    System.out.println(count + " " + bar.getDateTime() + " Cover " + bar.getOpen());
+		}
+	    }
+
+	    positionPrice = 0;
+	    marketPosition = 0;
+	    marketBuyToCover = false;
+	} else if (marketSell) {
+	    if (marketPosition == 1) {
+		addBankroll(bar.getOpen() - positionPrice);
+
+		if (PRINT_TRADES) {
+		    System.out
+			    .println(count + " " + bar.getDateTime() + " Sell " + bar.getOpen() + " " + getBankroll());
+		}
+	    }
+
+	    positionPrice = 0;
+	    marketPosition = 0;
+	    marketSell = false;
 	} else if (marketSellShort) {
 	    if (marketPosition == 1) {
 		addBankroll(bar.getOpen() - positionPrice);

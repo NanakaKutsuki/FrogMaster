@@ -9,9 +9,9 @@ import java.util.TreeMap;
 
 import org.kutsuki.frogmaster2.core.Bar;
 import org.kutsuki.frogmaster2.core.Ticker;
-import org.kutsuki.frogmaster2.inputs.HybridInputsOG;
+import org.kutsuki.frogmaster2.inputs.HybridInputsCore;
 import org.kutsuki.frogmaster2.inputs.Input;
-import org.kutsuki.frogmaster2.strategy.HybridStrategyOG;
+import org.kutsuki.frogmaster2.strategy.HybridStrategyCore;
 
 public class TradestationParser extends AbstractParser {
     private static final int YEAR = LocalDate.now().getYear() - 2000;
@@ -52,8 +52,8 @@ public class TradestationParser extends AbstractParser {
 	if (file.exists()) {
 	    TreeMap<LocalDateTime, Bar> barMap = load(file);
 
-	    Input input = HybridInputsOG.getInput();
-	    HybridStrategyOG strategy = new HybridStrategyOG(ticker, barMap, input);
+	    Input input = HybridInputsCore.getInput();
+	    HybridStrategyCore strategy = new HybridStrategyCore(ticker, barMap, input);
 	    strategy.run();
 
 	    // set ticker data

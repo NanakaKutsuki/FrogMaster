@@ -1,6 +1,9 @@
 package org.kutsuki.frogmaster2;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -24,8 +27,8 @@ public class TradestationSearch extends AbstractParser {
     public static boolean AT_ES = true;
 
     private static final File WINDOWS_ATES = new File(
-	    "C:/Users/" + System.getProperty("user.name") + "/Desktop/atEs.txt");
-    private static final File UNIX_ATES = new File("atEs.txt");
+	    "C:/Users/" + System.getProperty("user.name") + "/Desktop/atES.txt");
+    private static final File UNIX_ATES = new File("atES.txt");
     private static final String WINDOWS_DIR = "C:/Users/" + System.getProperty("user.name") + "/Desktop/ES/";
     private static final String UNIX_DIR = "ES/";
     private static final String TXT = ".txt";
@@ -79,17 +82,17 @@ public class TradestationSearch extends AbstractParser {
 
 	// setup inputs
 	List<Future<InputResult>> futureList = new ArrayList<>();
-	// for (int mom = -700; mom <= -500; mom += 25) {
-	// for (int accel = -200; accel <= -0; accel += 25) {
-	for (int up = 100; up <= 1500; up += 25) {
-	    for (int down = 100; down <= 1500; down += 25) {
-		Input input = new Input(-625, -150, up, down);
-		Future<InputResult> f = es.submit(new InputSearch(tickerBarMap, input));
-		futureList.add(f);
+	for (int mom = -1000; mom <= -100; mom += 25) {
+	    for (int accel = -1000; accel <= -0; accel += 25) {
+		for (int up = 100; up <= 1500; up += 25) {
+		    for (int down = 100; down <= 1500; down += 25) {
+			Input input = new Input(-600, -50, up, down);
+			Future<InputResult> f = es.submit(new InputSearch(tickerBarMap, input));
+			futureList.add(f);
+		    }
+		}
 	    }
 	}
-	// }
-	// }
 
 	// test
 	// Input input = HybridInputsOG.getInput();
@@ -113,21 +116,24 @@ public class TradestationSearch extends AbstractParser {
 	}
 
 	// print top 10
-	Collections.sort(futureList, new InputResultComparator());
-	StringBuilder sb = new StringBuilder();
-	for (int i = 0; i < 10; i++) {
-	    try {
+	File out = new File("Results-" + System.currentTimeMillis() + ".txt");
+	try (BufferedWriter bw = new BufferedWriter(new FileWriter(out))) {
+	    Collections.sort(futureList, new InputResultComparator());
+	    StringBuilder sb = new StringBuilder();
+	    for (int i = 0; i < 10; i++) {
 		sb.append(i + 1);
 		sb.append('.');
 		sb.append(' ');
 		sb.append(futureList.get(i).get());
 		sb.append('\n');
-	    } catch (InterruptedException | ExecutionException e) {
-		e.printStackTrace();
 	    }
+
+	    System.out.println(sb.toString());
+	    bw.write(sb.toString());
+	} catch (IOException | InterruptedException | ExecutionException e) {
+	    e.printStackTrace();
 	}
 
-	System.out.println(sb.toString());
     }
 
     private void loadAtEs() {
