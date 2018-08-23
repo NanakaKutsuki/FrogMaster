@@ -56,7 +56,7 @@ public class TradestationParser extends AbstractParser {
 	if (file.exists()) {
 	    TreeMap<LocalDateTime, Bar> barMap = load(file);
 
-	    STRATEGY.setTickerBarMap(ticker, barMap, INPUT);
+	    STRATEGY.init(ticker, barMap, INPUT);
 	    STRATEGY.run();
 
 	    // set ticker data

@@ -6,15 +6,15 @@ import java.util.TreeMap;
 
 import org.kutsuki.frogmaster2.core.Bar;
 import org.kutsuki.frogmaster2.core.Ticker;
-import org.kutsuki.frogmaster2.inputs.HybridInputsOG;
+import org.kutsuki.frogmaster2.inputs.HybridInputsCore;
 import org.kutsuki.frogmaster2.inputs.Input;
 import org.kutsuki.frogmaster2.strategy.AbstractStrategy;
-import org.kutsuki.frogmaster2.strategy.HybridStrategyOG;
+import org.kutsuki.frogmaster2.strategy.HybridStrategyCore;
 
 public class TradestationParserAtEs extends AbstractParser {
     private static final String FILE_NAME = "C:/Users/" + System.getProperty("user.name") + "/Desktop/atES.txt";
-    private static final AbstractStrategy STRATEGY = new HybridStrategyOG();
-    private static final Input INPUT = HybridInputsOG.getInput();
+    private static final AbstractStrategy STRATEGY = new HybridStrategyCore();
+    private static final Input INPUT = HybridInputsCore.getInput();
     private static final Ticker TICKER = new Ticker('A', 6);
 
     @Override
@@ -27,7 +27,7 @@ public class TradestationParserAtEs extends AbstractParser {
 	TreeMap<LocalDateTime, Bar> barMap = load(file);
 
 	if (file.exists()) {
-	    STRATEGY.setTickerBarMap(TICKER, barMap, INPUT);
+	    STRATEGY.init(TICKER, barMap, INPUT);
 	    STRATEGY.run();
 	}
     }
