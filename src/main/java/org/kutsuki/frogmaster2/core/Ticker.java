@@ -10,6 +10,7 @@ public class Ticker {
 
     private int equity;
     private int realized;
+    private int unrealized;
     private LocalDateTime equityDateTime;
 
     public Ticker(char month, int year) {
@@ -70,6 +71,14 @@ public class Ticker {
 
     public void setRealized(int realized) {
 	this.realized = realized;
+    }
+
+    public int getUnrealized() {
+	return unrealized;
+    }
+
+    public void setUnrealized(int unrealized) {
+	this.unrealized = unrealized;
     }
 
     public LocalDateTime getEquityDateTime() {

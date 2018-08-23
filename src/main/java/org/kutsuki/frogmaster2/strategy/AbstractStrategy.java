@@ -21,6 +21,8 @@ public abstract class AbstractStrategy {
     private static final int MAINTENANCE_MARGIN = 580000;
     private static final int SLIPPAGE = 25;
     private static final LocalTime EIGHT_AM = LocalTime.of(8, 0);
+    private static final LocalTime FIVE_PM = LocalTime.of(17, 00);
+    private static final LocalTime NINE_TWENTYFIVE = LocalTime.of(9, 25);
 
     private boolean marginCheck;
     private boolean marketBuy;
@@ -44,10 +46,6 @@ public abstract class AbstractStrategy {
     public abstract void init(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap, Input input);
 
     public abstract int getCostPerContract();
-
-    public abstract LocalDateTime getStartDateTime();
-
-    public abstract LocalDateTime getEndDateTime();
 
     public abstract void strategy(Bar bar);
 
@@ -125,6 +123,10 @@ public abstract class AbstractStrategy {
 	return endDate;
     }
 
+    public LocalDateTime getEndDateTime() {
+	return LocalDateTime.of(getEndDate(), FIVE_PM);
+    }
+
     public Input getInput() {
 	return input;
     }
@@ -157,6 +159,10 @@ public abstract class AbstractStrategy {
 
     public LocalDate getStartDate() {
 	return startDate;
+    }
+
+    public LocalDateTime getStartDateTime() {
+	return LocalDateTime.of(getStartDate(), NINE_TWENTYFIVE);
     }
 
     public int getUnrealized() {

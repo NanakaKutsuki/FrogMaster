@@ -13,10 +13,10 @@ import org.kutsuki.frogmaster2.core.Ticker;
 import org.kutsuki.frogmaster2.inputs.HybridInputsOG;
 import org.kutsuki.frogmaster2.inputs.Input;
 import org.kutsuki.frogmaster2.strategy.AbstractStrategy;
-import org.kutsuki.frogmaster2.strategy.HybridStrategyOG;
+import org.kutsuki.frogmaster2.strategy.TheLyon;
 
 public class TradestationParser extends AbstractParser {
-    private static final AbstractStrategy STRATEGY = new HybridStrategyOG();
+    private static final AbstractStrategy STRATEGY = new TheLyon();
     private static final Input INPUT = HybridInputsOG.getInput();
     private static final int YEAR = LocalDate.now().getYear() - 2000;
     private static final String DIR = "C:/Users/" + System.getProperty("user.name") + "/Desktop/ES/";
@@ -63,6 +63,7 @@ public class TradestationParser extends AbstractParser {
 	    ticker.setEquityDateTime(STRATEGY.getLowestEquityDateTime());
 	    ticker.setEquity(STRATEGY.getLowestEquity());
 	    ticker.setRealized(STRATEGY.getBankroll());
+	    ticker.setUnrealized(STRATEGY.getUnrealized());
 	    tickerMap.put(ticker.toString(), ticker);
 	}
     }
@@ -104,6 +105,7 @@ public class TradestationParser extends AbstractParser {
 
     public void printRealized() {
 	System.out.println("--------------------------");
+	System.out.println("Unrealized: " + getUnrealized());
 	System.out.println("Realized");
 	for (int year = YEAR; year >= 6; year--) {
 	    BigDecimal h = revertInt(getTicker('H', year).getRealized());
@@ -112,6 +114,18 @@ public class TradestationParser extends AbstractParser {
 	    BigDecimal z = revertInt(getTicker('Z', year).getRealized());
 	    System.out.println(h + "," + m + "," + u + "," + z);
 	}
+    }
+
+    public BigDecimal getUnrealized() {
+	int unrealized = 0;
+	for (int year = YEAR; year >= 6; year--) {
+	    unrealized += getTicker('H', year).getUnrealized();
+	    unrealized += getTicker('M', year).getUnrealized();
+	    unrealized += getTicker('U', year).getUnrealized();
+	    unrealized += getTicker('Z', year).getUnrealized();
+	}
+
+	return revertInt(unrealized);
     }
 
     public void printEquity() {

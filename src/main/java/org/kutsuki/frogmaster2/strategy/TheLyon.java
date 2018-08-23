@@ -16,8 +16,8 @@ public class TheLyon extends AbstractStrategy {
     private static final int BULL_LONG = 925;
     private static final int NEUTRAL_SHORT = 925;
     private static final int NEUTRAL_LONG = 725;
-    private static final int DOWN = 92;
-    private static final int NEUTRAL = 9825;
+    private static final double DOWN = .92;
+    private static final double NEUTRAL = .9825;
     private static final LocalTime START = LocalTime.of(9, 25);
 
     private int highY;
@@ -92,11 +92,6 @@ public class TheLyon extends AbstractStrategy {
     @Override
     public LocalDateTime getStartDateTime() {
 	return LocalDateTime.of(getStartDate(), START);
-    }
-
-    @Override
-    public LocalDateTime getEndDateTime() {
-	return LocalDateTime.of(getEndDate(), START);
     }
 
     private int highY(int year) {

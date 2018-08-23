@@ -64,16 +64,6 @@ public class HybridStrategyOG extends AbstractStrategy {
 	}
     }
 
-    @Override
-    public LocalDateTime getStartDateTime() {
-	return LocalDateTime.of(getStartDate(), NINE_TWENTYFIVE);
-    }
-
-    @Override
-    public LocalDateTime getEndDateTime() {
-	return LocalDateTime.of(getEndDate(), LocalTime.of(17, 00));
-    }
-
     private boolean isDay(LocalTime time) {
 	return time.isAfter(NINE_TWENTYFIVE) && time.isBefore(END);
     }
