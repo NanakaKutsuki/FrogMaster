@@ -18,11 +18,10 @@ public class HybridStrategyCore extends AbstractStrategy {
     private int highPrice;
     private int lowPrice;
     private int lastMom;
-    private Input input;
 
-    public HybridStrategyCore(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap, Input input) {
-	super(ticker, barMap);
-	this.input = input;
+    @Override
+    public void init(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap, Input input) {
+	setTickerBarMap(ticker, barMap, input);
 	this.lastMom = 0;
     }
 
@@ -38,9 +37,9 @@ public class HybridStrategyCore extends AbstractStrategy {
 	    accel = mom - lastMom;
 	    lastMom = mom;
 
-	    if (mom < input.getMomST() && accel < input.getAccelST()) {
-		highPrice = bar.getClose() + input.getUpAmount();
-		lowPrice = bar.getClose() - input.getDownAmount();
+	    if (mom < getInput().getMomST() && accel < getInput().getAccelST()) {
+		highPrice = bar.getClose() + getInput().getUpAmount();
+		lowPrice = bar.getClose() - getInput().getDownAmount();
 		marketSellShort();
 	    } else {
 		marketBuy();
@@ -51,9 +50,9 @@ public class HybridStrategyCore extends AbstractStrategy {
 	    lastMom = mom;
 
 	    if (getMarketPosition() != -1) {
-		if (mom < input.getMomST() && accel < input.getAccelST()) {
-		    highPrice = bar.getClose() + input.getUpAmount();
-		    lowPrice = bar.getClose() - input.getDownAmount();
+		if (mom < getInput().getMomST() && accel < getInput().getAccelST()) {
+		    highPrice = bar.getClose() + getInput().getUpAmount();
+		    lowPrice = bar.getClose() - getInput().getDownAmount();
 		    marketSellShort();
 		}
 	    } else if (getMarketPosition() == -1) {

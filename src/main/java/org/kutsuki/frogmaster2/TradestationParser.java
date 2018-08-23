@@ -1,6 +1,7 @@
 package org.kutsuki.frogmaster2;
 
 import java.io.File;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -9,11 +10,14 @@ import java.util.TreeMap;
 
 import org.kutsuki.frogmaster2.core.Bar;
 import org.kutsuki.frogmaster2.core.Ticker;
-import org.kutsuki.frogmaster2.inputs.HybridInputsCore;
+import org.kutsuki.frogmaster2.inputs.HybridInputsOG;
 import org.kutsuki.frogmaster2.inputs.Input;
-import org.kutsuki.frogmaster2.strategy.HybridStrategyCore;
+import org.kutsuki.frogmaster2.strategy.AbstractStrategy;
+import org.kutsuki.frogmaster2.strategy.HybridStrategyOG;
 
 public class TradestationParser extends AbstractParser {
+    private static final AbstractStrategy STRATEGY = new HybridStrategyOG();
+    private static final Input INPUT = HybridInputsOG.getInput();
     private static final int YEAR = LocalDate.now().getYear() - 2000;
     private static final String DIR = "C:/Users/" + System.getProperty("user.name") + "/Desktop/ES/";
     private static final String TXT = ".txt";
@@ -52,14 +56,13 @@ public class TradestationParser extends AbstractParser {
 	if (file.exists()) {
 	    TreeMap<LocalDateTime, Bar> barMap = load(file);
 
-	    Input input = HybridInputsCore.getInput();
-	    HybridStrategyCore strategy = new HybridStrategyCore(ticker, barMap, input);
-	    strategy.run();
+	    STRATEGY.setTickerBarMap(ticker, barMap, INPUT);
+	    STRATEGY.run();
 
 	    // set ticker data
-	    ticker.setEquityDateTime(strategy.getLowestEquityDateTime());
-	    ticker.setEquity(strategy.getLowestEquity());
-	    ticker.setRealized(strategy.getBankroll());
+	    ticker.setEquityDateTime(STRATEGY.getLowestEquityDateTime());
+	    ticker.setEquity(STRATEGY.getLowestEquity());
+	    ticker.setRealized(STRATEGY.getBankroll());
 	    tickerMap.put(ticker.toString(), ticker);
 	}
     }
@@ -103,10 +106,10 @@ public class TradestationParser extends AbstractParser {
 	System.out.println("--------------------------");
 	System.out.println("Realized");
 	for (int year = YEAR; year >= 6; year--) {
-	    String h = getTicker('H', year).getRealized();
-	    String m = getTicker('M', year).getRealized();
-	    String u = getTicker('U', year).getRealized();
-	    String z = getTicker('Z', year).getRealized();
+	    BigDecimal h = revertInt(getTicker('H', year).getRealized());
+	    BigDecimal m = revertInt(getTicker('M', year).getRealized());
+	    BigDecimal u = revertInt(getTicker('U', year).getRealized());
+	    BigDecimal z = revertInt(getTicker('Z', year).getRealized());
 	    System.out.println(h + "," + m + "," + u + "," + z);
 	}
     }
@@ -115,17 +118,17 @@ public class TradestationParser extends AbstractParser {
 	System.out.println("--------------------------");
 	System.out.println("Lowest Equity");
 	for (int year = YEAR; year >= 6; year--) {
-	    String h = getTicker('H', year).getEquity();
-	    String m = getTicker('M', year).getEquity();
-	    String u = getTicker('U', year).getEquity();
-	    String z = getTicker('Z', year).getEquity();
+	    BigDecimal h = revertInt(getTicker('H', year).getEquity());
+	    BigDecimal m = revertInt(getTicker('M', year).getEquity());
+	    BigDecimal u = revertInt(getTicker('U', year).getEquity());
+	    BigDecimal z = revertInt(getTicker('Z', year).getEquity());
 	    System.out.println(h + "," + m + "," + u + "," + z);
 	}
     }
 
     public static void main(String[] args) {
 	TradestationParser parser = new TradestationParser();
-	// parser.run('H', 17);
+	// parser.run('H', 18);
 
 	for (int year = 6; year <= YEAR; year++) {
 	    parser.run('H', year);

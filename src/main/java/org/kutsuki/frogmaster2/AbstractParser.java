@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -16,6 +18,7 @@ import org.kutsuki.frogmaster2.core.Bar;
 import org.kutsuki.frogmaster2.core.Ticker;
 
 public abstract class AbstractParser {
+    private static final BigDecimal HUNDRED = BigDecimal.valueOf(100);
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("MM/dd/yyyy");
     private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm");
 
@@ -63,5 +66,11 @@ public abstract class AbstractParser {
 	}
 
 	return barMap;
+    }
+
+    public BigDecimal revertInt(int i) {
+	BigDecimal bd = new BigDecimal(i);
+	bd = bd.divide(HUNDRED, 2, RoundingMode.HALF_UP);
+	return bd;
     }
 }

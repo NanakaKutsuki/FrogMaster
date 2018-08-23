@@ -40,11 +40,7 @@ public class TradestationSearch extends AbstractParser {
 
     public TradestationSearch() {
 	this.tickerBarMap = new HashMap<Ticker, TreeMap<LocalDateTime, Bar>>();
-	this.cores = Runtime.getRuntime().availableProcessors();
-	if (WINDOWS_ATES.exists()) {
-	    this.cores -= 1;
-	}
-
+	this.cores = Runtime.getRuntime().availableProcessors() - 1;
 	this.es = Executors.newFixedThreadPool(cores);
     }
 
@@ -86,7 +82,7 @@ public class TradestationSearch extends AbstractParser {
 	    for (int accel = -1000; accel <= -0; accel += 25) {
 		for (int up = 100; up <= 1500; up += 25) {
 		    for (int down = 100; down <= 1500; down += 25) {
-			Input input = new Input(-600, -50, up, down);
+			Input input = new Input(mom, accel, up, down);
 			Future<InputResult> f = es.submit(new InputSearch(tickerBarMap, input));
 			futureList.add(f);
 		    }
@@ -116,7 +112,7 @@ public class TradestationSearch extends AbstractParser {
 	}
 
 	// print top 10
-	File out = new File("Results-" + System.currentTimeMillis() + ".txt");
+	File out = new File("output/FrogMaster-" + System.currentTimeMillis() + ".txt");
 	try (BufferedWriter bw = new BufferedWriter(new FileWriter(out))) {
 	    Collections.sort(futureList, new InputResultComparator());
 	    StringBuilder sb = new StringBuilder();

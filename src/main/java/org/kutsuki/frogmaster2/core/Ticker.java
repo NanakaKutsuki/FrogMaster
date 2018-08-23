@@ -1,11 +1,8 @@
 package org.kutsuki.frogmaster2.core;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDateTime;
 
 public class Ticker {
-    private static final BigDecimal HUNDRED = BigDecimal.valueOf(100);
     private static final String ES = "ES";
 
     private char month;
@@ -59,20 +56,16 @@ public class Ticker {
 	return year;
     }
 
-    public String getEquity() {
-	BigDecimal bd = new BigDecimal(equity);
-	bd = bd.divide(HUNDRED, 2, RoundingMode.HALF_UP);
-	return bd.toString();
+    public int getEquity() {
+	return equity;
     }
 
     public void setEquity(int equity) {
 	this.equity = equity;
     }
 
-    public String getRealized() {
-	BigDecimal bd = new BigDecimal(realized);
-	bd = bd.divide(HUNDRED, 2, RoundingMode.HALF_UP);
-	return bd.toString();
+    public int getRealized() {
+	return realized;
     }
 
     public void setRealized(int realized) {

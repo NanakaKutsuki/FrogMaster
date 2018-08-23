@@ -11,12 +11,14 @@ import java.util.TreeMap;
 
 import org.kutsuki.frogmaster2.core.Bar;
 import org.kutsuki.frogmaster2.core.Ticker;
+import org.kutsuki.frogmaster2.inputs.Input;
 
 public abstract class AbstractStrategy {
     private static final boolean PRINT_TRADES = false;
     private static final int COMMISSION = 269;
+    // private static final int COMMISSION = 100;
     private static final int FIFTY = 50;
-    private static final int MAINTENANCE_MARGIN = 560000;
+    private static final int MAINTENANCE_MARGIN = 580000;
     private static final int SLIPPAGE = 25;
     private static final LocalTime EIGHT_AM = LocalTime.of(8, 0);
 
@@ -25,8 +27,9 @@ public abstract class AbstractStrategy {
     private boolean marketBuyToCover;
     private boolean marketSell;
     private boolean marketSellShort;
+    private Input input;
     private int bankroll;
-    private int count = 0;
+    private int count;
     private int lowestEquity;
     private int index;
     private int marketPosition;
@@ -34,10 +37,11 @@ public abstract class AbstractStrategy {
     private int unrealized;
     private LocalDate startDate;
     private LocalDate endDate;
-    private LocalDateTime dateTime;
     private LocalDateTime lowestEquityDateTime;
     private List<LocalDateTime> keyList;
     private TreeMap<LocalDateTime, Bar> barMap;
+
+    public abstract void init(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap, Input input);
 
     public abstract int getCostPerContract();
 
@@ -47,17 +51,26 @@ public abstract class AbstractStrategy {
 
     public abstract void strategy(Bar bar);
 
-    public AbstractStrategy(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap) {
+    public AbstractStrategy() {
+	this.marginCheck = true;
+    }
+
+    public void setTickerBarMap(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap, Input input) {
 	this.bankroll = 0;
 	this.barMap = barMap;
 	this.count = 0;
-	this.dateTime = null;
 	this.index = 0;
-	this.keyList = new ArrayList<LocalDateTime>(barMap.keySet());
+	this.input = input;
 	this.lowestEquity = Integer.MAX_VALUE;
 	this.marketPosition = 0;
-	this.marginCheck = true;
+	this.marketBuy = false;
+	this.marketBuyToCover = false;
+	this.marketSell = false;
+	this.marketSellShort = false;
+	this.positionPrice = 0;
 	this.unrealized = 0;
+
+	this.keyList = new ArrayList<LocalDateTime>(barMap.keySet());
 	Collections.sort(this.keyList);
 
 	if (!barMap.isEmpty()) {
@@ -70,7 +83,6 @@ public abstract class AbstractStrategy {
     public void run() {
 	for (LocalDateTime key : keyList) {
 	    Bar bar = barMap.get(key);
-	    dateTime = key;
 
 	    if (!key.isBefore(getStartDateTime()) && !key.isAfter(getEndDateTime())) {
 		// resolve market orders first
@@ -90,7 +102,7 @@ public abstract class AbstractStrategy {
 		}
 
 		// margin check
-		maintenanceMarginCheck();
+		maintenanceMarginCheck(key);
 	    }
 
 	    index++;
@@ -111,6 +123,10 @@ public abstract class AbstractStrategy {
 
     public LocalDate getEndDate() {
 	return endDate;
+    }
+
+    public Input getInput() {
+	return input;
     }
 
     public int getLowestEquity() {
@@ -278,9 +294,8 @@ public abstract class AbstractStrategy {
 	return margin;
     }
 
-    private void maintenanceMarginCheck() {
-	// Only check starting in 2009
-	if (dateTime.getYear() > 2008 && marginCheck) {
+    private void maintenanceMarginCheck(LocalDateTime dateTime) {
+	if (marginCheck) {
 	    int equity = getBankroll() + unrealized + getCostPerContract();
 
 	    if (equity < getStrategyMargin()) {
@@ -288,7 +303,6 @@ public abstract class AbstractStrategy {
 			+ unrealized + " " + getStrategyMargin());
 	    }
 	}
-
     }
 
     private void resolveMarketOrders(Bar bar) {
