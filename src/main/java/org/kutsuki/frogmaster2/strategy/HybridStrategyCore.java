@@ -9,7 +9,8 @@ import org.kutsuki.frogmaster2.core.Ticker;
 import org.kutsuki.frogmaster2.inputs.Input;
 
 public class HybridStrategyCore extends AbstractStrategy {
-    private static final int COST_PER_CONTRACT = 50000000;
+    private static final int COST_PER_CONTRACT = 1600000;
+    private static final int COST_PER_CONTRACT_RE = 2100000;
     private static final LocalTime END = LocalTime.of(16, 00);
     private static final LocalTime NINE_TWENTYFIVE = LocalTime.of(9, 25);
 
@@ -32,7 +33,7 @@ public class HybridStrategyCore extends AbstractStrategy {
 
     @Override
     protected int getCostPerContractRE() {
-	return COST_PER_CONTRACT;
+	return COST_PER_CONTRACT_RE;
     }
 
     @Override

@@ -33,8 +33,8 @@ public class TradestationParserAtEs extends AbstractParser {
     }
 
     public void printSummary() {
-	System.out.println("Realized: " + revertInt(STRATEGY.getBankroll()));
-	System.out.println("Unrealized: " + revertInt(STRATEGY.getUnrealized()));
+	System.out.println("Realized: " + revertDollars(STRATEGY.getBankroll()));
+	System.out.println("Unrealized: " + revertDollars(STRATEGY.getUnrealized()));
     }
 
     public static void main(String[] args) {

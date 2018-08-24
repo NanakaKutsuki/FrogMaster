@@ -10,7 +10,7 @@ import org.kutsuki.frogmaster2.inputs.Input;
 
 public class HybridStrategyOG extends AbstractStrategy {
     private static final int COST_PER_CONTRACT = 1260000;
-    private static final int COST_PER_CONTRACT_RE = 1800000;
+    private static final int COST_PER_CONTRACT_RE = 2100000;
     private static final LocalTime END = LocalTime.of(16, 00);
     private static final LocalTime NINE_TWENTYFIVE = LocalTime.of(9, 25);
 

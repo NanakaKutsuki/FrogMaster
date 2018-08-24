@@ -109,10 +109,10 @@ public class TradestationParser extends AbstractParser {
 	System.out.println("Unrealized: " + getUnrealized());
 	System.out.println("Realized");
 	for (int year = YEAR; year >= 6; year--) {
-	    BigDecimal h = revertInt(getTicker('H', year).getRealized());
-	    BigDecimal m = revertInt(getTicker('M', year).getRealized());
-	    BigDecimal u = revertInt(getTicker('U', year).getRealized());
-	    BigDecimal z = revertInt(getTicker('Z', year).getRealized());
+	    BigDecimal h = revertDollars(getTicker('H', year).getRealized());
+	    BigDecimal m = revertDollars(getTicker('M', year).getRealized());
+	    BigDecimal u = revertDollars(getTicker('U', year).getRealized());
+	    BigDecimal z = revertDollars(getTicker('Z', year).getRealized());
 	    System.out.println(h + "," + m + "," + u + "," + z);
 	}
     }
@@ -126,17 +126,17 @@ public class TradestationParser extends AbstractParser {
 	    unrealized += getTicker('Z', year).getUnrealized();
 	}
 
-	return revertInt(unrealized);
+	return revertDollars(unrealized);
     }
 
     public void printEquity() {
 	System.out.println("--------------------------");
 	System.out.println("Lowest Equity");
 	for (int year = YEAR; year >= 6; year--) {
-	    BigDecimal h = revertInt(getTicker('H', year).getEquity());
-	    BigDecimal m = revertInt(getTicker('M', year).getEquity());
-	    BigDecimal u = revertInt(getTicker('U', year).getEquity());
-	    BigDecimal z = revertInt(getTicker('Z', year).getEquity());
+	    BigDecimal h = revertDollars(getTicker('H', year).getEquity());
+	    BigDecimal m = revertDollars(getTicker('M', year).getEquity());
+	    BigDecimal u = revertDollars(getTicker('U', year).getEquity());
+	    BigDecimal z = revertDollars(getTicker('Z', year).getEquity());
 	    System.out.println(h + "," + m + "," + u + "," + z);
 	}
     }
@@ -145,10 +145,10 @@ public class TradestationParser extends AbstractParser {
 	System.out.println("--------------------------");
 	System.out.println("Rebalance");
 	for (int year = YEAR; year >= 6; year--) {
-	    BigDecimal h = revertInt(getTicker('H', year).getBankrollRE());
-	    BigDecimal m = revertInt(getTicker('M', year).getBankrollRE());
-	    BigDecimal u = revertInt(getTicker('U', year).getBankrollRE());
-	    BigDecimal z = revertInt(getTicker('Z', year).getBankrollRE());
+	    BigDecimal h = revertDollars(getTicker('H', year).getBankrollRE());
+	    BigDecimal m = revertDollars(getTicker('M', year).getBankrollRE());
+	    BigDecimal u = revertDollars(getTicker('U', year).getBankrollRE());
+	    BigDecimal z = revertDollars(getTicker('Z', year).getBankrollRE());
 	    System.out.println(h + "," + m + "," + u + "," + z);
 	}
     }

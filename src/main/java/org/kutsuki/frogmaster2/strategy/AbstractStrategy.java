@@ -30,18 +30,19 @@ public abstract class AbstractStrategy {
     private boolean marketSellShort;
     private Input input;
     private int bankroll;
-    private int bankrollRE;
-    private int numContracts;
+
     private int count;
     private int lowestEquity;
     private int index;
     private int marketPosition;
     private int positionPrice;
     private int unrealized;
+    private List<LocalDateTime> keyList;
     private LocalDate startDate;
     private LocalDate endDate;
     private LocalDateTime lowestEquityDateTime;
-    private List<LocalDateTime> keyList;
+    private long bankrollRE;
+    private long numContracts;
     private TreeMap<LocalDateTime, Bar> barMap;
 
     public abstract void setup(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap, Input input);
@@ -120,7 +121,7 @@ public abstract class AbstractStrategy {
 	return bankroll;
     }
 
-    public int getBankrollRE() {
+    public long getBankrollRE() {
 	return bankrollRE;
     }
 
@@ -190,13 +191,10 @@ public abstract class AbstractStrategy {
 	    this.bankrollRE += convertTicks(realized) * numContracts;
 	    this.bankrollRE -= (COMMISSION + SLIPPAGE + COMMISSION + SLIPPAGE) * numContracts;
 
-	    if (bankrollRE / getCostPerContractRE() > numContracts && numContracts < 100) {
+	    if (bankrollRE / getCostPerContractRE() > numContracts) {
 		numContracts = bankrollRE / getCostPerContractRE();
-
-		if (numContracts > 100) {
-		    numContracts = 100;
-		}
 	    }
+
 	}
     }
 
@@ -319,11 +317,12 @@ public abstract class AbstractStrategy {
 			+ unrealized + " " + getStrategyMargin());
 	    }
 
-	    int equityRE = bankrollRE + (unrealized * numContracts) + getCostPerContractRE();
+	    long equityRE = bankrollRE + (unrealized * numContracts) + getCostPerContractRE();
 
 	    if (equityRE < getStrategyMargin() * numContracts) {
 		throw new IllegalStateException("Maintenance Margin Exceeded REBALANCE! " + dateTime + " "
-			+ getBankrollRE() + " " + unrealized * numContracts + " " + getStrategyMargin() * numContracts);
+			+ getBankrollRE() + " " + unrealized * numContracts + " " + getStrategyMargin() * numContracts
+			+ " " + numContracts);
 	    }
 	}
     }

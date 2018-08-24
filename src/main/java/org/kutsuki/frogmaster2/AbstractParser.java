@@ -68,7 +68,7 @@ public abstract class AbstractParser {
 	return barMap;
     }
 
-    public BigDecimal revertInt(int i) {
+    public BigDecimal revertDollars(long i) {
 	BigDecimal bd = new BigDecimal(i);
 	bd = bd.divide(HUNDRED, 2, RoundingMode.HALF_UP);
 	return bd;
