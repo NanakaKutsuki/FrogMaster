@@ -52,17 +52,22 @@ public class HybridStrategy2 extends AbstractStrategy {
     //
 
     @Override
-    public void init(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap, Input input) {
+    public void setup(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap, Input input) {
 	setTickerBarMap(ticker, barMap, input);
     }
 
     @Override
-    public int getCostPerContract() {
+    protected int getCostPerContract() {
 	return COST_PER_CONTRACT;
     }
 
     @Override
-    public void strategy(Bar bar) {
+    protected int getCostPerContractRE() {
+	return COST_PER_CONTRACT;
+    }
+
+    @Override
+    protected void strategy(Bar bar) {
 	// if (!initialized) {
 	// marketBuy = bar.getDateTime().isEqual(buyDateTime);
 	// longPrice = bar.getClose();

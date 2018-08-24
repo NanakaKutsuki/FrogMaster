@@ -26,7 +26,7 @@ public class TheLyon extends AbstractStrategy {
     private int lastYear;
 
     @Override
-    public void init(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap, Input input) {
+    public void setup(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap, Input input) {
 	setTickerBarMap(ticker, barMap, input);
 	this.highY = 0;
 	this.lastHigh = 999999;
@@ -36,6 +36,11 @@ public class TheLyon extends AbstractStrategy {
 
     @Override
     public int getCostPerContract() {
+	return COST_PER_CONTRACT;
+    }
+
+    @Override
+    public int getCostPerContractRE() {
 	return COST_PER_CONTRACT;
     }
 

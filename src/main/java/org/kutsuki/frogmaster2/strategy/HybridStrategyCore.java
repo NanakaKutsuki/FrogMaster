@@ -20,18 +20,23 @@ public class HybridStrategyCore extends AbstractStrategy {
     private int lastMom;
 
     @Override
-    public void init(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap, Input input) {
+    public void setup(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap, Input input) {
 	setTickerBarMap(ticker, barMap, input);
 	this.lastMom = 0;
     }
 
     @Override
-    public int getCostPerContract() {
+    protected int getCostPerContract() {
 	return COST_PER_CONTRACT;
     }
 
     @Override
-    public void strategy(Bar bar) {
+    protected int getCostPerContractRE() {
+	return COST_PER_CONTRACT;
+    }
+
+    @Override
+    protected void strategy(Bar bar) {
 	if (bar.getDateTime().toLocalTime().equals(NINE_TWENTYFIVE)) {
 	    mom = bar.getClose() - getPrevBar(8).getClose();
 	    accel = mom - lastMom;

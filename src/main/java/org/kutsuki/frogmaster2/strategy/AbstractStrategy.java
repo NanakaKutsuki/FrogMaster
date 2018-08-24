@@ -16,7 +16,6 @@ import org.kutsuki.frogmaster2.inputs.Input;
 public abstract class AbstractStrategy {
     private static final boolean PRINT_TRADES = false;
     private static final int COMMISSION = 269;
-    // private static final int COMMISSION = 100;
     private static final int FIFTY = 50;
     private static final int MAINTENANCE_MARGIN = 580000;
     private static final int SLIPPAGE = 25;
@@ -31,6 +30,8 @@ public abstract class AbstractStrategy {
     private boolean marketSellShort;
     private Input input;
     private int bankroll;
+    private int bankrollRE;
+    private int numContracts;
     private int count;
     private int lowestEquity;
     private int index;
@@ -43,17 +44,21 @@ public abstract class AbstractStrategy {
     private List<LocalDateTime> keyList;
     private TreeMap<LocalDateTime, Bar> barMap;
 
-    public abstract void init(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap, Input input);
+    public abstract void setup(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap, Input input);
 
-    public abstract int getCostPerContract();
+    protected abstract int getCostPerContract();
 
-    public abstract void strategy(Bar bar);
+    protected abstract int getCostPerContractRE();
+
+    protected abstract void strategy(Bar bar);
 
     public AbstractStrategy() {
+	this.bankrollRE = 0;
+	this.numContracts = 1;
 	this.marginCheck = true;
     }
 
-    public void setTickerBarMap(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap, Input input) {
+    protected void setTickerBarMap(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap, Input input) {
 	this.bankroll = 0;
 	this.barMap = barMap;
 	this.count = 0;
@@ -105,30 +110,20 @@ public abstract class AbstractStrategy {
 
 	    index++;
 	}
+
+	// System.out.println(bankrollRE / 100 + " " + numContracts);
     }
 
     public void disableMarginCheck() {
-	marginCheck = false;
+	this.marginCheck = false;
     }
 
     public int getBankroll() {
 	return bankroll;
     }
 
-    public LocalTime getEightAM() {
-	return EIGHT_AM;
-    }
-
-    public LocalDate getEndDate() {
-	return endDate;
-    }
-
-    public LocalDateTime getEndDateTime() {
-	return LocalDateTime.of(getEndDate(), FIVE_PM);
-    }
-
-    public Input getInput() {
-	return input;
+    public int getBankrollRE() {
+	return bankrollRE;
     }
 
     public int getLowestEquity() {
@@ -139,15 +134,19 @@ public abstract class AbstractStrategy {
 	return lowestEquityDateTime;
     }
 
-    public int getMaintenanceMargin() {
-	return MAINTENANCE_MARGIN;
+    public int getUnrealized() {
+	return unrealized;
     }
 
-    public int getMarketPosition() {
+    protected LocalDateTime getEndDateTime() {
+	return LocalDateTime.of(endDate, FIVE_PM);
+    }
+
+    protected int getMarketPosition() {
 	return marketPosition;
     }
 
-    public Bar getPrevBar(int length) {
+    protected Bar getPrevBar(int length) {
 	Bar bar = null;
 
 	if (index > length) {
@@ -157,37 +156,50 @@ public abstract class AbstractStrategy {
 	return bar;
     }
 
-    public LocalDate getStartDate() {
+    protected Input getInput() {
+	return input;
+    }
+
+    protected LocalDate getStartDate() {
 	return startDate;
     }
 
-    public LocalDateTime getStartDateTime() {
+    protected LocalDateTime getStartDateTime() {
 	return LocalDateTime.of(getStartDate(), NINE_TWENTYFIVE);
     }
 
-    public int getUnrealized() {
-	return unrealized;
-    }
-
-    public void marketBuy() {
+    protected void marketBuy() {
 	marketBuy = true;
     }
 
-    public void marketBuyToCover() {
+    protected void marketBuyToCover() {
 	marketBuyToCover = true;
     }
 
-    public void marketSell() {
+    protected void marketSell() {
 	marketSell = true;
     }
 
-    public void marketSellShort() {
+    protected void marketSellShort() {
 	marketSellShort = true;
     }
 
     private void addBankroll(int realized) {
 	this.bankroll += convertTicks(realized);
 	this.bankroll -= COMMISSION + SLIPPAGE + COMMISSION + SLIPPAGE;
+
+	if (marginCheck) {
+	    this.bankrollRE += convertTicks(realized) * numContracts;
+	    this.bankrollRE -= (COMMISSION + SLIPPAGE + COMMISSION + SLIPPAGE) * numContracts;
+
+	    if (bankrollRE / getCostPerContract() > numContracts && numContracts < 100) {
+		numContracts = bankrollRE / getCostPerContract();
+
+		if (numContracts > 100) {
+		    numContracts = 100;
+		}
+	    }
+	}
     }
 
     private LocalDate calcStartDate(Ticker ticker) {
@@ -294,7 +306,7 @@ public abstract class AbstractStrategy {
 	int margin = 0;
 
 	if (getMarketPosition() != 0) {
-	    margin = getMaintenanceMargin();
+	    margin = MAINTENANCE_MARGIN;
 	}
 
 	return margin;
@@ -307,6 +319,13 @@ public abstract class AbstractStrategy {
 	    if (equity < getStrategyMargin()) {
 		throw new IllegalStateException("Maintenance Margin Exceeded! " + dateTime + " " + getBankroll() + " "
 			+ unrealized + " " + getStrategyMargin());
+	    }
+
+	    int equityRE = bankrollRE + (unrealized * numContracts) + (getCostPerContractRE() * numContracts);
+
+	    if (equityRE < getStrategyMargin() * numContracts) {
+		throw new IllegalStateException("Maintenance Margin Exceeded REBALANCE! " + dateTime + " "
+			+ getBankrollRE() + " " + unrealized * numContracts + " " + getStrategyMargin() * numContracts);
 	    }
 	}
     }

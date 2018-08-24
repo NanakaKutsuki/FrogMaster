@@ -28,7 +28,7 @@ public class InputSearch implements Callable<InputResult> {
 	int equity = Integer.MAX_VALUE;
 
 	for (Ticker ticker : tickerBarMap.keySet()) {
-	    STRATEGY.init(ticker, tickerBarMap.get(ticker), input);
+	    STRATEGY.setup(ticker, tickerBarMap.get(ticker), input);
 	    STRATEGY.disableMarginCheck();
 	    STRATEGY.run();
 
@@ -42,5 +42,4 @@ public class InputSearch implements Callable<InputResult> {
 
 	return new InputResult(input, realized, unrealized, equity);
     }
-
 }

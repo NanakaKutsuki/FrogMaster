@@ -27,7 +27,7 @@ public class TradestationParserAtEs extends AbstractParser {
 	TreeMap<LocalDateTime, Bar> barMap = load(file);
 
 	if (file.exists()) {
-	    STRATEGY.init(TICKER, barMap, INPUT);
+	    STRATEGY.setup(TICKER, barMap, INPUT);
 	    STRATEGY.run();
 	}
     }

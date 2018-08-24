@@ -90,11 +90,6 @@ public class TradestationSearch extends AbstractParser {
 	    }
 	}
 
-	// test
-	// Input input = HybridInputsOG.getInput();
-	// Future<InputResult> f = es.submit(new InputSearch(tickerBarMap, input));
-	// futureList.add(f);
-
 	// shutdown
 	es.shutdown();
 

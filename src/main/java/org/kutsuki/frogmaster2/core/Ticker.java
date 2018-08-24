@@ -11,6 +11,7 @@ public class Ticker {
     private int equity;
     private int realized;
     private int unrealized;
+    private int bankrollRE;
     private LocalDateTime equityDateTime;
 
     public Ticker(char month, int year) {
@@ -55,6 +56,14 @@ public class Ticker {
 
     public int getYear() {
 	return year;
+    }
+
+    public int getBankrollRE() {
+	return bankrollRE;
+    }
+
+    public void setBankrollRE(int bankrollRE) {
+	this.bankrollRE = bankrollRE;
     }
 
     public int getEquity() {

@@ -10,7 +10,7 @@ public class HybridInputsOG {
     static {
 	INPUT = new Input(-625, -150, 1025, 1050);
 
-	// INPUT_MAP.put(18, new Input(-625, -150, 1025, 1050));
+	INPUT_MAP.put(18, new Input(-625, -150, 1025, 1050));
 	INPUT_MAP.put(17, new Input(-625, -150, 1075, 925));
 	INPUT_MAP.put(16, new Input(-625, -150, 1075, 925));
 	INPUT_MAP.put(15, new Input(-625, -150, 1075, 925));
@@ -20,10 +20,10 @@ public class HybridInputsOG {
 	INPUT_MAP.put(11, new Input(-625, -150, 1125, 925));
 	INPUT_MAP.put(10, new Input(-625, -150, 1475, 800));
 	INPUT_MAP.put(9, new Input(-625, -150, 1475, 800));
-	INPUT_MAP.put(8, new Input(-625, -150, 1075, 925));
-	INPUT_MAP.put(7, new Input(-625, -150, 1250, 800));
-	INPUT_MAP.put(6, new Input(-625, -150, 1250, 800));
-	INPUT_MAP.put(5, new Input(-625, -150, 1250, 800));
+	INPUT_MAP.put(8, new Input(-625, -150, 1075, 1000));
+	INPUT_MAP.put(7, new Input(-625, -150, 675, 1300));
+	INPUT_MAP.put(6, new Input(-625, -150, 675, 1300));
+	INPUT_MAP.put(5, new Input(-625, -150, 675, 1300));
     }
 
     private HybridInputsOG() {

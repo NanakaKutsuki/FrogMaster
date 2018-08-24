@@ -9,7 +9,8 @@ import org.kutsuki.frogmaster2.core.Ticker;
 import org.kutsuki.frogmaster2.inputs.Input;
 
 public class HybridStrategyOG extends AbstractStrategy {
-    private static final int COST_PER_CONTRACT = 1200000000;
+    private static final int COST_PER_CONTRACT = 1260000;
+    private static final int COST_PER_CONTRACT_RE = 1800000;
     private static final LocalTime END = LocalTime.of(16, 00);
     private static final LocalTime NINE_TWENTYFIVE = LocalTime.of(9, 25);
 
@@ -21,19 +22,24 @@ public class HybridStrategyOG extends AbstractStrategy {
     private int lastMom;
 
     @Override
-    public void init(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap, Input input) {
+    public void setup(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap, Input input) {
 	setTickerBarMap(ticker, barMap, input);
 	this.initialized = false;
 	this.lastMom = 0;
     }
 
     @Override
-    public int getCostPerContract() {
+    protected int getCostPerContract() {
 	return COST_PER_CONTRACT;
     }
 
     @Override
-    public void strategy(Bar bar) {
+    protected int getCostPerContractRE() {
+	return COST_PER_CONTRACT_RE;
+    }
+
+    @Override
+    protected void strategy(Bar bar) {
 	if (!initialized) {
 	    if (bar.getDateTime().toLocalTime().equals(NINE_TWENTYFIVE)) {
 		marketBuy();
