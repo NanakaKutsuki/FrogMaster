@@ -155,16 +155,14 @@ public class TradestationParser extends AbstractParser {
 
     public static void main(String[] args) {
 	TradestationParser parser = new TradestationParser();
-	parser.run('H', 18);
-	parser.run('M', 18);
-	parser.run('U', 18);
+	// parser.run('H', 18);
 
-	// for (int year = 6; year <= YEAR; year++) {
-	// parser.run('H', year);
-	// parser.run('M', year);
-	// parser.run('U', year);
-	// parser.run('Z', year);
-	// }
+	for (int year = 6; year <= YEAR; year++) {
+	    parser.run('H', year);
+	    parser.run('M', year);
+	    parser.run('U', year);
+	    parser.run('Z', year);
+	}
 
 	// parser.printEquityDateTime();
 	parser.printRealized();

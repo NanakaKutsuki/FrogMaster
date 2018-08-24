@@ -110,8 +110,6 @@ public abstract class AbstractStrategy {
 
 	    index++;
 	}
-
-	// System.out.println(bankrollRE / 100 + " " + numContracts);
     }
 
     public void disableMarginCheck() {
@@ -192,8 +190,8 @@ public abstract class AbstractStrategy {
 	    this.bankrollRE += convertTicks(realized) * numContracts;
 	    this.bankrollRE -= (COMMISSION + SLIPPAGE + COMMISSION + SLIPPAGE) * numContracts;
 
-	    if (bankrollRE / getCostPerContract() > numContracts && numContracts < 100) {
-		numContracts = bankrollRE / getCostPerContract();
+	    if (bankrollRE / getCostPerContractRE() > numContracts && numContracts < 100) {
+		numContracts = bankrollRE / getCostPerContractRE();
 
 		if (numContracts > 100) {
 		    numContracts = 100;
@@ -321,7 +319,7 @@ public abstract class AbstractStrategy {
 			+ unrealized + " " + getStrategyMargin());
 	    }
 
-	    int equityRE = bankrollRE + (unrealized * numContracts) + (getCostPerContractRE() * numContracts);
+	    int equityRE = bankrollRE + (unrealized * numContracts) + getCostPerContractRE();
 
 	    if (equityRE < getStrategyMargin() * numContracts) {
 		throw new IllegalStateException("Maintenance Margin Exceeded REBALANCE! " + dateTime + " "
