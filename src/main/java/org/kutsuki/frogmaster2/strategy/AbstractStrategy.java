@@ -30,19 +30,18 @@ public abstract class AbstractStrategy {
     private boolean marketSellShort;
     private Input input;
     private int bankroll;
-
+    private int bankrollRE;
     private int count;
     private int lowestEquity;
     private int index;
     private int marketPosition;
+    private int numContracts;
     private int positionPrice;
     private int unrealized;
     private List<LocalDateTime> keyList;
     private LocalDate startDate;
     private LocalDate endDate;
     private LocalDateTime lowestEquityDateTime;
-    private long bankrollRE;
-    private long numContracts;
     private TreeMap<LocalDateTime, Bar> barMap;
 
     public abstract void setup(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap, Input input);
@@ -113,6 +112,38 @@ public abstract class AbstractStrategy {
 	}
     }
 
+    public LocalDate calcEndDate(char month, int fullYear) {
+	LocalDate date = null;
+
+	switch (month) {
+	case 'A':
+	    // hard coded for @ES
+	    date = barMap.lastKey().toLocalDate();
+	    break;
+	case 'H':
+	    date = LocalDate.of(fullYear, 3, 1);
+	    break;
+	case 'M':
+	    date = LocalDate.of(fullYear, 6, 1);
+	    break;
+	case 'U':
+	    date = LocalDate.of(fullYear, 9, 1);
+	    break;
+	case 'Z':
+	    date = LocalDate.of(fullYear, 12, 1);
+	    break;
+	default:
+	    throw new IllegalArgumentException("Bad Month!" + month);
+	}
+
+	LocalDateTime dateTime = LocalDateTime.of(calcThirdDayOfWeek(date), EIGHT_AM);
+	while (!barMap.containsKey(dateTime)) {
+	    dateTime = dateTime.minusDays(1);
+	}
+
+	return dateTime.toLocalDate();
+    }
+
     public void disableMarginCheck() {
 	this.marginCheck = false;
     }
@@ -121,7 +152,7 @@ public abstract class AbstractStrategy {
 	return bankroll;
     }
 
-    public long getBankrollRE() {
+    public int getBankrollRE() {
 	return bankrollRE;
     }
 
@@ -135,6 +166,10 @@ public abstract class AbstractStrategy {
 
     public int getUnrealized() {
 	return unrealized;
+    }
+
+    public void setEndDate(LocalDate endDate) {
+	this.endDate = endDate;
     }
 
     protected LocalDateTime getEndDateTime() {
@@ -191,8 +226,13 @@ public abstract class AbstractStrategy {
 	    this.bankrollRE += convertTicks(realized) * numContracts;
 	    this.bankrollRE -= (COMMISSION + SLIPPAGE + COMMISSION + SLIPPAGE) * numContracts;
 
-	    if (bankrollRE / getCostPerContractRE() > numContracts) {
+	    if (bankrollRE / getCostPerContractRE() > numContracts && numContracts < 100) {
 		numContracts = bankrollRE / getCostPerContractRE();
+
+		if (numContracts >= 100) {
+		    bankrollRE = 0;
+		    numContracts = 1;
+		}
 	    }
 
 	}
@@ -231,35 +271,7 @@ public abstract class AbstractStrategy {
     }
 
     private LocalDate calcEndDate(Ticker ticker) {
-	LocalDate date = null;
-
-	switch (ticker.getMonth()) {
-	case 'A':
-	    // hard coded for @ES
-	    date = barMap.lastKey().toLocalDate();
-	    break;
-	case 'H':
-	    date = LocalDate.of(ticker.getFullYear(), 3, 1);
-	    break;
-	case 'M':
-	    date = LocalDate.of(ticker.getFullYear(), 6, 1);
-	    break;
-	case 'U':
-	    date = LocalDate.of(ticker.getFullYear(), 9, 1);
-	    break;
-	case 'Z':
-	    date = LocalDate.of(ticker.getFullYear(), 12, 1);
-	    break;
-	default:
-	    throw new IllegalArgumentException("Bad Ticker!" + ticker);
-	}
-
-	LocalDateTime dateTime = LocalDateTime.of(calcThirdDayOfWeek(date), EIGHT_AM);
-	while (!barMap.containsKey(dateTime)) {
-	    dateTime = dateTime.minusDays(1);
-	}
-
-	return dateTime.toLocalDate();
+	return calcEndDate(ticker.getMonth(), ticker.getFullYear());
     }
 
     private LocalDate calcThirdDayOfWeek(LocalDate start) {
@@ -317,7 +329,7 @@ public abstract class AbstractStrategy {
 			+ unrealized + " " + getStrategyMargin());
 	    }
 
-	    long equityRE = bankrollRE + (unrealized * numContracts) + getCostPerContractRE();
+	    int equityRE = bankrollRE + (unrealized * numContracts) + getCostPerContractRE();
 
 	    if (equityRE < getStrategyMargin() * numContracts) {
 		throw new IllegalStateException("Maintenance Margin Exceeded REBALANCE! " + dateTime + " "

@@ -8,11 +8,9 @@ import java.util.concurrent.Callable;
 import org.kutsuki.frogmaster2.core.Bar;
 import org.kutsuki.frogmaster2.core.Ticker;
 import org.kutsuki.frogmaster2.strategy.AbstractStrategy;
-import org.kutsuki.frogmaster2.strategy.HybridStrategyCore;
+import org.kutsuki.frogmaster2.strategy.HybridStrategyOG;
 
 public class InputSearch implements Callable<InputResult> {
-    private static final AbstractStrategy STRATEGY = new HybridStrategyCore();
-
     private Input input;
     private Map<Ticker, TreeMap<LocalDateTime, Bar>> tickerBarMap;
 
@@ -28,15 +26,17 @@ public class InputSearch implements Callable<InputResult> {
 	int equity = Integer.MAX_VALUE;
 
 	for (Ticker ticker : tickerBarMap.keySet()) {
-	    STRATEGY.setup(ticker, tickerBarMap.get(ticker), input);
-	    STRATEGY.disableMarginCheck();
-	    STRATEGY.run();
+	    AbstractStrategy strategy = new HybridStrategyOG();
+	    strategy.setup(ticker, tickerBarMap.get(ticker), input);
+	    strategy.disableMarginCheck();
+	    // strategy.setEndDate(strategy.calcEndDate('Z', 2017));
+	    strategy.run();
 
-	    realized += STRATEGY.getBankroll();
-	    unrealized += STRATEGY.getUnrealized();
+	    realized += strategy.getBankroll();
+	    unrealized += strategy.getUnrealized();
 
-	    if (STRATEGY.getLowestEquity() < equity) {
-		equity = STRATEGY.getLowestEquity();
+	    if (strategy.getLowestEquity() < equity) {
+		equity = strategy.getLowestEquity();
 	    }
 	}
 

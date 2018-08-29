@@ -8,7 +8,7 @@ import org.kutsuki.frogmaster2.core.Bar;
 import org.kutsuki.frogmaster2.core.Ticker;
 import org.kutsuki.frogmaster2.inputs.Input;
 
-public class HybridStrategyCore extends AbstractStrategy {
+public class HybridTest extends AbstractStrategy {
     private static final int COST_PER_CONTRACT = 1600000;
     private static final int COST_PER_CONTRACT_RE = 1700000;
     private static final LocalTime END = LocalTime.of(16, 00);
@@ -39,7 +39,7 @@ public class HybridStrategyCore extends AbstractStrategy {
     @Override
     protected void strategy(Bar bar) {
 	if (bar.getDateTime().toLocalTime().equals(NINE_TWENTYFIVE)) {
-	    mom = bar.getClose() - getPrevBar(8).getClose();
+	    mom = bar.getClose() - getPrevBar(getInput().getLength()).getClose();
 	    accel = mom - lastMom;
 	    lastMom = mom;
 
@@ -51,7 +51,7 @@ public class HybridStrategyCore extends AbstractStrategy {
 		marketBuy();
 	    }
 	} else if (isDay(bar.getDateTime().toLocalTime())) {
-	    mom = bar.getClose() - getPrevBar(8).getClose();
+	    mom = bar.getClose() - getPrevBar(getInput().getLength()).getClose();
 	    accel = mom - lastMom;
 	    lastMom = mom;
 

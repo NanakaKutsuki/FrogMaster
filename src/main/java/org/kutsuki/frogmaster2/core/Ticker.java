@@ -8,10 +8,10 @@ public class Ticker {
     private char month;
     private int year;
 
+    private int bankrollRE;
     private int equity;
     private int realized;
     private int unrealized;
-    private long bankrollRE;
     private LocalDateTime equityDateTime;
 
     public Ticker(char month, int year) {
@@ -58,11 +58,11 @@ public class Ticker {
 	return year;
     }
 
-    public long getBankrollRE() {
+    public int getBankrollRE() {
 	return bankrollRE;
     }
 
-    public void setBankrollRE(long bankrollRE) {
+    public void setBankrollRE(int bankrollRE) {
 	this.bankrollRE = bankrollRE;
     }
 

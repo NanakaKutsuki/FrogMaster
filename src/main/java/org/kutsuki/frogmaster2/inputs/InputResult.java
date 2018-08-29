@@ -5,7 +5,7 @@ import java.math.RoundingMode;
 
 import org.kutsuki.frogmaster2.TradestationSearch;
 
-public class InputResult {
+public class InputResult implements Comparable<InputResult> {
     private static final BigDecimal HUNDRED = BigDecimal.valueOf(100);
 
     private Input input;
@@ -48,15 +48,15 @@ public class InputResult {
 	}
 
 	if (input != null) {
-	    sb.append("Inputs: (");
-	    sb.append(input.getMomST()).append(',').append(' ');
-	    sb.append(input.getAccelST()).append(',').append(' ');
-	    sb.append(input.getUpAmount()).append(',').append(' ');
-	    sb.append(input.getDownAmount());
-	    sb.append(')');
+	    sb.append(getInput());
 	}
 
 	return sb.toString();
+    }
+
+    @Override
+    public int compareTo(InputResult rhs) {
+	return Integer.compare(rhs.getTotal(), getTotal());
     }
 
     public Input getInput() {

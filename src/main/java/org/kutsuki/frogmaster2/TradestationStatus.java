@@ -9,12 +9,12 @@ public class TradestationStatus {
     private static final BigDecimal TWENTY_FOUR = new BigDecimal(24);
     private static final long PERIOD = 60 * 1000;
 
-    private int completed;
-    private int trials;
+    private long completed;
+    private long trials;
     private long start;
     private long timeout;
 
-    public TradestationStatus(int trials) {
+    public TradestationStatus(long trials) {
 	this.trials = trials;
 	this.completed = 0;
 	this.start = System.currentTimeMillis();

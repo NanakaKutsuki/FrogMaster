@@ -37,11 +37,16 @@ public class TradestationSearch extends AbstractParser {
     private ExecutorService es;
     private int cores;
     private Map<Ticker, TreeMap<LocalDateTime, Bar>> tickerBarMap;
+    private List<Future<InputResult>> futureList;
+    private List<InputResult> resultList;
+    private TradestationStatus status;
 
     public TradestationSearch() {
-	this.tickerBarMap = new HashMap<Ticker, TreeMap<LocalDateTime, Bar>>();
 	this.cores = Runtime.getRuntime().availableProcessors() - 1;
 	this.es = Executors.newFixedThreadPool(cores);
+	this.futureList = new ArrayList<Future<InputResult>>(1000);
+	this.resultList = new ArrayList<InputResult>();
+	this.tickerBarMap = new HashMap<Ticker, TreeMap<LocalDateTime, Bar>>();
     }
 
     @Override
@@ -76,55 +81,71 @@ public class TradestationSearch extends AbstractParser {
 	    loadQuarterly();
 	}
 
+	// staging
+	long count = 0;
+	for (int up = 500; up <= 1500; up += 25) {
+	    for (int down = 500; down <= 1500; down += 25) {
+		count++;
+	    }
+	}
+
+	System.out.println("Starting " + count + " tests with " + cores + " cores!");
+	this.status = new TradestationStatus(count);
+
 	// setup inputs
-	List<Future<InputResult>> futureList = new ArrayList<>();
-	for (int mom = -1000; mom <= -100; mom += 25) {
-	    for (int accel = -1000; accel <= -0; accel += 25) {
-		for (int up = 100; up <= 1500; up += 25) {
-		    for (int down = 100; down <= 1500; down += 25) {
-			Input input = new Input(mom, accel, up, down);
-			Future<InputResult> f = es.submit(new InputSearch(tickerBarMap, input));
-			futureList.add(f);
-		    }
-		}
+	for (int up = 500; up <= 1500; up += 25) {
+	    for (int down = 500; down <= 1500; down += 25) {
+		Input input = new Input(8, -625, -150, up, down);
+		addTest(input);
 	    }
 	}
 
 	// shutdown
 	es.shutdown();
+	waitForFutures();
 
-	System.out.println("Starting " + futureList.size() + " tests with " + cores + " cores!");
+	// print
+	File out = new File("FrogMaster-" + System.currentTimeMillis() + ".txt");
+	try (BufferedWriter bw = new BufferedWriter(new FileWriter(out))) {
+	    StringBuilder sb = new StringBuilder();
+	    for (int i = 0; i < resultList.size(); i++) {
+		sb.append(i + 1);
+		sb.append('.');
+		sb.append(' ');
+		sb.append(resultList.get(i));
+		sb.append('\n');
+	    }
 
-	// wait for all threads to complete
-	TradestationStatus status = new TradestationStatus(futureList.size());
+	    System.out.println(sb.toString());
+	    bw.write(sb.toString());
+	} catch (IOException e) {
+	    e.printStackTrace();
+	}
+    }
+
+    private void addTest(Input input) {
+	Future<InputResult> f = es.submit(new InputSearch(tickerBarMap, input));
+	futureList.add(f);
+
+	if (futureList.size() >= 1000) {
+	    waitForFutures();
+	}
+    }
+
+    private void waitForFutures() {
 	for (Future<InputResult> future : futureList) {
 	    try {
-		future.get();
+		InputResult result = future.get();
+		resultList.add(result);
 		status.complete();
 	    } catch (InterruptedException | ExecutionException e) {
 		e.printStackTrace();
 	    }
 	}
 
-	// print top 10
-	File out = new File("output/FrogMaster-" + System.currentTimeMillis() + ".txt");
-	try (BufferedWriter bw = new BufferedWriter(new FileWriter(out))) {
-	    Collections.sort(futureList, new InputResultComparator());
-	    StringBuilder sb = new StringBuilder();
-	    for (int i = 0; i < 10; i++) {
-		sb.append(i + 1);
-		sb.append('.');
-		sb.append(' ');
-		sb.append(futureList.get(i).get());
-		sb.append('\n');
-	    }
-
-	    System.out.println(sb.toString());
-	    bw.write(sb.toString());
-	} catch (IOException | InterruptedException | ExecutionException e) {
-	    e.printStackTrace();
-	}
-
+	Collections.sort(resultList);
+	resultList = resultList.subList(0, 9);
+	futureList.clear();
     }
 
     private void loadAtEs() {

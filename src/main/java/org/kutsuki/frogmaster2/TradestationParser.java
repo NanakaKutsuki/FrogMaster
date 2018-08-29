@@ -10,14 +10,13 @@ import java.util.TreeMap;
 
 import org.kutsuki.frogmaster2.core.Bar;
 import org.kutsuki.frogmaster2.core.Ticker;
-import org.kutsuki.frogmaster2.inputs.HybridInputsOG;
 import org.kutsuki.frogmaster2.inputs.Input;
 import org.kutsuki.frogmaster2.strategy.AbstractStrategy;
 import org.kutsuki.frogmaster2.strategy.HybridStrategyOG;
 
 public class TradestationParser extends AbstractParser {
     private static final AbstractStrategy STRATEGY = new HybridStrategyOG();
-    private static final Input INPUT = HybridInputsOG.getInput();
+    private static final Input INPUT = new Input(8, -625, -150, 1075, 925);
     private static final int YEAR = LocalDate.now().getYear() - 2000;
     private static final String DIR = "C:/Users/" + System.getProperty("user.name") + "/Desktop/ES/";
     private static final String TXT = ".txt";
