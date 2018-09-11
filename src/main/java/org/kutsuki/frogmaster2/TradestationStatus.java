@@ -30,7 +30,7 @@ public class TradestationStatus {
 	}
     }
 
-    private String formatTime(long ms) {
+    public String formatTime(long ms) {
 	StringBuilder sb = new StringBuilder();
 
 	BigDecimal bd = new BigDecimal(ms);

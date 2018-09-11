@@ -16,7 +16,9 @@ import org.kutsuki.frogmaster2.strategy.HybridStrategyOG;
 
 public class TradestationParser extends AbstractParser {
     private static final AbstractStrategy STRATEGY = new HybridStrategyOG();
-    private static final Input INPUT = new Input(8, -625, -150, 1075, 925);
+    private static final Input INPUT = new Input(-625, -100, 1025, 1050, 0, 0, 0, 0, 0, 0);
+    // private static final Input INPUT = new Input(-625, -150, 1450, 925, 4, -325,
+    // -575, 575, 1175);
     private static final int YEAR = LocalDate.now().getYear() - 2000;
     private static final String DIR = "C:/Users/" + System.getProperty("user.name") + "/Desktop/ES/";
     private static final String TXT = ".txt";

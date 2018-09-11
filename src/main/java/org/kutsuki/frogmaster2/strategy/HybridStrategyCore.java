@@ -55,7 +55,7 @@ public class HybridStrategyCore extends AbstractStrategy {
 	    accel = mom - lastMom;
 	    lastMom = mom;
 
-	    if (getMarketPosition() != -1) {
+	    if (getMarketPosition() == 1) {
 		if (mom < getInput().getMomST() && accel < getInput().getAccelST()) {
 		    highPrice = bar.getClose() + getInput().getUpAmount();
 		    lowPrice = bar.getClose() - getInput().getDownAmount();

@@ -8,13 +8,16 @@ import org.kutsuki.frogmaster2.core.Bar;
 import org.kutsuki.frogmaster2.core.Ticker;
 import org.kutsuki.frogmaster2.inputs.Input;
 import org.kutsuki.frogmaster2.strategy.AbstractStrategy;
-import org.kutsuki.frogmaster2.strategy.HybridTest;
+import org.kutsuki.frogmaster2.strategy.HybridStrategyOG;
 
 public class TradestationParserAtEs extends AbstractParser {
     private static final String FILE_NAME = "C:/Users/" + System.getProperty("user.name") + "/Desktop/atES.txt";
-    private static final AbstractStrategy STRATEGY = new HybridTest();
-    private static final Input INPUT = new Input(8, -625, -150, 1025, 1050);
+    private static final AbstractStrategy STRATEGY = new HybridStrategyOG();
+    private static final Input INPUT = new Input(-625, -150, 1025, 1050, 0, 0, 0, 0, 0, 0);
     private static final Ticker TICKER = new Ticker('A', 6);
+
+    // 1. Realized $320699.92 Unrealized $2409.56 Inputs: (-625, -150, 1450, 925, 7,
+    // -500, -250, 1300, 225)
 
     @Override
     public File getFile(Ticker ticker) {

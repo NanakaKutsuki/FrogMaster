@@ -24,8 +24,8 @@ import org.kutsuki.frogmaster2.inputs.InputResult;
 import org.kutsuki.frogmaster2.inputs.InputSearch;
 
 public class TradestationSearch extends AbstractParser {
-    public static boolean AT_ES = true;
-
+    public static final boolean AT_ES = true;
+    private static final boolean OUTPUT = false;
     private static final File WINDOWS_ATES = new File(
 	    "C:/Users/" + System.getProperty("user.name") + "/Desktop/atES.txt");
     private static final File UNIX_ATES = new File("atES.txt");
@@ -44,7 +44,7 @@ public class TradestationSearch extends AbstractParser {
     public TradestationSearch() {
 	this.cores = Runtime.getRuntime().availableProcessors() - 1;
 	this.es = Executors.newFixedThreadPool(cores);
-	this.futureList = new ArrayList<Future<InputResult>>(1000);
+	this.futureList = new ArrayList<Future<InputResult>>(100000);
 	this.resultList = new ArrayList<InputResult>();
 	this.tickerBarMap = new HashMap<Ticker, TreeMap<LocalDateTime, Bar>>();
     }
@@ -74,6 +74,8 @@ public class TradestationSearch extends AbstractParser {
     }
 
     public void run() {
+	long start = System.currentTimeMillis();
+
 	// load data
 	if (AT_ES) {
 	    loadAtEs();
@@ -81,53 +83,61 @@ public class TradestationSearch extends AbstractParser {
 	    loadQuarterly();
 	}
 
-	// staging
+	// count
 	long count = 0;
-	for (int up = 500; up <= 1500; up += 25) {
-	    for (int down = 500; down <= 1500; down += 25) {
-		count++;
+	for (int mom = -1000; mom <= -200; mom += 25) {
+	    for (int accel = -500; accel <= 0; accel += 25) {
+		for (int up = 500; up <= 1500; up += 25) {
+		    for (int down = 500; down <= 1500; down += 25) {
+			count++;
+		    }
+		}
 	    }
 	}
 
 	System.out.println("Starting " + count + " tests with " + cores + " cores!");
 	this.status = new TradestationStatus(count);
 
-	// setup inputs
-	for (int up = 500; up <= 1500; up += 25) {
-	    for (int down = 500; down <= 1500; down += 25) {
-		Input input = new Input(8, -625, -150, up, down);
-		addTest(input);
+	// stage inputs
+	// for (int upOG = 100; upOG <= 2000; upOG += 100) {
+	// for (int downOG = 100; downOG <= 2000; downOG += 100) {
+	// for (int mom = -1000; mom <= 0; mom += 100) {
+	// for (int accel = -1000; accel <= 0; accel += 100) {
+	// for (int up = 100; up <= 2000; up += 100) {
+	// for (int down = 100; down <= 2000; down += 100) {
+	// Input input = new Input(-625, -150, upOG, downOG, 6, 3, mom, accel, up,
+	// down);
+	// addTest(input);
+	// }
+	// }
+	// }
+	// }
+	// }
+	// }
+
+	for (int mom = -1000; mom <= -200; mom += 25) {
+	    for (int accel = -500; accel <= 0; accel += 25) {
+		for (int up = 500; up <= 1500; up += 25) {
+		    for (int down = 500; down <= 1500; down += 25) {
+			Input input = new Input(mom, accel, up, down, 0, 0, 0, 0, 0, 0);
+			addTest(input);
+		    }
+		}
 	    }
 	}
 
 	// shutdown
 	es.shutdown();
+
 	waitForFutures();
-
-	// print
-	File out = new File("FrogMaster-" + System.currentTimeMillis() + ".txt");
-	try (BufferedWriter bw = new BufferedWriter(new FileWriter(out))) {
-	    StringBuilder sb = new StringBuilder();
-	    for (int i = 0; i < resultList.size(); i++) {
-		sb.append(i + 1);
-		sb.append('.');
-		sb.append(' ');
-		sb.append(resultList.get(i));
-		sb.append('\n');
-	    }
-
-	    System.out.println(sb.toString());
-	    bw.write(sb.toString());
-	} catch (IOException e) {
-	    e.printStackTrace();
-	}
+	System.out.println("11Runtime: " + status.formatTime(System.currentTimeMillis() - start));
     }
 
     private void addTest(Input input) {
 	Future<InputResult> f = es.submit(new InputSearch(tickerBarMap, input));
 	futureList.add(f);
 
-	if (futureList.size() >= 1000) {
+	if (futureList.size() >= 100000) {
 	    waitForFutures();
 	}
     }
@@ -144,8 +154,15 @@ public class TradestationSearch extends AbstractParser {
 	}
 
 	Collections.sort(resultList);
-	resultList = resultList.subList(0, 9);
-	futureList.clear();
+	List<InputResult> resultList2 = new ArrayList<InputResult>();
+	for (int i = 0; i < 9; i++) {
+	    resultList2.add(resultList.get(i));
+	}
+
+	resultList = new ArrayList<InputResult>(resultList2);
+	futureList = new ArrayList<Future<InputResult>>(100000);
+
+	print();
     }
 
     private void loadAtEs() {
@@ -176,6 +193,28 @@ public class TradestationSearch extends AbstractParser {
 
 	    Ticker z = new Ticker('Z', year);
 	    tickerBarMap.put(z, load(getFile(z)));
+	}
+    }
+
+    private void print() {
+	StringBuilder sb = new StringBuilder();
+	for (int i = 0; i < resultList.size(); i++) {
+	    sb.append(i + 1);
+	    sb.append('.');
+	    sb.append(' ');
+	    sb.append(resultList.get(i));
+	    sb.append('\n');
+	}
+
+	System.out.println(sb.toString());
+
+	if (OUTPUT) {
+	    File out = new File("FrogMaster-" + System.currentTimeMillis() + ".txt");
+	    try (BufferedWriter bw = new BufferedWriter(new FileWriter(out))) {
+		bw.write(sb.toString());
+	    } catch (IOException e) {
+		e.printStackTrace();
+	    }
 	}
     }
 

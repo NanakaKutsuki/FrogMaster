@@ -29,7 +29,7 @@ public class InputSearch implements Callable<InputResult> {
 	    AbstractStrategy strategy = new HybridStrategyOG();
 	    strategy.setup(ticker, tickerBarMap.get(ticker), input);
 	    strategy.disableMarginCheck();
-	    // strategy.setEndDate(strategy.calcEndDate('Z', 2017));
+	    strategy.setEndDate(strategy.calcEndDate('Z', 2011));
 	    strategy.run();
 
 	    realized += strategy.getBankroll();
