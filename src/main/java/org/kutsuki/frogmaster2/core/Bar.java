@@ -1,6 +1,7 @@
 package org.kutsuki.frogmaster2.core;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 public class Bar implements Comparable<Bar> {
     private LocalDateTime dateTime;
@@ -28,6 +29,10 @@ public class Bar implements Comparable<Bar> {
 	sb.append(getDownTicks());
 
 	return sb.toString();
+    }
+
+    public LocalTime getTime() {
+	return getDateTime().toLocalTime();
     }
 
     public LocalDateTime getDateTime() {

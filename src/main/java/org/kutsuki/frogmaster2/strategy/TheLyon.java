@@ -8,6 +8,21 @@ import org.kutsuki.frogmaster2.core.Bar;
 import org.kutsuki.frogmaster2.core.Ticker;
 import org.kutsuki.frogmaster2.inputs.Input;
 
+/**
+ * private List<Integer> lastMomList;
+ * 
+ * @Override public void setup(Ticker ticker, TreeMap<LocalDateTime, Bar>
+ *           barMap, Input input) { setTickerBarMap(ticker, barMap, input);
+ *           this.lastMom = 0; this.lastMomList = new ArrayList<Integer>(); for
+ *           (int i = 0; i < 12; i++) { this.lastMomList.add(0); } }
+ * 
+ *           private int getLastMom(int lengthA) { return
+ *           lastMomList.get(lengthA - 1); }
+ * 
+ *           private void addMom(int mom) { lastMomList.add(0, mom);
+ *           lastMomList.remove(lastMomList.size() - 1); }
+ *
+ */
 public class TheLyon extends AbstractStrategy {
     private static final int COST_PER_CONTRACT = 2500000;
     private static final int BEAR_SHORT = 475;

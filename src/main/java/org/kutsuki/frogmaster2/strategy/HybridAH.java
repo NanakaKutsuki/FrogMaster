@@ -8,11 +8,12 @@ import org.kutsuki.frogmaster2.core.Bar;
 import org.kutsuki.frogmaster2.core.Ticker;
 import org.kutsuki.frogmaster2.inputs.Input;
 
-public class HybridStrategyCore extends AbstractStrategy {
-    private static final int COST_PER_CONTRACT = 1600000;
-    private static final int COST_PER_CONTRACT_RE = 1700000;
-    private static final LocalTime END = LocalTime.of(16, 00);
-    private static final LocalTime NINE_TWENTYFIVE = LocalTime.of(9, 25);
+public class HybridAH extends AbstractStrategy {
+    private static final int COST_PER_CONTRACT = 5000000;
+    private static final int COST_PER_CONTRACT_RE = 5000000;
+    private static final LocalTime START = LocalTime.of(15, 55);
+    private static final LocalTime END = LocalTime.of(9, 25);
+    private static final LocalTime MIDN = LocalTime.of(23, 55);
 
     private int mom;
     private int accel;
@@ -38,8 +39,8 @@ public class HybridStrategyCore extends AbstractStrategy {
 
     @Override
     protected void strategy(Bar bar) {
-	if (bar.getDateTime().toLocalTime().equals(NINE_TWENTYFIVE)) {
-	    mom = bar.getClose() - getPrevBar(8).getClose();
+	if (bar.getTime().equals(START)) {
+	    mom = bar.getClose() - getPrevBar(getInput().getLength()).getClose();
 	    accel = mom - lastMom;
 	    lastMom = mom;
 
@@ -50,8 +51,8 @@ public class HybridStrategyCore extends AbstractStrategy {
 	    } else {
 		marketBuy();
 	    }
-	} else if (isDay(bar.getDateTime().toLocalTime())) {
-	    mom = bar.getClose() - getPrevBar(8).getClose();
+	} else if (isDay(bar.getTime())) {
+	    mom = bar.getClose() - getPrevBar(getInput().getLength()).getClose();
 	    accel = mom - lastMom;
 	    lastMom = mom;
 
@@ -78,6 +79,7 @@ public class HybridStrategyCore extends AbstractStrategy {
     }
 
     private boolean isDay(LocalTime time) {
-	return time.isAfter(NINE_TWENTYFIVE) && time.isBefore(END);
+	return (time.isAfter(START) && (time.isBefore(MIDN) || time.equals(MIDN)))
+		|| ((time.isAfter(LocalTime.MIN) || time.equals(LocalTime.MIN)) && time.isBefore(END));
     }
 }

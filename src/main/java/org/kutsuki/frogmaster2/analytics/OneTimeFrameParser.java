@@ -12,7 +12,7 @@ import org.kutsuki.frogmaster2.core.Bar;
 import org.kutsuki.frogmaster2.core.Ticker;
 
 public class OneTimeFrameParser extends AbstractParser {
-    private static final String FILE_NAME = "C:/Users/" + System.getProperty("user.name") + "/Desktop/atES30.txt";
+    private static final String FILE_NAME = "C:/Users/" + System.getProperty("user.name") + "/Desktop/atES.txt";
 
     @Override
     public File getFile(Ticker ticker) {
@@ -22,6 +22,8 @@ public class OneTimeFrameParser extends AbstractParser {
     public void run() {
 	File file = getFile(null);
 	TreeMap<LocalDateTime, Bar> barMap = load(file);
+
+	// TODO convert from 30 min to 5 min bars
 
 	if (file.exists()) {
 	    int day = 0;

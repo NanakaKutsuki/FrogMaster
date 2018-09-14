@@ -20,7 +20,7 @@ public class HybridInputsCore {
 	INPUT_MAP.put(11, new Input(-600, -50, 625, 975));
 	INPUT_MAP.put(10, new Input(-600, -50, 625, 975));
 	INPUT_MAP.put(9, new Input(-600, -50, 625, 975));
-	INPUT_MAP.put(8, new Input(-600, 50, 575, 975));
+	INPUT_MAP.put(8, new Input(-600, -50, 575, 975));
 	INPUT_MAP.put(7, new Input(-600, -50, 575, 975));
 	INPUT_MAP.put(6, new Input(-600, -50, 575, 1175));
 	INPUT_MAP.put(5, new Input(-600, -50, 775, 1175));

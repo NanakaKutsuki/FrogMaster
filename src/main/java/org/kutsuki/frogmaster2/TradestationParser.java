@@ -12,13 +12,11 @@ import org.kutsuki.frogmaster2.core.Bar;
 import org.kutsuki.frogmaster2.core.Ticker;
 import org.kutsuki.frogmaster2.inputs.Input;
 import org.kutsuki.frogmaster2.strategy.AbstractStrategy;
-import org.kutsuki.frogmaster2.strategy.HybridStrategyOG;
+import org.kutsuki.frogmaster2.strategy.HybridTest;
 
 public class TradestationParser extends AbstractParser {
-    private static final AbstractStrategy STRATEGY = new HybridStrategyOG();
-    private static final Input INPUT = new Input(-625, -100, 1025, 1050, 0, 0, 0, 0, 0, 0);
-    // private static final Input INPUT = new Input(-625, -150, 1450, 925, 4, -325,
-    // -575, 575, 1175);
+    private static final AbstractStrategy STRATEGY = new HybridTest();
+    private static final Input INPUT = new Input(4, -350, -500, 275, 1625);
     private static final int YEAR = LocalDate.now().getYear() - 2000;
     private static final String DIR = "C:/Users/" + System.getProperty("user.name") + "/Desktop/ES/";
     private static final String TXT = ".txt";
@@ -58,6 +56,7 @@ public class TradestationParser extends AbstractParser {
 	    TreeMap<LocalDateTime, Bar> barMap = load(file);
 
 	    STRATEGY.setup(ticker, barMap, INPUT);
+	    STRATEGY.disableMarginCheck();
 	    STRATEGY.run();
 
 	    // set ticker data
@@ -116,6 +115,8 @@ public class TradestationParser extends AbstractParser {
 	    BigDecimal z = revertDollars(getTicker('Z', year).getRealized());
 	    System.out.println(h + "," + m + "," + u + "," + z);
 	}
+
+	System.out.println(getUnrealized());
     }
 
     public BigDecimal getUnrealized() {

@@ -24,7 +24,8 @@ import org.kutsuki.frogmaster2.inputs.InputResult;
 import org.kutsuki.frogmaster2.inputs.InputSearch;
 
 public class TradestationSearch extends AbstractParser {
-    public static final boolean AT_ES = true;
+    public static final boolean AT_ES = false;
+
     private static final boolean OUTPUT = false;
     private static final File WINDOWS_ATES = new File(
 	    "C:/Users/" + System.getProperty("user.name") + "/Desktop/atES.txt");
@@ -77,7 +78,7 @@ public class TradestationSearch extends AbstractParser {
 	long start = System.currentTimeMillis();
 
 	// load data
-	if (AT_ES) {
+	if (TradestationSearch.AT_ES) {
 	    loadAtEs();
 	} else {
 	    loadQuarterly();
@@ -85,10 +86,10 @@ public class TradestationSearch extends AbstractParser {
 
 	// count
 	long count = 0;
-	for (int mom = -1000; mom <= -200; mom += 25) {
-	    for (int accel = -500; accel <= 0; accel += 25) {
-		for (int up = 500; up <= 1500; up += 25) {
-		    for (int down = 500; down <= 1500; down += 25) {
+	for (int mom = -1000; mom <= 0; mom += 25) {
+	    for (int accel = -1000; accel <= 0; accel += 25) {
+		for (int up = 100; up <= 2000; up += 25) {
+		    for (int down = 100; down <= 2000; down += 25) {
 			count++;
 		    }
 		}
@@ -99,27 +100,22 @@ public class TradestationSearch extends AbstractParser {
 	this.status = new TradestationStatus(count);
 
 	// stage inputs
-	// for (int upOG = 100; upOG <= 2000; upOG += 100) {
-	// for (int downOG = 100; downOG <= 2000; downOG += 100) {
-	// for (int mom = -1000; mom <= 0; mom += 100) {
-	// for (int accel = -1000; accel <= 0; accel += 100) {
-	// for (int up = 100; up <= 2000; up += 100) {
-	// for (int down = 100; down <= 2000; down += 100) {
-	// Input input = new Input(-625, -150, upOG, downOG, 6, 3, mom, accel, up,
-	// down);
+	// for (int mom = -1000; mom <= -200; mom += 25) {
+	// for (int accel = -500; accel <= 0; accel += 25) {
+	// for (int up = 100; up <= 2000; up += 25) {
+	// for (int down = 100; down <= 2000; down += 25) {
+	// Input input = new Input(mom, accel, up, down);
 	// addTest(input);
 	// }
 	// }
 	// }
 	// }
-	// }
-	// }
 
-	for (int mom = -1000; mom <= -200; mom += 25) {
-	    for (int accel = -500; accel <= 0; accel += 25) {
-		for (int up = 500; up <= 1500; up += 25) {
-		    for (int down = 500; down <= 1500; down += 25) {
-			Input input = new Input(mom, accel, up, down, 0, 0, 0, 0, 0, 0);
+	for (int mom = -1000; mom <= 0; mom += 25) {
+	    for (int accel = -1000; accel <= 0; accel += 25) {
+		for (int up = 100; up <= 2000; up += 25) {
+		    for (int down = 100; down <= 2000; down += 25) {
+			Input input = new Input(4, mom, accel, up, down);
 			addTest(input);
 		    }
 		}
@@ -130,7 +126,7 @@ public class TradestationSearch extends AbstractParser {
 	es.shutdown();
 
 	waitForFutures();
-	System.out.println("11Runtime: " + status.formatTime(System.currentTimeMillis() - start));
+	System.out.println("CORE Runtime: " + status.formatTime(System.currentTimeMillis() - start));
     }
 
     private void addTest(Input input) {

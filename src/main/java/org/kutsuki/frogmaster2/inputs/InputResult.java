@@ -45,6 +45,10 @@ public class InputResult implements Comparable<InputResult> {
 	    bd = new BigDecimal(lowestEquity);
 	    bd = bd.divide(HUNDRED, 2, RoundingMode.HALF_UP);
 	    sb.append(bd).append(' ');
+
+	    sb.append("ROI ");
+	    bd = getROI();
+	    sb.append(bd).append('x').append(' ');
 	}
 
 	if (input != null) {
@@ -56,7 +60,15 @@ public class InputResult implements Comparable<InputResult> {
 
     @Override
     public int compareTo(InputResult rhs) {
-	return Integer.compare(rhs.getTotal(), getTotal());
+	int result = 0;
+
+	if (TradestationSearch.AT_ES) {
+	    result = Integer.compare(rhs.getTotal(), getTotal());
+	} else {
+	    result = rhs.getROI().compareTo(getROI());
+	}
+
+	return result;
     }
 
     public Input getInput() {
@@ -65,5 +77,10 @@ public class InputResult implements Comparable<InputResult> {
 
     public int getTotal() {
 	return realized + unrealized;
+    }
+
+    public BigDecimal getROI() {
+	BigDecimal cost = BigDecimal.valueOf(-lowestEquity + 580000);
+	return BigDecimal.valueOf(getTotal()).divide(cost, 4, RoundingMode.HALF_UP);
     }
 }
