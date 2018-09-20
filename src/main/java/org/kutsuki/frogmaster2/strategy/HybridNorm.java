@@ -8,18 +8,21 @@ import org.kutsuki.frogmaster2.core.Bar;
 import org.kutsuki.frogmaster2.core.Ticker;
 import org.kutsuki.frogmaster2.inputs.Input;
 
-public class HybridOG extends AbstractStrategy {
+public class HybridNorm extends AbstractStrategy {
     private static final int COST_PER_CONTRACT = 1500000;
     private static final int COST_PER_CONTRACT_RE = 2500000;
     private static final LocalTime START = LocalTime.of(9, 25);
     private static final LocalTime END = LocalTime.of(16, 00);
 
     private boolean initialized;
-    private int mom;
-    private int accel;
+    private double mom;
+    private double accel;
     private int highPrice;
     private int lowPrice;
-    private int lastMom;
+    private double lastMom;
+
+    private int high;
+    private int low;
 
     @Override
     public void setup(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap, Input input) {
@@ -40,16 +43,25 @@ public class HybridOG extends AbstractStrategy {
 
     @Override
     protected void strategy(Bar bar) {
+	if (bar.getLow() < low) {
+	    low = bar.getLow();
+	}
+
+	if (bar.getHigh() > high) {
+	    high = bar.getHigh();
+	}
+
+	double close = normalize(bar.getClose());
 	if (!initialized) {
 	    if (bar.getTime().equals(START)) {
 		marketBuy();
 		initialized = true;
 	    }
 
-	    lastMom = bar.getClose() - getPrevBar(8).getClose();
+	    lastMom = close - normalize(getPrevBar(8).getClose());
 	} else {
 	    if (isDay(bar.getTime())) {
-		mom = bar.getClose() - getPrevBar(8).getClose();
+		lastMom = close - normalize(getPrevBar(8).getClose());
 		accel = mom - lastMom;
 		lastMom = mom;
 
@@ -72,5 +84,9 @@ public class HybridOG extends AbstractStrategy {
 
     private boolean isDay(LocalTime time) {
 	return time.isAfter(START) && time.isBefore(END);
+    }
+
+    private double normalize(int price) {
+	return (double) (price - low) / (double) (high - low);
     }
 }

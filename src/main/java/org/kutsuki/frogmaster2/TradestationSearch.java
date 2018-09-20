@@ -24,8 +24,6 @@ import org.kutsuki.frogmaster2.inputs.InputResult;
 import org.kutsuki.frogmaster2.inputs.InputSearch;
 
 public class TradestationSearch extends AbstractParser {
-    public static final boolean AT_ES = false;
-
     private static final boolean OUTPUT = false;
     private static final File WINDOWS_ATES = new File(
 	    "C:/Users/" + System.getProperty("user.name") + "/Desktop/atES.txt");
@@ -41,6 +39,7 @@ public class TradestationSearch extends AbstractParser {
     private List<Future<InputResult>> futureList;
     private List<InputResult> resultList;
     private TradestationStatus status;
+    private TreeMap<LocalDateTime, Bar> atEsBarMap;
 
     public TradestationSearch() {
 	this.cores = Runtime.getRuntime().availableProcessors() - 1;
@@ -78,11 +77,8 @@ public class TradestationSearch extends AbstractParser {
 	long start = System.currentTimeMillis();
 
 	// load data
-	if (TradestationSearch.AT_ES) {
-	    loadAtEs();
-	} else {
-	    loadQuarterly();
-	}
+	loadAtEs();
+	loadQuarterly();
 
 	// count
 	long count = 0;
@@ -100,22 +96,11 @@ public class TradestationSearch extends AbstractParser {
 	this.status = new TradestationStatus(count);
 
 	// stage inputs
-	// for (int mom = -1000; mom <= -200; mom += 25) {
-	// for (int accel = -500; accel <= 0; accel += 25) {
-	// for (int up = 100; up <= 2000; up += 25) {
-	// for (int down = 100; down <= 2000; down += 25) {
-	// Input input = new Input(mom, accel, up, down);
-	// addTest(input);
-	// }
-	// }
-	// }
-	// }
-
 	for (int mom = -1000; mom <= 0; mom += 25) {
 	    for (int accel = -1000; accel <= 0; accel += 25) {
 		for (int up = 100; up <= 2000; up += 25) {
 		    for (int down = 100; down <= 2000; down += 25) {
-			Input input = new Input(4, mom, accel, up, down);
+			Input input = new Input(mom, accel, up, down);
 			addTest(input);
 		    }
 		}
@@ -126,11 +111,12 @@ public class TradestationSearch extends AbstractParser {
 	es.shutdown();
 
 	waitForFutures();
-	System.out.println("CORE Runtime: " + status.formatTime(System.currentTimeMillis() - start));
+	System.out.println("OG Runtime: " + status.formatTime(System.currentTimeMillis() - start));
+
     }
 
     private void addTest(Input input) {
-	Future<InputResult> f = es.submit(new InputSearch(tickerBarMap, input));
+	Future<InputResult> f = es.submit(new InputSearch(tickerBarMap, atEsBarMap, input));
 	futureList.add(f);
 
 	if (futureList.size() >= 100000) {
@@ -151,7 +137,9 @@ public class TradestationSearch extends AbstractParser {
 
 	Collections.sort(resultList);
 	List<InputResult> resultList2 = new ArrayList<InputResult>();
-	for (int i = 0; i < 9; i++) {
+
+	int size = resultList.size() < 9 ? resultList.size() : 9;
+	for (int i = 0; i < size; i++) {
 	    resultList2.add(resultList.get(i));
 	}
 
@@ -172,8 +160,7 @@ public class TradestationSearch extends AbstractParser {
 	    throw new IllegalArgumentException("File Not Found!");
 	}
 
-	Ticker ticker = new Ticker('A', 6);
-	tickerBarMap.put(ticker, load(file));
+	atEsBarMap = load(file);
     }
 
     private void loadQuarterly() {

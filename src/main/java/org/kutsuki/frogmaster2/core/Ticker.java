@@ -2,9 +2,8 @@ package org.kutsuki.frogmaster2.core;
 
 import java.time.LocalDateTime;
 
-public class Ticker {
-    private static final String ES = "ES";
-
+public class Ticker implements Comparable<Ticker> {
+    private String ticker;
     private char month;
     private int year;
 
@@ -17,17 +16,9 @@ public class Ticker {
     public Ticker(char month, int year) {
 	this.month = month;
 	this.year = year;
-    }
 
-    @Override
-    public String toString() {
-	return Ticker.getKey(getMonth(), getYear());
-    }
-
-    public static String getKey(char month, int year) {
 	StringBuilder sb = new StringBuilder();
-
-	sb.append(ES);
+	sb.append("ES");
 	sb.append(month);
 
 	if (year < 10) {
@@ -35,7 +26,23 @@ public class Ticker {
 	}
 	sb.append(year);
 
-	return sb.toString();
+	this.ticker = sb.toString();
+    }
+
+    @Override
+    public int compareTo(Ticker rhs) {
+	int result = Integer.compare(getFullYear(), rhs.getFullYear());
+
+	if (result == 0) {
+	    result = Character.compare(getMonth(), rhs.getMonth());
+	}
+
+	return result;
+    }
+
+    @Override
+    public String toString() {
+	return ticker;
     }
 
     public int getFullYear() {

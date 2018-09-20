@@ -12,13 +12,14 @@ import org.kutsuki.frogmaster2.core.Bar;
 import org.kutsuki.frogmaster2.core.Ticker;
 import org.kutsuki.frogmaster2.inputs.Input;
 import org.kutsuki.frogmaster2.strategy.AbstractStrategy;
-import org.kutsuki.frogmaster2.strategy.HybridTest;
+import org.kutsuki.frogmaster2.strategy.HybridCore;
 
 public class TradestationParser extends AbstractParser {
-    private static final AbstractStrategy STRATEGY = new HybridTest();
-    private static final Input INPUT = new Input(4, -350, -500, 275, 1625);
+    private static final AbstractStrategy STRATEGY = new HybridCore();
+    private static final Input INPUT = new Input(-575, -75, 625, 1050);
     private static final int YEAR = LocalDate.now().getYear() - 2000;
     private static final String DIR = "C:/Users/" + System.getProperty("user.name") + "/Desktop/ES/";
+    private static final String ES = "ES";
     private static final String TXT = ".txt";
 
     private Map<String, Ticker> tickerMap;
@@ -56,7 +57,6 @@ public class TradestationParser extends AbstractParser {
 	    TreeMap<LocalDateTime, Bar> barMap = load(file);
 
 	    STRATEGY.setup(ticker, barMap, INPUT);
-	    STRATEGY.disableMarginCheck();
 	    STRATEGY.run();
 
 	    // set ticker data
@@ -70,7 +70,16 @@ public class TradestationParser extends AbstractParser {
     }
 
     public Ticker getTicker(char month, int year) {
-	return tickerMap.get(Ticker.getKey(month, year));
+	StringBuilder sb = new StringBuilder();
+	sb.append(ES);
+	sb.append(month);
+
+	if (year < 10) {
+	    sb.append(0);
+	}
+	sb.append(year);
+
+	return tickerMap.get(sb.toString());
     }
 
     public void printEquityDateTime() {

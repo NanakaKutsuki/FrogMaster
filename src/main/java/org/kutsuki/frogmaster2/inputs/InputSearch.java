@@ -5,44 +5,59 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.Callable;
 
-import org.kutsuki.frogmaster2.TradestationSearch;
 import org.kutsuki.frogmaster2.core.Bar;
 import org.kutsuki.frogmaster2.core.Ticker;
 import org.kutsuki.frogmaster2.strategy.AbstractStrategy;
-import org.kutsuki.frogmaster2.strategy.HybridTest;
+import org.kutsuki.frogmaster2.strategy.HybridOG;
 
 public class InputSearch implements Callable<InputResult> {
+    private static final Ticker AT_ES_TICKER = new Ticker('A', 6);
+
     private Input input;
     private Map<Ticker, TreeMap<LocalDateTime, Bar>> tickerBarMap;
+    private TreeMap<LocalDateTime, Bar> atEsBarMap;
 
-    public InputSearch(Map<Ticker, TreeMap<LocalDateTime, Bar>> tickerBarMap, Input input) {
+    public InputSearch(Map<Ticker, TreeMap<LocalDateTime, Bar>> tickerBarMap, TreeMap<LocalDateTime, Bar> atEsBarMap,
+	    Input input) {
+	this.atEsBarMap = atEsBarMap;
 	this.input = input;
 	this.tickerBarMap = tickerBarMap;
+
     }
 
     @Override
     public InputResult call() {
-	int realized = 0;
-	int unrealized = 0;
+	return new InputResult(input, getTotal(), getEquity());
+    }
+
+    /**
+     * CHANGE STRATEGY IN 2 SPOTS
+     */
+    private int getTotal() {
+	AbstractStrategy strategy = new HybridOG();
+	strategy.disableMarginCheck();
+	strategy.setup(AT_ES_TICKER, atEsBarMap, input);
+	strategy.run();
+	return strategy.getBankroll() + strategy.getUnrealized();
+    }
+
+    /**
+     * CHANGE STRATEGY IN 2 SPOTS
+     */
+    private int getEquity() {
 	int equity = Integer.MAX_VALUE;
 
 	for (Ticker ticker : tickerBarMap.keySet()) {
-	    if (TradestationSearch.AT_ES || (!TradestationSearch.AT_ES && ticker.getFullYear() <= 2018)) {
-		AbstractStrategy strategy = new HybridTest();
-		strategy.disableMarginCheck();
-		strategy.setup(ticker, tickerBarMap.get(ticker), input);
-		// strategy.setEndDate(strategy.calcEndDate('Z', 2009));
-		strategy.run();
+	    AbstractStrategy strategy = new HybridOG();
+	    strategy.disableMarginCheck();
+	    strategy.setup(ticker, tickerBarMap.get(ticker), input);
+	    strategy.run();
 
-		realized += strategy.getBankroll();
-		unrealized += strategy.getUnrealized();
-
-		if (strategy.getLowestEquity() < equity) {
-		    equity = strategy.getLowestEquity();
-		}
+	    if (strategy.getLowestEquity() < equity) {
+		equity = strategy.getLowestEquity();
 	    }
 	}
 
-	return new InputResult(input, realized, unrealized, equity);
+	return equity;
     }
 }
