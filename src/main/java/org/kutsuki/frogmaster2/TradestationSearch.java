@@ -28,24 +28,27 @@ public class TradestationSearch extends AbstractParser {
     private static final File WINDOWS_ATES = new File(
 	    "C:/Users/" + System.getProperty("user.name") + "/Desktop/atES.txt");
     private static final File UNIX_ATES = new File("atES.txt");
+    private static final int CAPACITY = 100000;
+    private static final int YEAR = LocalDate.now().getYear() - 2000;
     private static final String WINDOWS_DIR = "C:/Users/" + System.getProperty("user.name") + "/Desktop/ES/";
     private static final String UNIX_DIR = "ES/";
     private static final String TXT = ".txt";
-    private static final int YEAR = LocalDate.now().getYear() - 2000;
 
     private ExecutorService es;
     private int cores;
     private Map<Ticker, TreeMap<LocalDateTime, Bar>> tickerBarMap;
     private List<Future<InputResult>> futureList;
     private List<InputResult> resultList;
+    private long start;
     private TradestationStatus status;
     private TreeMap<LocalDateTime, Bar> atEsBarMap;
 
     public TradestationSearch() {
 	this.cores = Runtime.getRuntime().availableProcessors() - 1;
 	this.es = Executors.newFixedThreadPool(cores);
-	this.futureList = new ArrayList<Future<InputResult>>(100000);
+	this.futureList = new ArrayList<Future<InputResult>>(CAPACITY);
 	this.resultList = new ArrayList<InputResult>();
+	this.start = System.currentTimeMillis();
 	this.tickerBarMap = new HashMap<Ticker, TreeMap<LocalDateTime, Bar>>();
     }
 
@@ -74,52 +77,50 @@ public class TradestationSearch extends AbstractParser {
     }
 
     public void run() {
-	long start = System.currentTimeMillis();
-
 	// load data
 	loadAtEs();
 	loadQuarterly();
 
 	// count
-	long count = 0;
-	for (int mom = -1000; mom <= 0; mom += 25) {
-	    for (int accel = -1000; accel <= 0; accel += 25) {
-		for (int up = 100; up <= 2000; up += 25) {
-		    for (int down = 100; down <= 2000; down += 25) {
-			count++;
-		    }
-		}
-	    }
-	}
-
+	int count = stage(true);
 	System.out.println("Starting " + count + " tests with " + cores + " cores!");
 	this.status = new TradestationStatus(count);
 
 	// stage inputs
-	for (int mom = -1000; mom <= 0; mom += 25) {
-	    for (int accel = -1000; accel <= 0; accel += 25) {
-		for (int up = 100; up <= 2000; up += 25) {
-		    for (int down = 100; down <= 2000; down += 25) {
-			Input input = new Input(mom, accel, up, down);
-			addTest(input);
-		    }
-		}
-	    }
-	}
+	stage(false);
 
 	// shutdown
 	es.shutdown();
 
 	waitForFutures();
-	System.out.println("OG Runtime: " + status.formatTime(System.currentTimeMillis() - start));
+    }
 
+    private int stage(boolean count) {
+	int tests = 0;
+
+	for (int mom = -1000; mom <= 0; mom += 25) {
+	    for (int accel = -1000; accel <= 0; accel += 25) {
+		for (int up = 100; up <= 2000; up += 25) {
+		    for (int down = 100; down <= 2000; down += 25) {
+			if (count) {
+			    tests++;
+			} else {
+			    Input input = new Input(-575, -25, 625, 950, 5, mom, accel, up, down);
+			    addTest(input);
+			}
+		    }
+		}
+	    }
+	}
+
+	return tests;
     }
 
     private void addTest(Input input) {
 	Future<InputResult> f = es.submit(new InputSearch(tickerBarMap, atEsBarMap, input));
 	futureList.add(f);
 
-	if (futureList.size() >= 100000) {
+	if (futureList.size() >= CAPACITY) {
 	    waitForFutures();
 	}
     }
@@ -144,7 +145,7 @@ public class TradestationSearch extends AbstractParser {
 	}
 
 	resultList = new ArrayList<InputResult>(resultList2);
-	futureList = new ArrayList<Future<InputResult>>(100000);
+	futureList = new ArrayList<Future<InputResult>>(CAPACITY);
 
 	print();
     }
@@ -189,10 +190,13 @@ public class TradestationSearch extends AbstractParser {
 	    sb.append('\n');
 	}
 
+	long runtime = System.currentTimeMillis() - start;
+	sb.append("\n5555Length ES Runtime: ");
+	sb.append(status.formatTime(runtime));
 	System.out.println(sb.toString());
 
 	if (OUTPUT) {
-	    File out = new File("FrogMaster-" + System.currentTimeMillis() + ".txt");
+	    File out = new File("FrogMaster-" + runtime + ".txt");
 	    try (BufferedWriter bw = new BufferedWriter(new FileWriter(out))) {
 		bw.write(sb.toString());
 	    } catch (IOException e) {

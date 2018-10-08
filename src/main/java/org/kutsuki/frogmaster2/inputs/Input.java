@@ -6,6 +6,7 @@ public class Input {
     private int upAmount;
     private int downAmount;
 
+    private int lengthAH;
     private int momAH;
     private int accelAH;
     private int upAmountAH;
@@ -18,13 +19,14 @@ public class Input {
 	this.downAmount = downAmount;
     }
 
-    public Input(int momST, int accelST, int upAmount, int downAmount, int momAH, int accelAH, int upAmountAH,
-	    int downAmountAH) {
+    public Input(int momST, int accelST, int upAmount, int downAmount, int lengthAH, int momAH, int accelAH,
+	    int upAmountAH, int downAmountAH) {
 	this.momST = momST;
 	this.accelST = accelST;
 	this.upAmount = upAmount;
 	this.downAmount = downAmount;
 
+	this.lengthAH = lengthAH;
 	this.momAH = momAH;
 	this.accelAH = accelAH;
 	this.upAmountAH = upAmountAH;
@@ -41,6 +43,7 @@ public class Input {
 	    sb.append(getAccelST()).append(',').append(' ');
 	    sb.append(getUpAmount()).append(',').append(' ');
 	    sb.append(getDownAmount()).append(',').append(' ');
+	    sb.append(getLengthAH()).append(',').append(' ');
 	    sb.append(getMomAH()).append(',').append(' ');
 	    sb.append(getAccelAH()).append(',').append(' ');
 	    sb.append(getUpAmountAH()).append(',').append(' ');
@@ -70,6 +73,10 @@ public class Input {
 
     public int getDownAmount() {
 	return downAmount;
+    }
+
+    public int getLengthAH() {
+	return lengthAH;
     }
 
     public int getMomAH() {

@@ -9,8 +9,8 @@ public class Bar implements Comparable<Bar> {
     private int high;
     private int low;
     private int close;
-    private int upTicks;
-    private int downTicks;
+    // private int upTicks;
+    // private int downTicks;
 
     @Override
     public int compareTo(Bar other) {
@@ -24,9 +24,10 @@ public class Bar implements Comparable<Bar> {
 	sb.append(getOpen()).append(',');
 	sb.append(getHigh()).append(',');
 	sb.append(getLow()).append(',');
-	sb.append(getClose()).append(',');
-	sb.append(getUpTicks()).append(',');
-	sb.append(getDownTicks());
+	sb.append(getClose());
+	// sb.append(getClose()).append(',');
+	// sb.append(getUpTicks()).append(',');
+	// sb.append(getDownTicks());
 
 	return sb.toString();
     }
@@ -75,19 +76,19 @@ public class Bar implements Comparable<Bar> {
 	this.close = close;
     }
 
-    public int getUpTicks() {
-	return upTicks;
-    }
-
-    public void setUpTicks(int upTicks) {
-	this.upTicks = upTicks;
-    }
-
-    public int getDownTicks() {
-	return downTicks;
-    }
-
-    public void setDownTicks(int downTicks) {
-	this.downTicks = downTicks;
-    }
+    // public int getUpTicks() {
+    // return upTicks;
+    // }
+    //
+    // public void setUpTicks(int upTicks) {
+    // this.upTicks = upTicks;
+    // }
+    //
+    // public int getDownTicks() {
+    // return downTicks;
+    // }
+    //
+    // public void setDownTicks(int downTicks) {
+    // this.downTicks = downTicks;
+    // }
 }

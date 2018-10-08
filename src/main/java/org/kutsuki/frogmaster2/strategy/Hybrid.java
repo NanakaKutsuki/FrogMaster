@@ -15,11 +15,6 @@ public class Hybrid extends AbstractStrategy {
     private static final LocalTime END = LocalTime.of(15, 55);
     private static final LocalTime FOUR_PM = LocalTime.of(16, 0);
 
-    private static final int MOM_AH = -350;
-    private static final int ACCEL_AH = -500;
-    private static final int UP_AH = 275;
-    private static final int DOWN_AH = 1625;
-
     private int mom;
     private int accel;
     private int mom2;
@@ -77,17 +72,17 @@ public class Hybrid extends AbstractStrategy {
     }
 
     private void flipAfter(Bar bar) {
-	mom2 = bar.getClose() - getPrevBar(4).getClose();
+	mom2 = bar.getClose() - getPrevBar(getInput().getLengthAH()).getClose();
 	accel2 = mom2 - lastMom2;
 	lastMom2 = mom2;
 
-	if (mom2 < MOM_AH && accel2 < ACCEL_AH) {
+	if (mom2 < getInput().getMomAH() && accel2 < getInput().getAccelAH()) {
 	    if (getMarketPosition() == 1) {
 		marketSellShort();
 	    }
 
-	    highPrice = bar.getClose() + UP_AH;
-	    lowPrice = bar.getClose() - DOWN_AH;
+	    highPrice = bar.getClose() + getInput().getUpAmountAH();
+	    lowPrice = bar.getClose() - getInput().getDownAmountAH();
 	} else if (getMarketPosition() == -1) {
 	    marketBuy();
 	}
@@ -98,12 +93,10 @@ public class Hybrid extends AbstractStrategy {
 	accel = mom - lastMom;
 	lastMom = mom;
 
-	if (getMarketPosition() == 1) {
-	    if (mom < getInput().getMomST() && accel < getInput().getAccelST()) {
-		highPrice = bar.getClose() + getInput().getUpAmount();
-		lowPrice = bar.getClose() - getInput().getDownAmount();
-		marketSellShort();
-	    }
+	if (getMarketPosition() == 1 && mom < getInput().getMomST() && accel < getInput().getAccelST()) {
+	    highPrice = bar.getClose() + getInput().getUpAmount();
+	    lowPrice = bar.getClose() - getInput().getDownAmount();
+	    marketSellShort();
 	} else if (getMarketPosition() == -1) {
 	    if (bar.getLow() <= lowPrice) {
 		marketBuy();
@@ -114,16 +107,14 @@ public class Hybrid extends AbstractStrategy {
     }
 
     private void afterHours(Bar bar) {
-	mom2 = bar.getClose() - getPrevBar(4).getClose();
+	mom2 = bar.getClose() - getPrevBar(getInput().getLengthAH()).getClose();
 	accel2 = mom2 - lastMom2;
 	lastMom2 = mom2;
 
-	if (getMarketPosition() == 1) {
-	    if (mom2 < MOM_AH && accel2 < ACCEL_AH) {
-		highPrice = bar.getClose() + UP_AH;
-		lowPrice = bar.getClose() - DOWN_AH;
-		marketSellShort();
-	    }
+	if (getMarketPosition() == 1 && mom2 < getInput().getMomAH() && accel2 < getInput().getAccelAH()) {
+	    highPrice = bar.getClose() + getInput().getUpAmountAH();
+	    lowPrice = bar.getClose() - getInput().getDownAmountAH();
+	    marketSellShort();
 	} else if (getMarketPosition() == -1) {
 	    if (bar.getLow() <= lowPrice) {
 		marketBuy();

@@ -43,8 +43,8 @@ public abstract class AbstractParser {
 			int high = Integer.parseInt(StringUtils.remove(split[3], '.'));
 			int low = Integer.parseInt(StringUtils.remove(split[4], '.'));
 			int close = Integer.parseInt(StringUtils.remove(split[5], '.'));
-			int up = Integer.parseInt(split[6]);
-			int down = Integer.parseInt(split[7]);
+			// int up = Integer.parseInt(split[6]);
+			// int down = Integer.parseInt(split[7]);
 
 			Bar bar = new Bar();
 			bar.setDateTime(LocalDateTime.of(date, time));
@@ -52,8 +52,8 @@ public abstract class AbstractParser {
 			bar.setHigh(high);
 			bar.setLow(low);
 			bar.setClose(close);
-			bar.setUpTicks(up);
-			bar.setDownTicks(down);
+			// bar.setUpTicks(up);
+			// bar.setDownTicks(down);
 
 			barMap.put(bar.getDateTime(), bar);
 		    } catch (DateTimeParseException | NumberFormatException e) {

@@ -30,14 +30,18 @@ public class Ticker implements Comparable<Ticker> {
     }
 
     @Override
+    public boolean equals(Object o) {
+	return toString().equals(o.toString());
+    }
+
+    @Override
+    public int hashCode() {
+	return toString().hashCode();
+    }
+
+    @Override
     public int compareTo(Ticker rhs) {
-	int result = Integer.compare(getFullYear(), rhs.getFullYear());
-
-	if (result == 0) {
-	    result = Character.compare(getMonth(), rhs.getMonth());
-	}
-
-	return result;
+	return toString().compareTo(rhs.toString());
     }
 
     @Override

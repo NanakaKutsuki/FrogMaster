@@ -12,11 +12,13 @@ import org.kutsuki.frogmaster2.core.Bar;
 import org.kutsuki.frogmaster2.core.Ticker;
 import org.kutsuki.frogmaster2.inputs.Input;
 import org.kutsuki.frogmaster2.strategy.AbstractStrategy;
-import org.kutsuki.frogmaster2.strategy.HybridCore;
+import org.kutsuki.frogmaster2.strategy.HybridOG;
 
 public class TradestationParser extends AbstractParser {
-    private static final AbstractStrategy STRATEGY = new HybridCore();
-    private static final Input INPUT = new Input(-575, -75, 625, 1050);
+    private static final AbstractStrategy STRATEGY = new HybridOG();
+    private static final Input INPUT = new Input(-625, -175, 1025, 1050);
+    // private static final Input INPUT = new Input(-575, -25, 625, 950, 7, -700,
+    // -350, 350, 400);
     private static final int YEAR = LocalDate.now().getYear() - 2000;
     private static final String DIR = "C:/Users/" + System.getProperty("user.name") + "/Desktop/ES/";
     private static final String ES = "ES";
@@ -125,7 +127,7 @@ public class TradestationParser extends AbstractParser {
 	    System.out.println(h + "," + m + "," + u + "," + z);
 	}
 
-	System.out.println(getUnrealized());
+	System.out.println(getUnrealized() + ",,,");
     }
 
     public BigDecimal getUnrealized() {

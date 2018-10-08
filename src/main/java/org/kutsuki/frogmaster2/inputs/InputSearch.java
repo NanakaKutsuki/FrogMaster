@@ -1,5 +1,6 @@
 package org.kutsuki.frogmaster2.inputs;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.TreeMap;
@@ -8,10 +9,11 @@ import java.util.concurrent.Callable;
 import org.kutsuki.frogmaster2.core.Bar;
 import org.kutsuki.frogmaster2.core.Ticker;
 import org.kutsuki.frogmaster2.strategy.AbstractStrategy;
-import org.kutsuki.frogmaster2.strategy.HybridOG;
+import org.kutsuki.frogmaster2.strategy.Hybrid;
 
 public class InputSearch implements Callable<InputResult> {
     private static final Ticker AT_ES_TICKER = new Ticker('A', 6);
+    private static final LocalDate END_DATE = LocalDate.of(2015, 12, 18);
 
     private Input input;
     private Map<Ticker, TreeMap<LocalDateTime, Bar>> tickerBarMap;
@@ -30,25 +32,25 @@ public class InputSearch implements Callable<InputResult> {
 	return new InputResult(input, getTotal(), getEquity());
     }
 
-    /**
-     * CHANGE STRATEGY IN 2 SPOTS
-     */
+    private AbstractStrategy getStrategy() {
+	return new Hybrid();
+    }
+
     private int getTotal() {
-	AbstractStrategy strategy = new HybridOG();
+	AbstractStrategy strategy = getStrategy();
 	strategy.disableMarginCheck();
 	strategy.setup(AT_ES_TICKER, atEsBarMap, input);
+	// strategy.setEndDate(END_DATE);
 	strategy.run();
+
 	return strategy.getBankroll() + strategy.getUnrealized();
     }
 
-    /**
-     * CHANGE STRATEGY IN 2 SPOTS
-     */
     private int getEquity() {
-	int equity = Integer.MAX_VALUE;
+	int equity = 0;
 
 	for (Ticker ticker : tickerBarMap.keySet()) {
-	    AbstractStrategy strategy = new HybridOG();
+	    AbstractStrategy strategy = getStrategy();
 	    strategy.disableMarginCheck();
 	    strategy.setup(ticker, tickerBarMap.get(ticker), input);
 	    strategy.run();
