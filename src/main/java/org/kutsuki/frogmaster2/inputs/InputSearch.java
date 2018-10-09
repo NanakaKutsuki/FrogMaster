@@ -9,7 +9,7 @@ import java.util.concurrent.Callable;
 import org.kutsuki.frogmaster2.core.Bar;
 import org.kutsuki.frogmaster2.core.Ticker;
 import org.kutsuki.frogmaster2.strategy.AbstractStrategy;
-import org.kutsuki.frogmaster2.strategy.Hybrid;
+import org.kutsuki.frogmaster2.strategy.HybridCore;
 
 public class InputSearch implements Callable<InputResult> {
     private static final Ticker AT_ES_TICKER = new Ticker('A', 6);
@@ -29,11 +29,19 @@ public class InputSearch implements Callable<InputResult> {
 
     @Override
     public InputResult call() {
-	return new InputResult(input, getTotal(), getEquity());
+	AbstractStrategy strategy = getStrategy();
+	strategy.disableMarginCheck();
+	strategy.setup(AT_ES_TICKER, atEsBarMap, input);
+	// strategy.setEndDate(END_DATE);
+	strategy.run();
+
+	return new InputResult(input, strategy.getBankroll() + strategy.getUnrealized(), strategy.getLowestEquity());
+
+	// return new InputResult(input, getTotal(), getEquity());
     }
 
     private AbstractStrategy getStrategy() {
-	return new Hybrid();
+	return new HybridCore();
     }
 
     private int getTotal() {

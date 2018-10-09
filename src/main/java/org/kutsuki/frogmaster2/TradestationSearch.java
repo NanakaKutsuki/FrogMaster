@@ -98,14 +98,14 @@ public class TradestationSearch extends AbstractParser {
     private int stage(boolean count) {
 	int tests = 0;
 
-	for (int mom = -1000; mom <= 0; mom += 25) {
-	    for (int accel = -1000; accel <= 0; accel += 25) {
+	for (int mom = -800; mom <= 0; mom += 25) {
+	    for (int accel = -500; accel <= 0; accel += 25) {
 		for (int up = 100; up <= 2000; up += 25) {
 		    for (int down = 100; down <= 2000; down += 25) {
 			if (count) {
 			    tests++;
 			} else {
-			    Input input = new Input(-575, -25, 625, 950, 5, mom, accel, up, down);
+			    Input input = new Input(mom, accel, up, down);
 			    addTest(input);
 			}
 		    }
@@ -191,7 +191,7 @@ public class TradestationSearch extends AbstractParser {
 	}
 
 	long runtime = System.currentTimeMillis() - start;
-	sb.append("\n5555Length ES Runtime: ");
+	sb.append("\nOG ES Runtime: ");
 	sb.append(status.formatTime(runtime));
 	System.out.println(sb.toString());
 

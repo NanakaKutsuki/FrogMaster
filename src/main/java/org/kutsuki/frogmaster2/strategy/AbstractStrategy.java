@@ -30,6 +30,7 @@ public abstract class AbstractStrategy {
     private boolean marketSellShort;
     private Input input;
     private int bankroll;
+    private int bankrollEquity;
     private int bankrollRE;
     private int count;
     private int lowestEquity;
@@ -60,6 +61,7 @@ public abstract class AbstractStrategy {
 
     protected void setTickerBarMap(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap, Input input) {
 	this.bankroll = 0;
+	this.bankrollEquity = 0;
 	this.barMap = barMap;
 	this.count = 0;
 	this.index = 0;
@@ -98,7 +100,7 @@ public abstract class AbstractStrategy {
 		calcUnrealized(bar);
 
 		// calculate equity
-		int equity = getBankroll() + unrealized;
+		int equity = bankrollEquity + unrealized;
 		if (equity < getLowestEquity()) {
 		    lowestEquity = equity;
 		    lowestEquityDateTime = key;
@@ -221,6 +223,13 @@ public abstract class AbstractStrategy {
     private void addBankroll(int realized) {
 	this.bankroll += convertTicks(realized);
 	this.bankroll -= COMMISSION + SLIPPAGE + COMMISSION + SLIPPAGE;
+
+	this.bankrollEquity += convertTicks(realized);
+	this.bankrollEquity -= COMMISSION + SLIPPAGE + COMMISSION + SLIPPAGE;
+
+	if (bankrollEquity > 0) {
+	    this.bankrollEquity = 0;
+	}
 
 	if (marginCheck) {
 	    this.bankrollRE += convertTicks(realized) * numContracts;
