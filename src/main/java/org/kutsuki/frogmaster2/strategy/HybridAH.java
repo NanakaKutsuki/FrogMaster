@@ -40,7 +40,7 @@ public class HybridAH extends AbstractStrategy {
     @Override
     protected void strategy(Bar bar) {
 	if (bar.getTime().equals(START)) {
-	    mom = bar.getClose() - getPrevBar(4).getClose();
+	    mom = bar.getClose() - getPrevBar(getInput().getLengthAH()).getClose();
 	    accel = mom - lastMom;
 	    lastMom = mom;
 
@@ -52,7 +52,7 @@ public class HybridAH extends AbstractStrategy {
 		marketBuy();
 	    }
 	} else if (isDay(bar.getTime())) {
-	    mom = bar.getClose() - getPrevBar(4).getClose();
+	    mom = bar.getClose() - getPrevBar(getInput().getLengthAH()).getClose();
 	    accel = mom - lastMom;
 	    lastMom = mom;
 

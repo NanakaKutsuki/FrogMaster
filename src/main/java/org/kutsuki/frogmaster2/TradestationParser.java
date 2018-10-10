@@ -16,7 +16,9 @@ import org.kutsuki.frogmaster2.strategy.HybridCore;
 
 public class TradestationParser extends AbstractParser {
     private static final AbstractStrategy STRATEGY = new HybridCore();
-    private static final Input INPUT = new Input(-600, -25, 575, 1000);
+    private static final Input INPUT = new Input(-575, -25, 625, 1025);
+    // private static final Input INPUT = new Input(-600, -25, 575, 1000, 6, -175,
+    // -675, 550, 1300);
     // private static final Input INPUT = new Input(-575, -25, 625, 950, 7, -700,
     // -350, 350, 400);
     private static final int YEAR = LocalDate.now().getYear() - 2000;

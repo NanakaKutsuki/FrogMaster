@@ -1,6 +1,5 @@
 package org.kutsuki.frogmaster2.inputs;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.TreeMap;
@@ -9,11 +8,11 @@ import java.util.concurrent.Callable;
 import org.kutsuki.frogmaster2.core.Bar;
 import org.kutsuki.frogmaster2.core.Ticker;
 import org.kutsuki.frogmaster2.strategy.AbstractStrategy;
-import org.kutsuki.frogmaster2.strategy.HybridCore;
+import org.kutsuki.frogmaster2.strategy.Hybrid;
 
 public class InputSearch implements Callable<InputResult> {
     private static final Ticker AT_ES_TICKER = new Ticker('A', 6);
-    private static final LocalDate END_DATE = LocalDate.of(2015, 12, 18);
+    // private static final LocalDate END_DATE = LocalDate.of(2015, 12, 18);
 
     private Input input;
     private Map<Ticker, TreeMap<LocalDateTime, Bar>> tickerBarMap;
@@ -29,6 +28,14 @@ public class InputSearch implements Callable<InputResult> {
 
     @Override
     public InputResult call() {
+	return runQuarterly();
+    }
+
+    private AbstractStrategy getStrategy() {
+	return new Hybrid();
+    }
+
+    private InputResult runAtEs() {
 	AbstractStrategy strategy = getStrategy();
 	strategy.disableMarginCheck();
 	strategy.setup(AT_ES_TICKER, atEsBarMap, input);
@@ -36,25 +43,10 @@ public class InputSearch implements Callable<InputResult> {
 	strategy.run();
 
 	return new InputResult(input, strategy.getBankroll() + strategy.getUnrealized(), strategy.getLowestEquity());
-
-	// return new InputResult(input, getTotal(), getEquity());
     }
 
-    private AbstractStrategy getStrategy() {
-	return new HybridCore();
-    }
-
-    private int getTotal() {
-	AbstractStrategy strategy = getStrategy();
-	strategy.disableMarginCheck();
-	strategy.setup(AT_ES_TICKER, atEsBarMap, input);
-	// strategy.setEndDate(END_DATE);
-	strategy.run();
-
-	return strategy.getBankroll() + strategy.getUnrealized();
-    }
-
-    private int getEquity() {
+    private InputResult runQuarterly() {
+	int total = 0;
 	int equity = 0;
 
 	for (Ticker ticker : tickerBarMap.keySet()) {
@@ -63,11 +55,13 @@ public class InputSearch implements Callable<InputResult> {
 	    strategy.setup(ticker, tickerBarMap.get(ticker), input);
 	    strategy.run();
 
+	    total += strategy.getBankroll() + strategy.getUnrealized();
+
 	    if (strategy.getLowestEquity() < equity) {
 		equity = strategy.getLowestEquity();
 	    }
 	}
 
-	return equity;
+	return new InputResult(input, total, equity);
     }
 }
