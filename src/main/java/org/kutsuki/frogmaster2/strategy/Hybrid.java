@@ -113,9 +113,7 @@ public class Hybrid extends AbstractStrategy {
 	accel2 = mom2 - lastMom2;
 	lastMom2 = mom2;
 
-	if ((bar.getTime().isAfter(SIX_PM) && (bar.getTime().isBefore(MIDN) || bar.getTime().equals(MIDN)))
-		|| ((bar.getTime().isAfter(LocalTime.MIN) || bar.getTime().equals(LocalTime.MIN))
-			&& bar.getTime().isBefore(START))) {
+	if (isAfterHours(bar.getTime())) {
 	    if (getMarketPosition() == 1 && mom2 < getInput().getMomAH() && accel2 < getInput().getAccelAH()) {
 		highPrice = bar.getClose() + getInput().getUpAmountAH();
 		lowPrice = bar.getClose() - getInput().getDownAmountAH();
@@ -128,5 +126,10 @@ public class Hybrid extends AbstractStrategy {
 		}
 	    }
 	}
+    }
+
+    private boolean isAfterHours(LocalTime time) {
+	return (time.isAfter(SIX_PM) && (time.isBefore(MIDN) || time.equals(MIDN)))
+		|| ((time.isAfter(LocalTime.MIN) || time.equals(LocalTime.MIN)) && time.isBefore(START));
     }
 }
