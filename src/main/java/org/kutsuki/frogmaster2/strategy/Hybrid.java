@@ -14,6 +14,8 @@ public class Hybrid extends AbstractStrategy {
     private static final LocalTime START = LocalTime.of(9, 25);
     private static final LocalTime END = LocalTime.of(15, 55);
     private static final LocalTime FOUR_PM = LocalTime.of(16, 0);
+    private static final LocalTime SIX_PM = LocalTime.of(18, 5);
+    private static final LocalTime MIDN = LocalTime.of(23, 55);
 
     private int mom;
     private int accel;
@@ -111,15 +113,19 @@ public class Hybrid extends AbstractStrategy {
 	accel2 = mom2 - lastMom2;
 	lastMom2 = mom2;
 
-	if (getMarketPosition() == 1 && mom2 < getInput().getMomAH() && accel2 < getInput().getAccelAH()) {
-	    highPrice = bar.getClose() + getInput().getUpAmountAH();
-	    lowPrice = bar.getClose() - getInput().getDownAmountAH();
-	    marketSellShort();
-	} else if (getMarketPosition() == -1) {
-	    if (bar.getLow() <= lowPrice) {
-		marketBuy();
-	    } else if (bar.getClose() >= highPrice) {
-		marketBuy();
+	if ((bar.getTime().isAfter(SIX_PM) && (bar.getTime().isBefore(MIDN) || bar.getTime().equals(MIDN)))
+		|| ((bar.getTime().isAfter(LocalTime.MIN) || bar.getTime().equals(LocalTime.MIN))
+			&& bar.getTime().isBefore(START))) {
+	    if (getMarketPosition() == 1 && mom2 < getInput().getMomAH() && accel2 < getInput().getAccelAH()) {
+		highPrice = bar.getClose() + getInput().getUpAmountAH();
+		lowPrice = bar.getClose() - getInput().getDownAmountAH();
+		marketSellShort();
+	    } else if (getMarketPosition() == -1) {
+		if (bar.getLow() <= lowPrice) {
+		    marketBuy();
+		} else if (bar.getClose() >= highPrice) {
+		    marketBuy();
+		}
 	    }
 	}
     }
