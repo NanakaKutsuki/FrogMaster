@@ -13,7 +13,7 @@ import org.kutsuki.frogmaster2.strategy.HybridOG;
 public class TradestationParserAtEs extends AbstractParser {
     private static final String FILE_NAME = "C:/Users/" + System.getProperty("user.name") + "/Desktop/atES.txt";
     private static final AbstractStrategy STRATEGY = new HybridOG();
-    private static final Input INPUT = new Input(-650, -125, 1025, 1050);
+    private static final Input INPUT = new Input(8, -650, -125, 1025, 1050);
     // private static final Input INPUT = new Input(-575, -25, 625, 950, 7, -700,
     // -350, 350, 400);
     private static final Ticker TICKER = new Ticker('A', 6);

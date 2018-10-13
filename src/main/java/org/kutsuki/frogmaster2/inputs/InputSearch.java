@@ -8,7 +8,7 @@ import java.util.concurrent.Callable;
 import org.kutsuki.frogmaster2.core.Bar;
 import org.kutsuki.frogmaster2.core.Ticker;
 import org.kutsuki.frogmaster2.strategy.AbstractStrategy;
-import org.kutsuki.frogmaster2.strategy.Hybrid;
+import org.kutsuki.frogmaster2.strategy.HybridOG;
 
 public class InputSearch implements Callable<InputResult> {
     private static final Ticker AT_ES_TICKER = new Ticker('A', 6);
@@ -32,7 +32,7 @@ public class InputSearch implements Callable<InputResult> {
     }
 
     private AbstractStrategy getStrategy() {
-	return new Hybrid();
+	return new HybridOG();
     }
 
     private InputResult runAtEs() {

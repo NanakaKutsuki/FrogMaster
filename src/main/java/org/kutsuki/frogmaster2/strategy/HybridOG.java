@@ -10,7 +10,7 @@ import org.kutsuki.frogmaster2.inputs.Input;
 
 public class HybridOG extends AbstractStrategy {
     private static final int COST_PER_CONTRACT = 1500000;
-    private static final int COST_PER_CONTRACT_RE = 2500000;
+    private static final int COST_PER_CONTRACT_RE = 3000000;
     private static final LocalTime START = LocalTime.of(9, 25);
     private static final LocalTime END = LocalTime.of(16, 00);
 
@@ -46,10 +46,10 @@ public class HybridOG extends AbstractStrategy {
 		initialized = true;
 	    }
 
-	    lastMom = bar.getClose() - getPrevBar(8).getClose();
+	    lastMom = bar.getClose() - getPrevBar(getInput().getLength()).getClose();
 	} else {
 	    if (isDay(bar.getTime())) {
-		mom = bar.getClose() - getPrevBar(8).getClose();
+		mom = bar.getClose() - getPrevBar(getInput().getLength()).getClose();
 		accel = mom - lastMom;
 		lastMom = mom;
 

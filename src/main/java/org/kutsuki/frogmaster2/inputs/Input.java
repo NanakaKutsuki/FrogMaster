@@ -1,6 +1,7 @@
 package org.kutsuki.frogmaster2.inputs;
 
 public class Input {
+    private int length;
     private int momST;
     private int accelST;
     private int upAmount;
@@ -12,15 +13,17 @@ public class Input {
     private int upAmountAH;
     private int downAmountAH;
 
-    public Input(int momST, int accelST, int upAmount, int downAmount) {
+    public Input(int length, int momST, int accelST, int upAmount, int downAmount) {
+	this.length = length;
 	this.momST = momST;
 	this.accelST = accelST;
 	this.upAmount = upAmount;
 	this.downAmount = downAmount;
     }
 
-    public Input(int momST, int accelST, int upAmount, int downAmount, int lengthAH, int momAH, int accelAH,
+    public Input(int length, int momST, int accelST, int upAmount, int downAmount, int lengthAH, int momAH, int accelAH,
 	    int upAmountAH, int downAmountAH) {
+	this.length = length;
 	this.momST = momST;
 	this.accelST = accelST;
 	this.upAmount = upAmount;
@@ -39,6 +42,7 @@ public class Input {
 	sb.append("Inputs: (");
 
 	if (getDownAmountAH() != 0) {
+	    sb.append(getLength()).append(',').append(' ');
 	    sb.append(getMomST()).append(',').append(' ');
 	    sb.append(getAccelST()).append(',').append(' ');
 	    sb.append(getUpAmount()).append(',').append(' ');
@@ -49,6 +53,7 @@ public class Input {
 	    sb.append(getUpAmountAH()).append(',').append(' ');
 	    sb.append(getDownAmountAH());
 	} else {
+	    sb.append(getLength()).append(',').append(' ');
 	    sb.append(getMomST()).append(',').append(' ');
 	    sb.append(getAccelST()).append(',').append(' ');
 	    sb.append(getUpAmount()).append(',').append(' ');
@@ -57,6 +62,10 @@ public class Input {
 
 	sb.append(')');
 	return sb.toString();
+    }
+
+    public int getLength() {
+	return length;
     }
 
     public int getMomST() {

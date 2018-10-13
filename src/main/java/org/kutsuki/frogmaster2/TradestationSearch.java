@@ -98,21 +98,25 @@ public class TradestationSearch extends AbstractParser {
     private int stage(boolean count) {
 	int tests = 0;
 
-	for (int mom = -1000; mom <= 0; mom += 25) {
-	    for (int accel = -1000; accel <= 0; accel += 25) {
-		for (int up = 100; up <= 2000; up += 25) {
-		    for (int down = 100; down <= 2000; down += 25) {
+	// 1. Total $235552.88 LowestEquity -$8357.22 ROI 16.6384x Inputs: (-600, -100,
+	// 925, 1050)
+	// 1. Total $223872.92 LowestEquity -$9308.66 ROI 14.8175x Inputs: (5, -600,
+	// -300, 925, 1025)
+
+	for (int mom = -700; mom <= -500; mom += 25) {
+	    for (int accel = -400; accel <= 0; accel += 25) {
+		for (int up = 500; up <= 1500; up += 25) {
+		    for (int down = 500; down <= 1500; down += 25) {
 			if (count) {
 			    tests++;
 			} else {
-			    Input input = new Input(-575, -25, 625, 1025, 5, mom, accel, up, down);
+			    Input input = new Input(5, mom, accel, up, down);
 			    addTest(input);
 			}
 		    }
 		}
 	    }
 	}
-
 	return tests;
     }
 
