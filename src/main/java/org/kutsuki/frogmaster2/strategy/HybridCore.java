@@ -8,6 +8,11 @@ import org.kutsuki.frogmaster2.core.Bar;
 import org.kutsuki.frogmaster2.core.Ticker;
 import org.kutsuki.frogmaster2.inputs.Input;
 
+/**
+ * 1. Total $193349.38 LowestEquity -$8075.52 ROI 13.9346x Inputs: (8, -600,
+ * -100, 800, 1050)
+ *
+ */
 public class HybridCore extends AbstractStrategy {
     private static final int COST_PER_CONTRACT = 5000000;
     private static final int COST_PER_CONTRACT_RE = 5000000;
@@ -39,7 +44,7 @@ public class HybridCore extends AbstractStrategy {
     @Override
     protected void strategy(Bar bar) {
 	if (bar.getTime().equals(START)) {
-	    mom = bar.getClose() - getPrevBar(8).getClose();
+	    mom = bar.getClose() - getPrevBar(getInput().getLength()).getClose();
 	    accel = mom - lastMom;
 	    lastMom = mom;
 
@@ -51,7 +56,7 @@ public class HybridCore extends AbstractStrategy {
 		marketBuy();
 	    }
 	} else if (isDay(bar.getTime())) {
-	    mom = bar.getClose() - getPrevBar(8).getClose();
+	    mom = bar.getClose() - getPrevBar(getInput().getLength()).getClose();
 	    accel = mom - lastMom;
 	    lastMom = mom;
 

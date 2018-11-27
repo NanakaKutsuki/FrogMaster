@@ -8,8 +8,14 @@ import org.kutsuki.frogmaster2.core.Bar;
 import org.kutsuki.frogmaster2.core.Ticker;
 import org.kutsuki.frogmaster2.inputs.Input;
 
+/**
+ * 
+ * 1. Total $286847.50 LowestEquity -$13424.08 ROI 14.9213x Inputs: (5, -600,
+ * -325, 1300, 1025) -600, -325, 1525, 1025
+ *
+ */
 public class HybridOG extends AbstractStrategy {
-    private static final int COST_PER_CONTRACT = 1500000;
+    private static final int COST_PER_CONTRACT = 3000000;
     private static final int COST_PER_CONTRACT_RE = 3000000;
     private static final LocalTime START = LocalTime.of(9, 25);
     private static final LocalTime END = LocalTime.of(16, 00);

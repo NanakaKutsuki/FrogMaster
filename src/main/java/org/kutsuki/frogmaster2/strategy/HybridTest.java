@@ -9,26 +9,23 @@ import org.kutsuki.frogmaster2.core.Ticker;
 import org.kutsuki.frogmaster2.inputs.Input;
 
 public class HybridTest extends AbstractStrategy {
-    private static final int COST_PER_CONTRACT = 5000000;
-    private static final int COST_PER_CONTRACT_RE = 5000000;
+    private static final int COST_PER_CONTRACT = 3000000;
+    private static final int COST_PER_CONTRACT_RE = 3000000;
     private static final LocalTime START = LocalTime.of(9, 25);
-    private static final LocalTime END = LocalTime.of(15, 55);
-    private static final LocalTime FOUR_PM = LocalTime.of(16, 0);
+    private static final LocalTime END = LocalTime.of(16, 00);
 
+    private boolean initialized;
     private int mom;
     private int accel;
-    private int mom2;
-    private int accel2;
     private int highPrice;
     private int lowPrice;
     private int lastMom;
-    private int lastMom2;
 
     @Override
     public void setup(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap, Input input) {
 	setTickerBarMap(ticker, barMap, input);
+	this.initialized = false;
 	this.lastMom = 0;
-	this.lastMom2 = 0;
     }
 
     @Override
@@ -43,94 +40,39 @@ public class HybridTest extends AbstractStrategy {
 
     @Override
     protected void strategy(Bar bar) {
-	if (bar.getTime().equals(START)) {
-	    flipCore(bar);
-	} else if (bar.getTime().equals(END)) {
-	    flipAfter(bar);
-	} else if (bar.getTime().isAfter(START) && bar.getTime().isBefore(FOUR_PM)) {
-	    coreHours(bar);
+	if (!initialized) {
+	    if (bar.getTime().equals(START)) {
+		marketBuy();
+		initialized = true;
+	    }
+
+	    lastMom = bar.getClose() - getPrevBar(getInput().getLength()).getClose();
 	} else {
-	    afterHours(bar);
-	}
-    }
+	    if (isDay(bar.getTime())) {
+		mom = bar.getClose() - getPrevBar(getInput().getLength()).getClose();
+		accel = mom - lastMom;
+		lastMom = mom;
 
-    private void flipCore(Bar bar) {
-	mom = bar.getClose() - getPrevBar(8).getClose();
-	accel = mom - lastMom;
-	lastMom = mom;
-
-	if (mom < getInput().getMomST() && accel < getInput().getAccelST()) {
-	    if (getMarketPosition() == 1) {
-		marketSellShort();
-	    }
-
-	    highPrice = bar.getClose() + getInput().getUpAmount();
-	    lowPrice = bar.getClose() - getInput().getDownAmount();
-	} else if (getMarketPosition() <= 0) {
-	    marketBuy();
-	}
-    }
-
-    private void flipAfter(Bar bar) {
-	mom2 = bar.getClose() - getPrevBar(getInput().getLengthAH()).getClose();
-	accel2 = mom2 - lastMom2;
-	lastMom2 = mom2;
-
-	if (mom2 < getInput().getMomAH() && accel2 < getInput().getAccelAH()) {
-	    if (getMarketPosition() == 1) {
-		marketSellShort();
-	    }
-
-	    highPrice = bar.getClose() + getInput().getUpAmountAH();
-	    lowPrice = bar.getClose() - getInput().getDownAmountAH();
-	} else if (getMarketPosition() == -1) {
-	    marketBuy();
-	}
-    }
-
-    private void coreHours(Bar bar) {
-	mom = bar.getClose() - getPrevBar(8).getClose();
-	accel = mom - lastMom;
-	lastMom = mom;
-
-	if (getMarketPosition() == 1 && mom < getInput().getMomST() && accel < getInput().getAccelST()) {
-	    highPrice = bar.getClose() + getInput().getUpAmount();
-	    lowPrice = bar.getClose() - getInput().getDownAmount();
-	    marketSellShort();
-	} else if (getMarketPosition() == -1) {
-	    if (bar.getLow() <= lowPrice) {
-		if (mom < getInput().getMomST() && accel < getInput().getAccelST()) {
-		    highPrice = bar.getClose() + getInput().getUpAmount();
-		    lowPrice = bar.getClose() - getInput().getDownAmount();
-		} else {
-		    marketBuy();
+		if (getMarketPosition() == 1) {
+		    if (mom < getInput().getMomST() && accel < getInput().getAccelST()) {
+			highPrice = bar.getClose() + getInput().getUpAmount();
+			lowPrice = bar.getClose() - getInput().getDownAmount();
+			marketSellShort();
+		    }
+		} else if (getMarketPosition() <= 0) {
+		    if (bar.getLow() <= lowPrice) {
+			marketBuy();
+		    } else if (bar.getClose() >= highPrice) {
+			marketBuy();
+		    } else if (getMarketPosition() == -1) {
+			limitCover(lowPrice);
+		    }
 		}
-	    } else if (bar.getClose() >= highPrice) {
-		marketBuy();
 	    }
 	}
     }
 
-    private void afterHours(Bar bar) {
-	mom2 = bar.getClose() - getPrevBar(getInput().getLengthAH()).getClose();
-	accel2 = mom2 - lastMom2;
-	lastMom2 = mom2;
-
-	if (getMarketPosition() == 1 && mom2 < getInput().getMomAH() && accel2 < getInput().getAccelAH()) {
-	    highPrice = bar.getClose() + getInput().getUpAmountAH();
-	    lowPrice = bar.getClose() - getInput().getDownAmountAH();
-	    marketSellShort();
-	} else if (getMarketPosition() == -1) {
-	    if (bar.getLow() <= lowPrice) {
-		if (mom2 < getInput().getMomAH() && accel2 < getInput().getAccelAH()) {
-		    highPrice = bar.getClose() + getInput().getUpAmountAH();
-		    lowPrice = bar.getClose() - getInput().getDownAmountAH();
-		} else {
-		    marketBuy();
-		}
-	    } else if (bar.getClose() >= highPrice) {
-		marketBuy();
-	    }
-	}
+    private boolean isDay(LocalTime time) {
+	return time.isAfter(START) && time.isBefore(END);
     }
 }

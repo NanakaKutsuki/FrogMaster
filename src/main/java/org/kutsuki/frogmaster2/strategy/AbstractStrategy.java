@@ -33,8 +33,9 @@ public abstract class AbstractStrategy {
     private int bankrollEquity;
     private int bankrollRE;
     private int count;
-    private int lowestEquity;
     private int index;
+    private int limitCover;
+    private int lowestEquity;
     private int marketPosition;
     private int numContracts;
     private int positionPrice;
@@ -66,6 +67,7 @@ public abstract class AbstractStrategy {
 	this.count = 0;
 	this.index = 0;
 	this.input = input;
+	this.limitCover = 0;
 	this.lowestEquity = Integer.MAX_VALUE;
 	this.marketPosition = 0;
 	this.marketBuy = false;
@@ -90,8 +92,8 @@ public abstract class AbstractStrategy {
 	    Bar bar = barMap.get(key);
 
 	    if (!key.isBefore(getStartDateTime()) && !key.isAfter(getEndDateTime())) {
-		// resolve market orders first
-		resolveMarketOrders(bar);
+		// resolve orders first
+		resolveOrders(bar);
 
 		// run strategy
 		strategy(bar);
@@ -202,6 +204,10 @@ public abstract class AbstractStrategy {
 
     protected LocalDateTime getStartDateTime() {
 	return LocalDateTime.of(getStartDate(), NINE_TWENTYFIVE);
+    }
+
+    protected void limitCover(int limit) {
+	limitCover = limit;
     }
 
     protected void marketBuy() {
@@ -348,7 +354,21 @@ public abstract class AbstractStrategy {
 	}
     }
 
-    private void resolveMarketOrders(Bar bar) {
+    private void resolveOrders(Bar bar) {
+	if (limitCover > 0 && bar.getLow() <= limitCover) {
+	    if (bar.getOpen() < limitCover) {
+		limitCover = bar.getOpen();
+	    }
+
+	    addBankroll(positionPrice - limitCover);
+
+	    if (PRINT_TRADES) {
+		System.out.println(count + " " + bar.getDateTime() + " LongLimit " + limitCover + " " + getBankroll());
+	    }
+
+	    marketPosition = 0;
+	}
+
 	if (marketBuy) {
 	    if (marketPosition == -1) {
 		addBankroll(positionPrice - bar.getOpen());
@@ -416,5 +436,7 @@ public abstract class AbstractStrategy {
 	    marketPosition = -1;
 	    marketSellShort = false;
 	}
+
+	limitCover = 0;
     }
 }

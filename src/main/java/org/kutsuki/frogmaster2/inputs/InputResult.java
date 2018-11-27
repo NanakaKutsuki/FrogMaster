@@ -49,11 +49,15 @@ public class InputResult implements Comparable<InputResult> {
 
     @Override
     public int compareTo(InputResult rhs) {
-	return rhs.getROI().compareTo(getROI());
+	return Integer.compare(rhs.getTotal(), getTotal());
     }
 
     public BigDecimal getROI() {
 	BigDecimal cost = BigDecimal.valueOf(-lowestEquity + 580000);
 	return BigDecimal.valueOf(total).divide(cost, 4, RoundingMode.HALF_UP);
+    }
+
+    public int getTotal() {
+	return total;
     }
 }

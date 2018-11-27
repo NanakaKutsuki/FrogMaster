@@ -8,12 +8,18 @@ import org.kutsuki.frogmaster2.core.Bar;
 import org.kutsuki.frogmaster2.core.Ticker;
 import org.kutsuki.frogmaster2.inputs.Input;
 
+/**
+ * 1. Total $92161.78 LowestEquity -$8507.30 ROI 6.4416x Inputs: (4, -600, -600,
+ * 600, 1900)
+ */
 public class HybridAH extends AbstractStrategy {
     private static final int COST_PER_CONTRACT = 5000000;
     private static final int COST_PER_CONTRACT_RE = 5000000;
     private static final LocalTime START = LocalTime.of(15, 55);
     private static final LocalTime END = LocalTime.of(9, 25);
     private static final LocalTime MIDN = LocalTime.of(23, 55);
+    private static final LocalTime FOUR_TEN = LocalTime.of(16, 10);
+    private static final LocalTime FOUR_55 = LocalTime.of(16, 55);
 
     private int mom;
     private int accel;
@@ -40,7 +46,7 @@ public class HybridAH extends AbstractStrategy {
     @Override
     protected void strategy(Bar bar) {
 	if (bar.getTime().equals(START)) {
-	    mom = bar.getClose() - getPrevBar(getInput().getLengthAH()).getClose();
+	    mom = bar.getClose() - getPrevBar(getInput().getLength()).getClose();
 	    accel = mom - lastMom;
 	    lastMom = mom;
 
@@ -52,21 +58,23 @@ public class HybridAH extends AbstractStrategy {
 		marketBuy();
 	    }
 	} else if (isDay(bar.getTime())) {
-	    mom = bar.getClose() - getPrevBar(getInput().getLengthAH()).getClose();
+	    mom = bar.getClose() - getPrevBar(getInput().getLength()).getClose();
 	    accel = mom - lastMom;
 	    lastMom = mom;
 
-	    if (getMarketPosition() == 1) {
-		if (mom < getInput().getMomST() && accel < getInput().getAccelST()) {
-		    highPrice = bar.getClose() + getInput().getUpAmount();
-		    lowPrice = bar.getClose() - getInput().getDownAmount();
-		    marketSellShort();
-		}
-	    } else if (getMarketPosition() == -1) {
-		if (bar.getLow() <= lowPrice) {
-		    marketBuy();
-		} else if (bar.getClose() >= highPrice) {
-		    marketBuy();
+	    if (!(bar.getTime().equals(FOUR_TEN) || bar.getTime().equals(FOUR_55))) {
+		if (getMarketPosition() == 1) {
+		    if (mom < getInput().getMomST() && accel < getInput().getAccelST()) {
+			highPrice = bar.getClose() + getInput().getUpAmount();
+			lowPrice = bar.getClose() - getInput().getDownAmount();
+			marketSellShort();
+		    }
+		} else if (getMarketPosition() == -1) {
+		    if (bar.getLow() <= lowPrice) {
+			marketBuy();
+		    } else if (bar.getClose() >= highPrice) {
+			marketBuy();
+		    }
 		}
 	    }
 	} else {
