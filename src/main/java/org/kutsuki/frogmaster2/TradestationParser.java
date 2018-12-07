@@ -12,13 +12,13 @@ import org.kutsuki.frogmaster2.core.Bar;
 import org.kutsuki.frogmaster2.core.Ticker;
 import org.kutsuki.frogmaster2.inputs.Input;
 import org.kutsuki.frogmaster2.strategy.AbstractStrategy;
-import org.kutsuki.frogmaster2.strategy.HybridOG;
+import org.kutsuki.frogmaster2.strategy.HybridLimit;
 
 public class TradestationParser extends AbstractParser {
-    private static final AbstractStrategy STRATEGY = new HybridOG();
-    private static final Input INPUT = new Input(5, -600, -325, 1300, 1025);
+    private static final AbstractStrategy STRATEGY = new HybridLimit();
+    private static final Input INPUT = new Input(5, -600, -325, 1300, 1000);
     private static final int YEAR = LocalDate.now().getYear() - 2000;
-    private static final String DIR = "C:/Users/" + System.getProperty("user.name") + "/Desktop/ES/";
+    private static final String DIR = "C:/Users/" + System.getProperty("user.name") + "/Desktop/ES-1min/";
     private static final String ES = "ES";
     private static final String TXT = ".txt";
 
@@ -115,8 +115,6 @@ public class TradestationParser extends AbstractParser {
 
     public void printRealized() {
 	System.out.println("--------------------------");
-	System.out.println("Unrealized: " + getUnrealized());
-	System.out.println("Realized");
 	for (int year = YEAR; year >= 6; year--) {
 	    BigDecimal h = revertDollars(getTicker('H', year).getRealized());
 	    BigDecimal m = revertDollars(getTicker('M', year).getRealized());
@@ -126,6 +124,19 @@ public class TradestationParser extends AbstractParser {
 	}
 
 	System.out.println(getUnrealized() + ",,,");
+	System.out.println("Total: " + getRealized().add(getUnrealized()));
+    }
+
+    public BigDecimal getRealized() {
+	int realized = 0;
+	for (int year = YEAR; year >= 6; year--) {
+	    realized += getTicker('H', year).getRealized();
+	    realized += getTicker('M', year).getRealized();
+	    realized += getTicker('U', year).getRealized();
+	    realized += getTicker('Z', year).getRealized();
+	}
+
+	return revertDollars(realized);
     }
 
     public BigDecimal getUnrealized() {

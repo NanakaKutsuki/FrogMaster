@@ -22,6 +22,7 @@ import org.kutsuki.frogmaster2.core.Ticker;
 import org.kutsuki.frogmaster2.inputs.Input;
 import org.kutsuki.frogmaster2.inputs.InputResult;
 import org.kutsuki.frogmaster2.inputs.InputSearch;
+import org.kutsuki.frogmaster2.strategy.HybridLimit;
 
 public class TradestationSearch extends AbstractParser {
     private static final boolean OUTPUT = false;
@@ -30,7 +31,7 @@ public class TradestationSearch extends AbstractParser {
     private static final File UNIX_ATES = new File("atES.txt");
     private static final int CAPACITY = 100000;
     private static final int YEAR = LocalDate.now().getYear() - 2000;
-    private static final String WINDOWS_DIR = "C:/Users/" + System.getProperty("user.name") + "/Desktop/ES/";
+    private static final String WINDOWS_DIR = "C:/Users/" + System.getProperty("user.name") + "/Desktop/ES-1min/";
     private static final String UNIX_DIR = "ES/";
     private static final String TXT = ".txt";
 
@@ -49,7 +50,6 @@ public class TradestationSearch extends AbstractParser {
 	this.futureList = new ArrayList<Future<InputResult>>(CAPACITY);
 	this.resultList = new ArrayList<InputResult>();
 	this.start = System.currentTimeMillis();
-	this.tickerBarMap = new HashMap<Ticker, TreeMap<LocalDateTime, Bar>>();
     }
 
     @Override
@@ -78,7 +78,7 @@ public class TradestationSearch extends AbstractParser {
 
     public void run() {
 	// load data
-	loadAtEs();
+	// loadAtEs();
 	loadQuarterly();
 
 	// count
@@ -98,28 +98,34 @@ public class TradestationSearch extends AbstractParser {
     private int stage(boolean count) {
 	int tests = 0;
 
-	// for (int length = 8; length <= 8; length += 1) {
-	// for (int mom = -700; mom <= -500; mom += 25) {
-	for (int accel = -150; accel <= 0; accel += 25) {
-	    for (int up = 500; up <= 1500; up += 25) {
-		for (int down = 500; down <= 1500; down += 25) {
-		    if (count) {
-			tests++;
-		    } else {
-			Input input = new Input(8, -625, accel, up, down);
-			addTest(input);
+	for (int length = 1; length <= 12; length++) {
+	    for (int mom = -1000; mom <= 0; mom += 100) {
+		for (int accel = -1000; accel <= 0; accel += 100) {
+		    for (int up = 100; up <= 2000; up += 100) {
+			for (int down = 100; down <= 2000; down += 100) {
+			    if (count) {
+				tests++;
+			    } else {
+				Input input = new Input(length, mom, accel, up, down);
+				addTest(input);
+			    }
+			}
 		    }
 		}
 	    }
 	}
-	// }
-	// }
 
 	return tests;
     }
 
     private void addTest(Input input) {
-	Future<InputResult> f = es.submit(new InputSearch(tickerBarMap, atEsBarMap, input));
+	InputSearch is = new InputSearch();
+	is.setAtEsBarMap(atEsBarMap);
+	is.setTickerBarMap(tickerBarMap);
+	is.setInput(input);
+	is.setStrategy(new HybridLimit());
+
+	Future<InputResult> f = es.submit(is);
 	futureList.add(f);
 
 	if (futureList.size() >= CAPACITY) {
@@ -164,9 +170,12 @@ public class TradestationSearch extends AbstractParser {
 	}
 
 	atEsBarMap = load(file);
+	System.out.println("@ES Loaded!");
     }
 
     private void loadQuarterly() {
+	this.tickerBarMap = new HashMap<Ticker, TreeMap<LocalDateTime, Bar>>();
+
 	for (int year = 6; year <= YEAR; year++) {
 	    Ticker h = new Ticker('H', year);
 	    tickerBarMap.put(h, load(getFile(h)));
@@ -179,6 +188,8 @@ public class TradestationSearch extends AbstractParser {
 
 	    Ticker z = new Ticker('Z', year);
 	    tickerBarMap.put(z, load(getFile(z)));
+
+	    System.out.println("Year: " + year + " Loaded!");
 	}
     }
 
@@ -193,7 +204,7 @@ public class TradestationSearch extends AbstractParser {
 	}
 
 	long runtime = System.currentTimeMillis() - start;
-	sb.append("\nCore+AH ES Runtime: ");
+	sb.append("\nQuarterly ES Runtime: ");
 	sb.append(status.formatTime(runtime));
 	System.out.println(sb.toString());
 

@@ -8,7 +8,7 @@ import org.kutsuki.frogmaster2.core.Bar;
 import org.kutsuki.frogmaster2.core.Ticker;
 import org.kutsuki.frogmaster2.inputs.Input;
 
-public class HybridTest extends AbstractStrategy {
+public class HybridLimit extends AbstractStrategy {
     private static final int COST_PER_CONTRACT = 3000000;
     private static final int COST_PER_CONTRACT_RE = 3000000;
     private static final LocalTime START = LocalTime.of(9, 25);
@@ -61,13 +61,7 @@ public class HybridTest extends AbstractStrategy {
 		    }
 		} else if (getMarketPosition() <= 0) {
 		    if (bar.getLow() <= lowPrice) {
-			if (mom < getInput().getMomAH() && accel < getInput().getAccelAH()) {
-			    highPrice = bar.getClose() + getInput().getUpAmountAH();
-			    lowPrice = bar.getClose() - getInput().getDownAmountAH();
-			    marketSellShort();
-			} else {
-			    marketBuy();
-			}
+			marketBuy();
 		    } else if (bar.getClose() >= highPrice) {
 			marketBuy();
 		    } else if (getMarketPosition() == -1) {

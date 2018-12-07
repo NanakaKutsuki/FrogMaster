@@ -8,7 +8,6 @@ import java.util.concurrent.Callable;
 import org.kutsuki.frogmaster2.core.Bar;
 import org.kutsuki.frogmaster2.core.Ticker;
 import org.kutsuki.frogmaster2.strategy.AbstractStrategy;
-import org.kutsuki.frogmaster2.strategy.HybridOG;
 
 public class InputSearch implements Callable<InputResult> {
     private static final Ticker AT_ES_TICKER = new Ticker('A', 6);
@@ -17,27 +16,38 @@ public class InputSearch implements Callable<InputResult> {
     private Input input;
     private Map<Ticker, TreeMap<LocalDateTime, Bar>> tickerBarMap;
     private TreeMap<LocalDateTime, Bar> atEsBarMap;
-
-    public InputSearch(Map<Ticker, TreeMap<LocalDateTime, Bar>> tickerBarMap, TreeMap<LocalDateTime, Bar> atEsBarMap,
-	    Input input) {
-	this.atEsBarMap = atEsBarMap;
-	this.input = input;
-	this.tickerBarMap = tickerBarMap;
-
-    }
+    private AbstractStrategy strategy;
 
     @Override
     public InputResult call() {
-	// return runAtEs();
-	return runQuarterly();
+	InputResult result = null;
+
+	if (atEsBarMap != null) {
+	    result = runAtEs();
+	} else if (tickerBarMap != null) {
+	    result = runQuarterly();
+	}
+
+	return result;
     }
 
-    private AbstractStrategy getStrategy() {
-	return new HybridOG();
+    public void setAtEsBarMap(TreeMap<LocalDateTime, Bar> atEsBarMap) {
+	this.atEsBarMap = atEsBarMap;
+    }
+
+    public void setTickerBarMap(Map<Ticker, TreeMap<LocalDateTime, Bar>> tickerBarMap) {
+	this.tickerBarMap = tickerBarMap;
+    }
+
+    public void setInput(Input input) {
+	this.input = input;
+    }
+
+    public void setStrategy(AbstractStrategy strategy) {
+	this.strategy = strategy;
     }
 
     private InputResult runAtEs() {
-	AbstractStrategy strategy = getStrategy();
 	strategy.disableMarginCheck();
 	strategy.setup(AT_ES_TICKER, atEsBarMap, input);
 	// strategy.setEndDate(END_DATE);
@@ -51,7 +61,6 @@ public class InputSearch implements Callable<InputResult> {
 	int equity = 0;
 
 	for (Ticker ticker : tickerBarMap.keySet()) {
-	    AbstractStrategy strategy = getStrategy();
 	    strategy.disableMarginCheck();
 	    strategy.setup(ticker, tickerBarMap.get(ticker), input);
 	    strategy.run();

@@ -34,6 +34,7 @@ public abstract class AbstractStrategy {
     private int bankrollRE;
     private int count;
     private int index;
+    // private int limitBuy;
     private int limitCover;
     private int lowestEquity;
     private int marketPosition;
@@ -67,6 +68,7 @@ public abstract class AbstractStrategy {
 	this.count = 0;
 	this.index = 0;
 	this.input = input;
+	// this.limitBuy = 0;
 	this.limitCover = 0;
 	this.lowestEquity = Integer.MAX_VALUE;
 	this.marketPosition = 0;
@@ -205,6 +207,10 @@ public abstract class AbstractStrategy {
     protected LocalDateTime getStartDateTime() {
 	return LocalDateTime.of(getStartDate(), NINE_TWENTYFIVE);
     }
+
+    // protected void limitBuy(int limit) {
+    // limitBuy = limit;
+    // }
 
     protected void limitCover(int limit) {
 	limitCover = limit;
@@ -355,6 +361,25 @@ public abstract class AbstractStrategy {
     }
 
     private void resolveOrders(Bar bar) {
+	// if (limitBuy > 0 && bar.getLow() <= limitBuy) {
+	// if (bar.getOpen() < limitBuy) {
+	// limitBuy = bar.getOpen();
+	// }
+	//
+	// addBankroll(positionPrice - limitBuy);
+	//
+	// if (PRINT_TRADES) {
+	// System.out.println(count + " " + bar.getDateTime() + " LongLimit " + limitBuy
+	// + " " + getBankroll());
+	// count++;
+	// System.out.println(count + " " + bar.getDateTime() + " LongLimit " +
+	// limitBuy);
+	// }
+	//
+	// positionPrice = limitBuy;
+	// marketPosition = 1;
+	// }
+
 	if (limitCover > 0 && bar.getLow() <= limitCover) {
 	    if (bar.getOpen() < limitCover) {
 		limitCover = bar.getOpen();
@@ -366,6 +391,7 @@ public abstract class AbstractStrategy {
 		System.out.println(count + " " + bar.getDateTime() + " LongLimit " + limitCover + " " + getBankroll());
 	    }
 
+	    positionPrice = 0;
 	    marketPosition = 0;
 	}
 
@@ -437,6 +463,7 @@ public abstract class AbstractStrategy {
 	    marketSellShort = false;
 	}
 
+	// limitBuy = 0;
 	limitCover = 0;
     }
 }
