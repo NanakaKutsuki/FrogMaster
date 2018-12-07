@@ -17,6 +17,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import org.apache.commons.lang3.SystemUtils;
 import org.kutsuki.frogmaster2.core.Bar;
 import org.kutsuki.frogmaster2.core.Ticker;
 import org.kutsuki.frogmaster2.inputs.Input;
@@ -32,7 +33,7 @@ public class TradestationSearch extends AbstractParser {
     private static final int CAPACITY = 100000;
     private static final int YEAR = LocalDate.now().getYear() - 2000;
     private static final String WINDOWS_DIR = "C:/Users/" + System.getProperty("user.name") + "/Desktop/ES-1min/";
-    private static final String UNIX_DIR = "ES/";
+    private static final String UNIX_DIR = "ES-1min/";
     private static final String TXT = ".txt";
 
     private ExecutorService es;
@@ -45,7 +46,11 @@ public class TradestationSearch extends AbstractParser {
     private TreeMap<LocalDateTime, Bar> atEsBarMap;
 
     public TradestationSearch() {
-	this.cores = Runtime.getRuntime().availableProcessors() - 1;
+	this.cores = Runtime.getRuntime().availableProcessors();
+	if (SystemUtils.IS_OS_WINDOWS) {
+	    this.cores--;
+	}
+
 	this.es = Executors.newFixedThreadPool(cores);
 	this.futureList = new ArrayList<Future<InputResult>>(CAPACITY);
 	this.resultList = new ArrayList<InputResult>();
@@ -55,22 +60,22 @@ public class TradestationSearch extends AbstractParser {
     @Override
     public File getFile(Ticker ticker) {
 	File file = null;
-	File windowsDir = new File(WINDOWS_DIR);
-	File unixDir = new File(UNIX_DIR);
 	StringBuilder sb = new StringBuilder();
 
-	if (windowsDir.exists()) {
+	if (SystemUtils.IS_OS_WINDOWS) {
 	    sb.append(WINDOWS_DIR);
 	    sb.append(ticker);
 	    sb.append(TXT);
 	    file = new File(sb.toString());
-	} else if (unixDir.exists()) {
+	} else if (SystemUtils.IS_OS_UNIX) {
 	    sb.append(UNIX_DIR);
 	    sb.append(ticker);
 	    sb.append(TXT);
 	    file = new File(sb.toString());
-	} else {
-	    throw new IllegalArgumentException("No Directory Found!");
+	}
+
+	if (!file.exists()) {
+	    throw new IllegalArgumentException(file.getAbsolutePath() + " Not Found!");
 	}
 
 	return file;
@@ -189,8 +194,10 @@ public class TradestationSearch extends AbstractParser {
 	    Ticker z = new Ticker('Z', year);
 	    tickerBarMap.put(z, load(getFile(z)));
 
-	    System.out.println("Year: " + year + " Loaded!");
+	    System.out.println("Loaded: " + z.getFullYear());
 	}
+
+	System.out.println("Quarterly ES Loaded!");
     }
 
     private void print() {
