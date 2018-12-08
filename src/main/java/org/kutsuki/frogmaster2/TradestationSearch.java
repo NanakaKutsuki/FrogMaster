@@ -103,17 +103,15 @@ public class TradestationSearch extends AbstractParser {
     private int stage(boolean count) {
 	int tests = 0;
 
-	for (int length = 1; length <= 12; length++) {
-	    for (int mom = -1000; mom <= 0; mom += 100) {
-		for (int accel = -1000; accel <= 0; accel += 100) {
-		    for (int up = 100; up <= 2000; up += 100) {
-			for (int down = 100; down <= 2000; down += 100) {
-			    if (count) {
-				tests++;
-			    } else {
-				Input input = new Input(length, mom, accel, up, down);
-				addTest(input);
-			    }
+	for (int mom = -800; mom <= -600; mom += 25) {
+	    for (int accel = -300; accel <= -100; accel += 25) {
+		for (int up = 1000; up <= 2000; up += 25) {
+		    for (int down = 800; down <= 1100; down += 25) {
+			if (count) {
+			    tests++;
+			} else {
+			    Input input = new Input(28, mom, accel, up, down);
+			    addTest(input);
 			}
 		    }
 		}

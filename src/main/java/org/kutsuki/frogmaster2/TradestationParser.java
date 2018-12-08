@@ -12,13 +12,13 @@ import org.kutsuki.frogmaster2.core.Bar;
 import org.kutsuki.frogmaster2.core.Ticker;
 import org.kutsuki.frogmaster2.inputs.Input;
 import org.kutsuki.frogmaster2.strategy.AbstractStrategy;
-import org.kutsuki.frogmaster2.strategy.HybridLimit;
+import org.kutsuki.frogmaster2.strategy.HybridTest;
 
 public class TradestationParser extends AbstractParser {
-    private static final AbstractStrategy STRATEGY = new HybridLimit();
+    private static final AbstractStrategy STRATEGY = new HybridTest();
     private static final Input INPUT = new Input(5, -600, -325, 1300, 1000);
     private static final int YEAR = LocalDate.now().getYear() - 2000;
-    private static final String DIR = "C:/Users/" + System.getProperty("user.name") + "/Desktop/ES-1min/";
+    private static final String DIR = "C:/Users/" + System.getProperty("user.name") + "/Desktop/ES/";
     private static final String ES = "ES";
     private static final String TXT = ".txt";
 

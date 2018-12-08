@@ -18,6 +18,7 @@ public class HybridOG extends AbstractStrategy {
     private static final int COST_PER_CONTRACT = 3000000;
     private static final int COST_PER_CONTRACT_RE = 3000000;
     private static final LocalTime START = LocalTime.of(9, 25);
+    // private static final LocalTime START = LocalTime.of(9, 29);
     private static final LocalTime END = LocalTime.of(16, 00);
 
     private boolean initialized;

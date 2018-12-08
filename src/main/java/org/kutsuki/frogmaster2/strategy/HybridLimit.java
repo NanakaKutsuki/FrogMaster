@@ -58,6 +58,7 @@ public class HybridLimit extends AbstractStrategy {
 			highPrice = bar.getClose() + getInput().getUpAmount();
 			lowPrice = bar.getClose() - getInput().getDownAmount();
 			marketSellShort();
+			limitCover(lowPrice);
 		    }
 		} else if (getMarketPosition() <= 0) {
 		    if (bar.getLow() <= lowPrice) {
