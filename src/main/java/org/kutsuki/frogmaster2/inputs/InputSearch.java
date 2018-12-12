@@ -11,7 +11,7 @@ import org.kutsuki.frogmaster2.strategy.AbstractStrategy;
 
 public class InputSearch implements Callable<InputResult> {
     private static final Ticker AT_ES_TICKER = new Ticker('A', 6);
-    // private static final LocalDate END_DATE = LocalDate.of(2015, 12, 18);
+    // private static final LocalDate END_DATE = LocalDate.of(2018, 12, 7);
 
     private Input input;
     private Map<Ticker, TreeMap<LocalDateTime, Bar>> tickerBarMap;
@@ -63,6 +63,11 @@ public class InputSearch implements Callable<InputResult> {
 	for (Ticker ticker : tickerBarMap.keySet()) {
 	    strategy.disableMarginCheck();
 	    strategy.setup(ticker, tickerBarMap.get(ticker), input);
+
+	    // if (ticker.toString().equals(ESZ18)) {
+	    // strategy.setEndDate(END_DATE);
+	    // }
+
 	    strategy.run();
 
 	    total += strategy.getBankroll() + strategy.getUnrealized();

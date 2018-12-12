@@ -67,7 +67,6 @@ public abstract class AbstractStrategy {
 	this.count = 0;
 	this.index = 0;
 	this.input = input;
-	// this.limitBuy = 0;
 	this.limitCover = 0;
 	this.lowestEquity = Integer.MAX_VALUE;
 	this.marketPosition = 0;

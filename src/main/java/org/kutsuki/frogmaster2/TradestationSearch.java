@@ -32,8 +32,8 @@ public class TradestationSearch extends AbstractParser {
     private static final File UNIX_ATES = new File("atES.txt");
     private static final int CAPACITY = 100000;
     private static final int YEAR = LocalDate.now().getYear() - 2000;
-    private static final String WINDOWS_DIR = "C:/Users/" + System.getProperty("user.name") + "/Desktop/ES-1min/";
-    private static final String UNIX_DIR = "ES-1min/";
+    private static final String WINDOWS_DIR = "C:/Users/" + System.getProperty("user.name") + "/Desktop/ES/";
+    private static final String UNIX_DIR = "ES/";
     private static final String TXT = ".txt";
 
     private ExecutorService es;
@@ -103,15 +103,17 @@ public class TradestationSearch extends AbstractParser {
     private int stage(boolean count) {
 	int tests = 0;
 
-	for (int mom = -800; mom <= -600; mom += 25) {
-	    for (int accel = -300; accel <= -100; accel += 25) {
-		for (int up = 1000; up <= 2000; up += 25) {
-		    for (int down = 800; down <= 1100; down += 25) {
-			if (count) {
-			    tests++;
-			} else {
-			    Input input = new Input(28, mom, accel, up, down);
-			    addTest(input);
+	for (int length = 5; length <= 8; length += 3) {
+	    for (int momRE = -700; momRE <= -500; momRE += 25) {
+		for (int accelRE = -500; accelRE <= 0; accelRE += 25) {
+		    for (int up = 500; up <= 1800; up += 25) {
+			for (int down = 900; down <= 1100; down += 25) {
+			    if (count) {
+				tests++;
+			    } else {
+				Input input = new Input(length, momRE, accelRE, up, down);
+				addTest(input);
+			    }
 			}
 		    }
 		}

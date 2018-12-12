@@ -54,9 +54,9 @@ public class HybridTest extends AbstractStrategy {
 		lastMom = mom;
 
 		if (getMarketPosition() == 1) {
-		    if (mom < getInput().getMomST() && accel < getInput().getAccelST()) {
-			highPrice = bar.getClose() + getInput().getUpAmount();
-			lowPrice = bar.getClose() - getInput().getDownAmount();
+		    if (mom < getInput().getMomAH() && accel < getInput().getAccelAH()) {
+			highPrice = bar.getClose() + getInput().getUpAmountAH();
+			lowPrice = bar.getClose() - getInput().getDownAmountAH();
 			marketSellShort();
 			limitCover(lowPrice);
 		    }

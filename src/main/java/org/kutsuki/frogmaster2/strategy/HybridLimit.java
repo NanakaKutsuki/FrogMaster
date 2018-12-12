@@ -8,6 +8,11 @@ import org.kutsuki.frogmaster2.core.Bar;
 import org.kutsuki.frogmaster2.core.Ticker;
 import org.kutsuki.frogmaster2.inputs.Input;
 
+/**
+ * 1 min 1. Total $254716.62 LowestEquity -$12452.78 ROI 13.9549x Inputs: (28,
+ * -675, -225, 1450, 900)
+ *
+ */
 public class HybridLimit extends AbstractStrategy {
     private static final int COST_PER_CONTRACT = 3000000;
     private static final int COST_PER_CONTRACT_RE = 3000000;
@@ -69,6 +74,8 @@ public class HybridLimit extends AbstractStrategy {
 			limitCover(lowPrice);
 		    }
 		}
+	    } else if (bar.getTime().equals(END) && getMarketPosition() <= 0 && bar.getLow() <= lowPrice) {
+		marketBuy();
 	    }
 	}
     }
