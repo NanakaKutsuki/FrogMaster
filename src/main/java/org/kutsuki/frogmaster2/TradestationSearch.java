@@ -23,7 +23,7 @@ import org.kutsuki.frogmaster2.core.Ticker;
 import org.kutsuki.frogmaster2.inputs.Input;
 import org.kutsuki.frogmaster2.inputs.InputResult;
 import org.kutsuki.frogmaster2.inputs.InputSearch;
-import org.kutsuki.frogmaster2.strategy.HybridLimit;
+import org.kutsuki.frogmaster2.strategy.HybridTest;
 
 public class TradestationSearch extends AbstractParser {
     private static final boolean OUTPUT = false;
@@ -104,14 +104,14 @@ public class TradestationSearch extends AbstractParser {
 	int tests = 0;
 
 	for (int length = 5; length <= 8; length += 3) {
-	    for (int momRE = -700; momRE <= -500; momRE += 25) {
-		for (int accelRE = -500; accelRE <= 0; accelRE += 25) {
-		    for (int up = 500; up <= 1800; up += 25) {
-			for (int down = 900; down <= 1100; down += 25) {
+	    for (int momRE = -625; momRE <= -600; momRE += 25) {
+		for (int accelRE = -150; accelRE <= 0; accelRE += 25) {
+		    for (int up = 625; up <= 1125; up += 500) {
+			for (int down = 925; down <= 1025; down += 100) {
 			    if (count) {
 				tests++;
 			    } else {
-				Input input = new Input(length, momRE, accelRE, up, down);
+				Input input = new Input(5, -625, accelRE, up, down);
 				addTest(input);
 			    }
 			}
@@ -128,7 +128,7 @@ public class TradestationSearch extends AbstractParser {
 	is.setAtEsBarMap(atEsBarMap);
 	is.setTickerBarMap(tickerBarMap);
 	is.setInput(input);
-	is.setStrategy(new HybridLimit());
+	is.setStrategy(new HybridTest());
 
 	Future<InputResult> f = es.submit(is);
 	futureList.add(f);

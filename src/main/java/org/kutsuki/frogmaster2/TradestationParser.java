@@ -57,6 +57,7 @@ public class TradestationParser extends AbstractParser {
 	    TreeMap<LocalDateTime, Bar> barMap = load(file);
 
 	    STRATEGY.setup(ticker, barMap, INPUT);
+	    // STRATEGY.disableMarginCheck();
 	    STRATEGY.run();
 
 	    // set ticker data

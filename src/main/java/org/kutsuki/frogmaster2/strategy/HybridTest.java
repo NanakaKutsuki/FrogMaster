@@ -14,18 +14,16 @@ public class HybridTest extends AbstractStrategy {
     private static final LocalTime START = LocalTime.of(9, 25);
     private static final LocalTime END = LocalTime.of(16, 00);
 
-    private boolean initialized;
-    private int mom;
-    private int accel;
+    private int onHigh;
+    private int onLow;
     private int highPrice;
     private int lowPrice;
-    private int lastMom;
 
     @Override
     public void setup(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap, Input input) {
 	setTickerBarMap(ticker, barMap, input);
-	this.initialized = false;
-	this.lastMom = 0;
+	this.onHigh = 0;
+	this.onLow = 999999;
     }
 
     @Override
@@ -40,46 +38,42 @@ public class HybridTest extends AbstractStrategy {
 
     @Override
     protected void strategy(Bar bar) {
-	if (!initialized) {
-	    if (bar.getTime().equals(START)) {
-		marketBuy();
-		initialized = true;
+	if (isDay(bar.getTime())) {
+	    if (getMarketPosition() == 0) {
+		if (bar.getClose() > onHigh) {
+		    marketSellShort();
+		    highPrice = bar.getClose() + getInput().getUpAmount();
+		    lowPrice = bar.getClose() - getInput().getDownAmount();
+		} else if (bar.getLow() < onLow) {
+		    marketBuy();
+		    highPrice = bar.getClose() + getInput().getUpAmountAH();
+		    lowPrice = bar.getClose() - getInput().getDownAmountAH();
+		}
+	    } else if (getMarketPosition() == 1) {
+		if (bar.getHigh() >= highPrice) {
+		    marketSell();
+		} else if (bar.getClose() <= lowPrice) {
+		    marketSell();
+		}
+	    } else if (getMarketPosition() == -1) {
+		if (bar.getLow() <= lowPrice) {
+		    marketBuy();
+		} else if (bar.getClose() >= highPrice) {
+		    marketBuy();
+		}
+	    }
+	} else {
+	    if (bar.getTime().equals(END)) {
+		onHigh = bar.getHigh();
+		onLow = bar.getLow();
 	    }
 
-	    lastMom = bar.getClose() - getPrevBar(getInput().getLength()).getClose();
-	} else {
-	    if (isDay(bar.getTime())) {
-		mom = bar.getClose() - getPrevBar(getInput().getLength()).getClose();
-		accel = mom - lastMom;
-		lastMom = mom;
+	    if (onHigh > bar.getHigh()) {
+		onHigh = bar.getHigh();
+	    }
 
-		if (getMarketPosition() == 1) {
-		    if (mom < getInput().getMomAH() && accel < getInput().getAccelAH()) {
-			highPrice = bar.getClose() + getInput().getUpAmountAH();
-			lowPrice = bar.getClose() - getInput().getDownAmountAH();
-			marketSellShort();
-			limitCover(lowPrice);
-		    }
-		} else if (getMarketPosition() <= 0) {
-		    if (bar.getLow() <= lowPrice) {
-			if (mom < getInput().getMomST() && accel < getInput().getAccelST()) {
-			    if (getMarketPosition() == 0) {
-				marketSellShort();
-			    }
-
-			    highPrice = bar.getClose() + getInput().getUpAmount();
-			    lowPrice = bar.getClose() - getInput().getDownAmount();
-
-			    limitCover(lowPrice);
-			} else {
-			    marketBuy();
-			}
-		    } else if (bar.getClose() >= highPrice) {
-			marketBuy();
-		    } else if (getMarketPosition() == -1) {
-			limitCover(lowPrice);
-		    }
-		}
+	    if (onLow < bar.getLow()) {
+		onLow = bar.getLow();
 	    }
 	}
     }
