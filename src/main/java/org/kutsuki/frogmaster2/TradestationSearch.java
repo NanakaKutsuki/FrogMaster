@@ -4,7 +4,6 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -23,7 +22,7 @@ import org.kutsuki.frogmaster2.core.Ticker;
 import org.kutsuki.frogmaster2.inputs.Input;
 import org.kutsuki.frogmaster2.inputs.InputResult;
 import org.kutsuki.frogmaster2.inputs.InputSearch;
-import org.kutsuki.frogmaster2.strategy.HybridTest;
+import org.kutsuki.frogmaster2.strategy.HybridLimit;
 
 public class TradestationSearch extends AbstractParser {
     private static final boolean OUTPUT = false;
@@ -31,7 +30,7 @@ public class TradestationSearch extends AbstractParser {
 	    "C:/Users/" + System.getProperty("user.name") + "/Desktop/atES.txt");
     private static final File UNIX_ATES = new File("atES.txt");
     private static final int CAPACITY = 100000;
-    private static final int YEAR = LocalDate.now().getYear() - 2000;
+    private static final int YEAR = 19;
     private static final String WINDOWS_DIR = "C:/Users/" + System.getProperty("user.name") + "/Desktop/ES/";
     private static final String UNIX_DIR = "ES/";
     private static final String TXT = ".txt";
@@ -74,10 +73,6 @@ public class TradestationSearch extends AbstractParser {
 	    file = new File(sb.toString());
 	}
 
-	if (!file.exists()) {
-	    throw new IllegalArgumentException(file.getAbsolutePath() + " Not Found!");
-	}
-
 	return file;
     }
 
@@ -104,14 +99,14 @@ public class TradestationSearch extends AbstractParser {
 	int tests = 0;
 
 	for (int length = 5; length <= 8; length += 3) {
-	    for (int momRE = -625; momRE <= -600; momRE += 25) {
-		for (int accelRE = -150; accelRE <= 0; accelRE += 25) {
-		    for (int up = 625; up <= 1125; up += 500) {
-			for (int down = 925; down <= 1025; down += 100) {
+	    for (int mom = -700; mom <= -500; mom += 25) {
+		for (int accel = -500; accel <= 0; accel += 25) {
+		    for (int up = 100; up <= 2000; up += 25) {
+			for (int down = 100; down <= 2000; down += 25) {
 			    if (count) {
 				tests++;
 			    } else {
-				Input input = new Input(5, -625, accelRE, up, down);
+				Input input = new Input(length, mom, accel, up, down);
 				addTest(input);
 			    }
 			}
@@ -128,7 +123,7 @@ public class TradestationSearch extends AbstractParser {
 	is.setAtEsBarMap(atEsBarMap);
 	is.setTickerBarMap(tickerBarMap);
 	is.setInput(input);
-	is.setStrategy(new HybridTest());
+	is.setStrategy(new HybridLimit());
 
 	Future<InputResult> f = es.submit(is);
 	futureList.add(f);
@@ -163,7 +158,7 @@ public class TradestationSearch extends AbstractParser {
 	print();
     }
 
-    private void loadAtEs() {
+    public void loadAtEs() {
 	File file = null;
 
 	if (WINDOWS_ATES.exists()) {
@@ -178,7 +173,7 @@ public class TradestationSearch extends AbstractParser {
 	System.out.println("@ES Loaded!");
     }
 
-    private void loadQuarterly() {
+    public void loadQuarterly() {
 	this.tickerBarMap = new HashMap<Ticker, TreeMap<LocalDateTime, Bar>>();
 
 	for (int year = 6; year <= YEAR; year++) {
