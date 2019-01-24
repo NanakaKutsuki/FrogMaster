@@ -14,14 +14,13 @@ import org.kutsuki.frogmaster2.core.Ticker;
 import org.kutsuki.frogmaster2.inputs.Input;
 
 public abstract class AbstractStrategy {
-    private static final boolean PRINT_TRADES = false;
+    private static final boolean PRINT_TRADES = true;
     private static final int COMMISSION = 269;
     private static final int FIFTY = 50;
     private static final int MAINTENANCE_MARGIN = 580000;
     private static final int SLIPPAGE = 25;
-    private static final LocalTime EIGHT_AM = LocalTime.of(8, 0);
-    private static final LocalTime FIVE_PM = LocalTime.of(17, 00);
     private static final LocalTime NINE_TWENTYFIVE = LocalTime.of(9, 25);
+    private static final LocalTime FIVE_PM = LocalTime.of(17, 0);
 
     private boolean marginCheck;
     private boolean marketBuy;
@@ -41,8 +40,8 @@ public abstract class AbstractStrategy {
     private int positionPrice;
     private int unrealized;
     private List<LocalDateTime> keyList;
-    private LocalDate startDate;
-    private LocalDate endDate;
+    private LocalDateTime startDateTime;
+    private LocalDateTime endDateTime;
     private LocalDateTime lowestEquityDateTime;
     private TreeMap<LocalDateTime, Bar> barMap;
 
@@ -81,8 +80,8 @@ public abstract class AbstractStrategy {
 	Collections.sort(this.keyList);
 
 	if (!barMap.isEmpty()) {
-	    this.endDate = calcEndDate(ticker);
-	    this.startDate = calcStartDate(ticker);
+	    this.endDateTime = calcEndDateTime(ticker);
+	    this.startDateTime = calcStartDateTime(ticker);
 	    this.lowestEquityDateTime = barMap.firstKey();
 	}
     }
@@ -116,7 +115,7 @@ public abstract class AbstractStrategy {
 	}
     }
 
-    public LocalDate calcEndDate(char month, int fullYear) {
+    public LocalDateTime calcEndDateTime(char month, int fullYear) {
 	LocalDate date = null;
 
 	switch (month) {
@@ -140,12 +139,12 @@ public abstract class AbstractStrategy {
 	    throw new IllegalArgumentException("Bad Month!" + month);
 	}
 
-	LocalDateTime dateTime = LocalDateTime.of(calcThirdDayOfWeek(date), EIGHT_AM);
+	LocalDateTime dateTime = LocalDateTime.of(calcThirdDayOfWeek(date), FIVE_PM);
 	while (!barMap.containsKey(dateTime)) {
 	    dateTime = dateTime.minusDays(1);
 	}
 
-	return dateTime.toLocalDate();
+	return dateTime;
     }
 
     public void disableMarginCheck() {
@@ -172,12 +171,8 @@ public abstract class AbstractStrategy {
 	return unrealized;
     }
 
-    public void setEndDate(LocalDate endDate) {
-	this.endDate = endDate;
-    }
-
     protected LocalDateTime getEndDateTime() {
-	return LocalDateTime.of(endDate, FIVE_PM);
+	return endDateTime;
     }
 
     protected int getMarketPosition() {
@@ -198,12 +193,8 @@ public abstract class AbstractStrategy {
 	return input;
     }
 
-    protected LocalDate getStartDate() {
-	return startDate;
-    }
-
     protected LocalDateTime getStartDateTime() {
-	return LocalDateTime.of(getStartDate(), NINE_TWENTYFIVE);
+	return startDateTime;
     }
 
     protected void limitCover(int limit) {
@@ -253,7 +244,7 @@ public abstract class AbstractStrategy {
 	}
     }
 
-    private LocalDate calcStartDate(Ticker ticker) {
+    private LocalDateTime calcStartDateTime(Ticker ticker) {
 	LocalDate date = null;
 
 	switch (ticker.getMonth()) {
@@ -277,16 +268,16 @@ public abstract class AbstractStrategy {
 	    throw new IllegalStateException("Bad Ticker!" + ticker);
 	}
 
-	LocalDateTime dateTime = LocalDateTime.of(calcThirdDayOfWeek(date), EIGHT_AM);
+	LocalDateTime dateTime = LocalDateTime.of(calcThirdDayOfWeek(date), NINE_TWENTYFIVE);
 	while (!barMap.containsKey(dateTime)) {
 	    dateTime = dateTime.plusDays(1);
 	}
 
-	return dateTime.toLocalDate();
+	return dateTime;
     }
 
-    private LocalDate calcEndDate(Ticker ticker) {
-	return calcEndDate(ticker.getMonth(), ticker.getFullYear());
+    private LocalDateTime calcEndDateTime(Ticker ticker) {
+	return calcEndDateTime(ticker.getMonth(), ticker.getFullYear());
     }
 
     private LocalDate calcThirdDayOfWeek(LocalDate start) {

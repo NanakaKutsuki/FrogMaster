@@ -109,11 +109,6 @@ public class TheLyon extends AbstractStrategy {
 	}
     }
 
-    @Override
-    public LocalDateTime getStartDateTime() {
-	return LocalDateTime.of(getStartDate(), START);
-    }
-
     private int highY(int year) {
 	return highY;
     }

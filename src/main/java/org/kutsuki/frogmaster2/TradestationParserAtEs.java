@@ -8,12 +8,12 @@ import org.kutsuki.frogmaster2.core.Bar;
 import org.kutsuki.frogmaster2.core.Ticker;
 import org.kutsuki.frogmaster2.inputs.Input;
 import org.kutsuki.frogmaster2.strategy.AbstractStrategy;
-import org.kutsuki.frogmaster2.strategy.HybridLimit;
+import org.kutsuki.frogmaster2.strategy.Hybrid;
 
 public class TradestationParserAtEs extends AbstractParser {
     private static final String FILE_NAME = "C:/Users/" + System.getProperty("user.name") + "/Desktop/atES.txt";
-    private static final AbstractStrategy STRATEGY = new HybridLimit();
-    private static final Input INPUT = new Input(5, -600, -325, 1300, 1000);
+    private static final AbstractStrategy STRATEGY = new Hybrid();
+    private static final Input INPUT = new Input(8, -600, -50, 575, 1000, 4, -575, -575, 575, 1900);
     private static final Ticker TICKER = new Ticker('A', 6);
 
     @Override
@@ -34,7 +34,8 @@ public class TradestationParserAtEs extends AbstractParser {
     public void printSummary() {
 	System.out.println("Realized: " + revertDollars(STRATEGY.getBankroll()));
 	System.out.println("Unrealized: " + revertDollars(STRATEGY.getUnrealized()));
-	System.out.println("Equity: " + revertDollars(STRATEGY.getLowestEquity()));
+	System.out.println(
+		"Equity: " + revertDollars(STRATEGY.getLowestEquity()) + " " + STRATEGY.getLowestEquityDateTime());
 	System.out.println("Total: " + revertDollars(STRATEGY.getBankroll() + STRATEGY.getUnrealized()));
     }
 

@@ -13,10 +13,10 @@ public class Hybrid extends AbstractStrategy {
     private static final int COST_PER_CONTRACT_RE = 5000000;
     private static final LocalTime START = LocalTime.of(9, 25);
     private static final LocalTime END = LocalTime.of(15, 55);
-    private static final LocalTime FOUR_PM = LocalTime.of(16, 0);
-    private static final LocalTime SIX_PM = LocalTime.of(18, 5);
-    private static final LocalTime MIDN = LocalTime.of(23, 55);
+    private static final LocalTime FOUR_TEN = LocalTime.of(16, 10);
+    private static final LocalTime FOUR_55 = LocalTime.of(16, 55);
 
+    private boolean initialized;
     private int mom;
     private int accel;
     private int mom2;
@@ -29,6 +29,7 @@ public class Hybrid extends AbstractStrategy {
     @Override
     public void setup(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap, Input input) {
 	setTickerBarMap(ticker, barMap, input);
+	this.initialized = false;
 	this.lastMom = 0;
 	this.lastMom2 = 0;
     }
@@ -45,14 +46,23 @@ public class Hybrid extends AbstractStrategy {
 
     @Override
     protected void strategy(Bar bar) {
-	if (bar.getTime().equals(START)) {
-	    flipCore(bar);
-	} else if (bar.getTime().equals(END)) {
-	    flipAfter(bar);
-	} else if (bar.getTime().isAfter(START) && bar.getTime().isBefore(FOUR_PM)) {
-	    coreHours(bar);
+	if (!initialized) {
+	    if (bar.getTime().equals(START)) {
+		marketBuy();
+		initialized = true;
+	    }
+
+	    lastMom = bar.getClose() - getPrevBar(8).getClose();
 	} else {
-	    afterHours(bar);
+	    if (bar.getTime().equals(START)) {
+		flipCore(bar);
+	    } else if (bar.getTime().equals(END)) {
+		flipAfter(bar);
+	    } else if (bar.getTime().isAfter(START) && bar.getTime().isBefore(END)) {
+		coreHours(bar);
+	    } else {
+		afterHours(bar);
+	    }
 	}
     }
 
@@ -62,30 +72,32 @@ public class Hybrid extends AbstractStrategy {
 	lastMom = mom;
 
 	if (mom < getInput().getMomST() && accel < getInput().getAccelST()) {
-	    if (getMarketPosition() == 1) {
+	    if (getMarketPosition() >= 0) {
 		marketSellShort();
 	    }
 
 	    highPrice = bar.getClose() + getInput().getUpAmount();
 	    lowPrice = bar.getClose() - getInput().getDownAmount();
+	    limitCover(lowPrice);
 	} else if (getMarketPosition() <= 0) {
 	    marketBuy();
 	}
     }
 
     private void flipAfter(Bar bar) {
-	mom2 = bar.getClose() - getPrevBar(getInput().getLengthAH()).getClose();
+	mom2 = bar.getClose() - getPrevBar(4).getClose();
 	accel2 = mom2 - lastMom2;
 	lastMom2 = mom2;
 
 	if (mom2 < getInput().getMomAH() && accel2 < getInput().getAccelAH()) {
-	    if (getMarketPosition() == 1) {
+	    if (getMarketPosition() >= 0) {
 		marketSellShort();
 	    }
 
 	    highPrice = bar.getClose() + getInput().getUpAmountAH();
 	    lowPrice = bar.getClose() - getInput().getDownAmountAH();
-	} else if (getMarketPosition() == -1) {
+	    limitCover(lowPrice);
+	} else if (getMarketPosition() <= 0) {
 	    marketBuy();
 	}
     }
@@ -99,17 +111,20 @@ public class Hybrid extends AbstractStrategy {
 	    highPrice = bar.getClose() + getInput().getUpAmount();
 	    lowPrice = bar.getClose() - getInput().getDownAmount();
 	    marketSellShort();
-	} else if (getMarketPosition() == -1) {
+	    limitCover(lowPrice);
+	} else if (getMarketPosition() <= 0) {
 	    if (bar.getLow() <= lowPrice) {
 		marketBuy();
 	    } else if (bar.getClose() >= highPrice) {
 		marketBuy();
+	    } else if (getMarketPosition() == -1) {
+		limitCover(lowPrice);
 	    }
 	}
     }
 
     private void afterHours(Bar bar) {
-	mom2 = bar.getClose() - getPrevBar(getInput().getLengthAH()).getClose();
+	mom2 = bar.getClose() - getPrevBar(4).getClose();
 	accel2 = mom2 - lastMom2;
 	lastMom2 = mom2;
 
@@ -118,18 +133,20 @@ public class Hybrid extends AbstractStrategy {
 		highPrice = bar.getClose() + getInput().getUpAmountAH();
 		lowPrice = bar.getClose() - getInput().getDownAmountAH();
 		marketSellShort();
-	    } else if (getMarketPosition() == -1) {
+		limitCover(lowPrice);
+	    } else if (getMarketPosition() <= 0) {
 		if (bar.getLow() <= lowPrice) {
 		    marketBuy();
 		} else if (bar.getClose() >= highPrice) {
 		    marketBuy();
+		} else if (getMarketPosition() == -1) {
+		    limitCover(lowPrice);
 		}
 	    }
 	}
     }
 
     private boolean isAfterHours(LocalTime time) {
-	return (time.isAfter(SIX_PM) && (time.isBefore(MIDN) || time.equals(MIDN)))
-		|| ((time.isAfter(LocalTime.MIN) || time.equals(LocalTime.MIN)) && time.isBefore(START));
+	return !(time.equals(FOUR_TEN) || time.equals(FOUR_55));
     }
 }

@@ -22,7 +22,7 @@ import org.kutsuki.frogmaster2.core.Ticker;
 import org.kutsuki.frogmaster2.inputs.Input;
 import org.kutsuki.frogmaster2.inputs.InputResult;
 import org.kutsuki.frogmaster2.inputs.InputSearch;
-import org.kutsuki.frogmaster2.strategy.HybridLimit;
+import org.kutsuki.frogmaster2.strategy.HybridTest;
 
 public class TradestationSearch extends AbstractParser {
     private static final boolean OUTPUT = false;
@@ -47,7 +47,7 @@ public class TradestationSearch extends AbstractParser {
     public TradestationSearch() {
 	this.cores = Runtime.getRuntime().availableProcessors();
 	if (SystemUtils.IS_OS_WINDOWS) {
-	    this.cores--;
+	    this.cores -= 2;
 	}
 
 	this.es = Executors.newFixedThreadPool(cores);
@@ -78,8 +78,8 @@ public class TradestationSearch extends AbstractParser {
 
     public void run() {
 	// load data
-	// loadAtEs();
-	loadQuarterly();
+	loadAtEs();
+	// loadQuarterly();
 
 	// count
 	int count = stage(true);
@@ -98,16 +98,20 @@ public class TradestationSearch extends AbstractParser {
     private int stage(boolean count) {
 	int tests = 0;
 
-	for (int length = 5; length <= 8; length += 3) {
+	for (int length = 8; length <= 8; length += 1) {
 	    for (int mom = -700; mom <= -500; mom += 25) {
-		for (int accel = -500; accel <= 0; accel += 25) {
-		    for (int up = 100; up <= 2000; up += 25) {
-			for (int down = 100; down <= 2000; down += 25) {
-			    if (count) {
-				tests++;
-			    } else {
-				Input input = new Input(length, mom, accel, up, down);
-				addTest(input);
+		for (int accel = -200; accel <= 0; accel += 25) {
+		    for (int up = 500; up <= 700; up += 25) {
+			for (int down = 900; down <= 1200; down += 25) {
+			    for (int upAH = 200; upAH <= 600; upAH += 25) {
+				for (int downAH = 1700; downAH <= 2400; downAH += 25) {
+				    if (count) {
+					tests++;
+				    } else {
+					Input input = new Input(length, mom, accel, up, down, 0, 0, 0, upAH, downAH);
+					addTest(input);
+				    }
+				}
 			    }
 			}
 		    }
@@ -116,6 +120,7 @@ public class TradestationSearch extends AbstractParser {
 	}
 
 	return tests;
+
     }
 
     private void addTest(Input input) {
@@ -123,7 +128,7 @@ public class TradestationSearch extends AbstractParser {
 	is.setAtEsBarMap(atEsBarMap);
 	is.setTickerBarMap(tickerBarMap);
 	is.setInput(input);
-	is.setStrategy(new HybridLimit());
+	is.setStrategy(new HybridTest());
 
 	Future<InputResult> f = es.submit(is);
 	futureList.add(f);
