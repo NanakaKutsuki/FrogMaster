@@ -9,18 +9,21 @@ import org.kutsuki.frogmaster2.core.Ticker;
 import org.kutsuki.frogmaster2.inputs.AbstractInput;
 import org.kutsuki.frogmaster2.inputs.Input;
 
-//1. Total $362594.34 LowestEquity -$14242.68 ROI 17.9124x Inputs: (8, -600,
-//-25, 575, 1100, 11, -1300, -750, 1325, 2025)
-// 1. Total $360624.64 LowestEquity -$14309.42 ROI 17.7565x Inputs: (8, -600,
-// -25, 575, 1100, 4, -1125, -525, 1075, 1300)
-// 1. Total $360243.56 LowestEquity -$19465.46 ROI 14.1464x Inputs: (8, -600,
-// -25, 575, 1100, 7, -1575, -550, 2225, 1875)
-public class HybridTest extends AbstractStrategy {
+//1. Total $330827.08 LowestEquity -$23986.82 ROI 11.0324x Inputs: (8, -600, -75, 575, 1100)
+//2. Total $330401.58 LowestEquity -$22996.36 ROI 11.3946x Inputs: (8, -600, -25, 575, 1100)
+//3. Total $328359.56 LowestEquity -$25360.34 ROI 10.4705x Inputs: (8, -600, -50, 575, 1100)
+//4. Total $328353.14 LowestEquity -$22807.38 ROI 11.3982x Inputs: (8, -600, 0, 575, 1100)
+//5. Total $328274.94 LowestEquity -$22536.08 ROI 11.5039x Inputs: (8, -600, -25, 600, 1100)
+//6. Total $328128.90 LowestEquity -$23616.26 ROI 11.0793x Inputs: (8, -625, -75, 575, 1100)
+//7. Total $327168.86 LowestEquity -$20914.04 ROI 12.1561x Inputs: (8, -600, -25, 625, 1100)
+//8. Total $326422.70 LowestEquity -$30552.94 ROI 8.9301x Inputs: (8, -600, -50, 575, 1000)
+//9. Total $325787.28 LowestEquity -$22770.52 ROI 11.3236x Inputs: (8, -625, 0, 575, 1100)
+public class HybridTimeLimit extends AbstractStrategy {
     private static final int COST_PER_CONTRACT = 5000000;
     private static final int COST_PER_CONTRACT_RE = 5000000;
     private static final LocalTime START = LocalTime.of(9, 25);
     private static final LocalTime GO_SHORT = LocalTime.of(15, 45);
-    private static final LocalTime GO_LONG = LocalTime.of(23, 20);
+    private static final LocalTime GO_LONG = LocalTime.of(23, 15);
 
     private boolean initialized;
     private Input input;
@@ -29,10 +32,6 @@ public class HybridTest extends AbstractStrategy {
     private int highPrice;
     private int lowPrice;
     private int lastMom;
-
-    private int mom2;
-    private int accel2;
-    private int lastMom2;
 
     @Override
     public void setup(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap, AbstractInput input) {
@@ -63,10 +62,6 @@ public class HybridTest extends AbstractStrategy {
 	    accel = mom - lastMom;
 	    lastMom = mom;
 
-	    mom2 = bar.getClose() - getPrevBar(input.getLengthRE()).getClose();
-	    accel2 = mom2 - lastMom2;
-	    lastMom2 = mom2;
-
 	    if (isDay(bar.getTime())) {
 		if (getMarketPosition() == 1) {
 		    if (mom < input.getMomST() && accel < input.getAccelST()) {
@@ -77,15 +72,7 @@ public class HybridTest extends AbstractStrategy {
 		    }
 		} else if (getMarketPosition() <= 0) {
 		    if (bar.getLow() <= lowPrice) {
-			// if (input.getLengthRE() > 0 && mom2 < input.getMomRE() && accel2 <
-			// input.getAccelRE()) {
-			// highPrice = bar.getClose() + input.getUpAmountRE();
-			// lowPrice = bar.getClose() - input.getDownAmountRE();
-			// marketSellShort();
-			// limitCover(lowPrice);
-			// } else {
 			marketBuy();
-			// }
 		    } else if (bar.getClose() >= highPrice) {
 			marketBuy();
 		    } else if (getMarketPosition() == -1) {
@@ -101,7 +88,6 @@ public class HybridTest extends AbstractStrategy {
     }
 
     private boolean isDay(LocalTime time) {
-	return (time.isAfter(GO_LONG) && time.isBefore(LocalTime.MAX))
-		|| (time.isAfter(LocalTime.MIN)) && time.isBefore(GO_SHORT) || time.equals(LocalTime.MIN);
+	return time.isAfter(START) && time.isBefore(GO_SHORT);
     }
 }

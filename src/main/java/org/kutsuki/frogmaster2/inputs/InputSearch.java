@@ -1,5 +1,6 @@
 package org.kutsuki.frogmaster2.inputs;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.TreeMap;
@@ -11,12 +12,13 @@ import org.kutsuki.frogmaster2.strategy.AbstractStrategy;
 
 public class InputSearch implements Callable<InputResult> {
     private static final Ticker AT_ES_TICKER = new Ticker('A', 6);
-    // private static final LocalDate END_DATE = LocalDate.of(2018, 12, 14);
 
-    private Input input;
+    private AbstractInput input;
+    private AbstractStrategy strategy;
+    private LocalDate startDate;
+    private LocalDate endDate;
     private Map<Ticker, TreeMap<LocalDateTime, Bar>> tickerBarMap;
     private TreeMap<LocalDateTime, Bar> atEsBarMap;
-    private AbstractStrategy strategy;
 
     @Override
     public InputResult call() {
@@ -39,8 +41,16 @@ public class InputSearch implements Callable<InputResult> {
 	this.tickerBarMap = tickerBarMap;
     }
 
-    public void setInput(Input input) {
+    public void setInput(AbstractInput input) {
 	this.input = input;
+    }
+
+    public void setStartDate(LocalDate startDate) {
+	this.startDate = startDate;
+    }
+
+    public void setEndDate(LocalDate endDate) {
+	this.endDate = endDate;
     }
 
     public void setStrategy(AbstractStrategy strategy) {
@@ -50,7 +60,8 @@ public class InputSearch implements Callable<InputResult> {
     private InputResult runAtEs() {
 	strategy.disableMarginCheck();
 	strategy.setup(AT_ES_TICKER, atEsBarMap, input);
-	// strategy.setEndDate(END_DATE);
+	applyDates();
+
 	strategy.run();
 
 	return new InputResult(input, strategy.getBankroll() + strategy.getUnrealized(), strategy.getLowestEquity());
@@ -78,5 +89,15 @@ public class InputSearch implements Callable<InputResult> {
 	}
 
 	return new InputResult(input, total, equity);
+    }
+
+    private void applyDates() {
+	if (startDate != null) {
+	    strategy.setStartDate(startDate);
+	}
+
+	if (endDate != null) {
+	    strategy.setEndDate(endDate);
+	}
     }
 }

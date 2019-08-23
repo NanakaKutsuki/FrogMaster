@@ -2,8 +2,8 @@ package org.kutsuki.frogmaster2.analytics;
 
 import java.io.File;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.util.Map.Entry;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.TreeMap;
 
 import org.kutsuki.frogmaster2.AbstractParser;
@@ -23,26 +23,30 @@ public class TempParser extends AbstractParser {
 	TreeMap<LocalDateTime, Bar> barMap = load(file);
 
 	if (file.exists()) {
-	    int green = 0;
-	    int buy = 0;
-	    boolean gap = false;
-	    Bar prev = barMap.firstEntry().getValue();
+	    int high = 0;
+	    int low = 0;
 
-	    for (Entry<LocalDateTime, Bar> e : barMap.entrySet()) {
-		Bar bar = e.getValue();
+	    List<Bar> barList = new ArrayList<Bar>();
 
-		if (bar.getTime().equals(LocalTime.of(18, 5))) {
-		    buy = 0;
+	    for (Bar bar : barMap.values()) {
+		if (bar.getHigh() > high) {
+		    Bar bar2 = new Bar();
+		    bar2.setDateTime(bar.getDateTime());
+		    bar2.setHigh(high);
+		    bar2.setLow(low);
+		    barList.add(bar2);
+
+		    high = bar.getHigh();
+		    low = Integer.MAX_VALUE;
 		}
 
-		if (bar.getClose() - bar.getOpen() > 1000) {
-		    buy = bar.getClose();
+		if (bar.getLow() < low) {
+		    low = bar.getLow();
 		}
+	    }
 
-		if (bar.getTime().equals(LocalTime.of(16, 0)) && buy > 0) {
-		    green += buy - bar.getClose();
-		    System.out.println(green + " " + (buy - bar.getClose()));
-		}
+	    for (Bar bar : barList) {
+		System.out.println(bar);
 	    }
 	}
     }

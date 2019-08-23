@@ -6,7 +6,7 @@ import java.math.RoundingMode;
 public class InputResult implements Comparable<InputResult> {
     private static final BigDecimal HUNDRED = BigDecimal.valueOf(100);
 
-    private Input input;
+    private AbstractInput input;
     private int total;
     private int lowestEquity;
 
@@ -16,7 +16,7 @@ public class InputResult implements Comparable<InputResult> {
 	this.lowestEquity = 0;
     }
 
-    public InputResult(Input input, int total, int equity) {
+    public InputResult(AbstractInput input, int total, int equity) {
 	this.input = input;
 	this.total = total;
 	this.lowestEquity = equity;
@@ -50,10 +50,11 @@ public class InputResult implements Comparable<InputResult> {
     @Override
     public int compareTo(InputResult rhs) {
 	return Integer.compare(rhs.getTotal(), getTotal());
+	// return rhs.getROI().compareTo(getROI());
     }
 
     public BigDecimal getROI() {
-	BigDecimal cost = BigDecimal.valueOf(-lowestEquity + 580000);
+	BigDecimal cost = BigDecimal.valueOf(-lowestEquity + 600000);
 	return BigDecimal.valueOf(total).divide(cost, 4, RoundingMode.HALF_UP);
     }
 

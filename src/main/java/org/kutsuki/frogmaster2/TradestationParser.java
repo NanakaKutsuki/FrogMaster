@@ -12,11 +12,11 @@ import org.kutsuki.frogmaster2.core.Bar;
 import org.kutsuki.frogmaster2.core.Ticker;
 import org.kutsuki.frogmaster2.inputs.Input;
 import org.kutsuki.frogmaster2.strategy.AbstractStrategy;
-import org.kutsuki.frogmaster2.strategy.HybridTest;
+import org.kutsuki.frogmaster2.strategy.HybridTimeLimitRE;
 
 public class TradestationParser extends AbstractParser {
-    private static final AbstractStrategy STRATEGY = new HybridTest();
-    private static final Input INPUT = new Input(5, -600, -325, 1525, 1000);
+    private static final AbstractStrategy STRATEGY = new HybridTimeLimitRE();
+    private static final Input INPUT = new Input(8, -600, -75, 575, 1100, 0, -1150, -525, 2025, 350);
     private static final int YEAR = LocalDate.now().getYear() - 2000;
     private static final String DIR = "C:/Users/" + System.getProperty("user.name") + "/Desktop/ES/";
     private static final String ES = "ES";
@@ -57,7 +57,7 @@ public class TradestationParser extends AbstractParser {
 	    TreeMap<LocalDateTime, Bar> barMap = load(file);
 
 	    STRATEGY.setup(ticker, barMap, INPUT);
-	    // STRATEGY.disableMarginCheck();
+	    STRATEGY.disableMarginCheck();
 	    STRATEGY.run();
 
 	    // set ticker data
@@ -65,7 +65,6 @@ public class TradestationParser extends AbstractParser {
 	    ticker.setEquity(STRATEGY.getLowestEquity());
 	    ticker.setRealized(STRATEGY.getBankroll());
 	    ticker.setUnrealized(STRATEGY.getUnrealized());
-	    ticker.setBankrollRE(STRATEGY.getBankrollRE());
 	    tickerMap.put(ticker.toString(), ticker);
 	}
     }
@@ -164,18 +163,6 @@ public class TradestationParser extends AbstractParser {
 	}
     }
 
-    public void printBankrollRE() {
-	System.out.println("--------------------------");
-	System.out.println("Rebalance");
-	for (int year = YEAR; year >= 6; year--) {
-	    BigDecimal h = revertDollars(getTicker('H', year).getBankrollRE());
-	    BigDecimal m = revertDollars(getTicker('M', year).getBankrollRE());
-	    BigDecimal u = revertDollars(getTicker('U', year).getBankrollRE());
-	    BigDecimal z = revertDollars(getTicker('Z', year).getBankrollRE());
-	    System.out.println(h + "," + m + "," + u + "," + z);
-	}
-    }
-
     public static void main(String[] args) {
 	TradestationParser parser = new TradestationParser();
 	// parser.run('H', 18);
@@ -190,6 +177,5 @@ public class TradestationParser extends AbstractParser {
 	// parser.printEquityDateTime();
 	parser.printRealized();
 	parser.printEquity();
-	parser.printBankrollRE();
     }
 }

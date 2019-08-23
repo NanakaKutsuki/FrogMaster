@@ -11,13 +11,13 @@ import java.util.TreeMap;
 
 import org.kutsuki.frogmaster2.core.Bar;
 import org.kutsuki.frogmaster2.core.Ticker;
-import org.kutsuki.frogmaster2.inputs.Input;
+import org.kutsuki.frogmaster2.inputs.AbstractInput;
 
 public abstract class AbstractStrategy {
-    private static final boolean PRINT_TRADES = true;
+    private static final boolean PRINT_TRADES = false;
     private static final int COMMISSION = 269;
     private static final int FIFTY = 50;
-    private static final int MAINTENANCE_MARGIN = 580000;
+    private static final int MAINTENANCE_MARGIN = 630000;
     private static final int SLIPPAGE = 25;
     private static final LocalTime NINE_TWENTYFIVE = LocalTime.of(9, 25);
     private static final LocalTime FIVE_PM = LocalTime.of(17, 0);
@@ -27,17 +27,17 @@ public abstract class AbstractStrategy {
     private boolean marketBuyToCover;
     private boolean marketSell;
     private boolean marketSellShort;
-    private Input input;
     private int bankroll;
     private int bankrollEquity;
-    private int bankrollRE;
     private int count;
     private int index;
     private int limitCover;
     private int lowestEquity;
     private int marketPosition;
-    private int numContracts;
     private int positionPrice;
+    private int stopBuy;
+    private int stopCover;
+    private int stopSell;
     private int unrealized;
     private List<LocalDateTime> keyList;
     private LocalDateTime startDateTime;
@@ -45,7 +45,7 @@ public abstract class AbstractStrategy {
     private LocalDateTime lowestEquityDateTime;
     private TreeMap<LocalDateTime, Bar> barMap;
 
-    public abstract void setup(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap, Input input);
+    public abstract void setup(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap, AbstractInput input);
 
     protected abstract int getCostPerContract();
 
@@ -54,18 +54,15 @@ public abstract class AbstractStrategy {
     protected abstract void strategy(Bar bar);
 
     public AbstractStrategy() {
-	this.bankrollRE = 0;
-	this.numContracts = 1;
 	this.marginCheck = true;
     }
 
-    protected void setTickerBarMap(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap, Input input) {
+    protected void setTickerBarMap(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap) {
 	this.bankroll = 0;
 	this.bankrollEquity = 0;
 	this.barMap = barMap;
 	this.count = 0;
 	this.index = 0;
-	this.input = input;
 	this.limitCover = 0;
 	this.lowestEquity = Integer.MAX_VALUE;
 	this.marketPosition = 0;
@@ -74,6 +71,9 @@ public abstract class AbstractStrategy {
 	this.marketSell = false;
 	this.marketSellShort = false;
 	this.positionPrice = 0;
+	this.stopBuy = 0;
+	this.stopCover = 0;
+	this.stopSell = 0;
 	this.unrealized = 0;
 
 	this.keyList = new ArrayList<LocalDateTime>(barMap.keySet());
@@ -88,9 +88,9 @@ public abstract class AbstractStrategy {
 
     public void run() {
 	for (LocalDateTime key : keyList) {
-	    Bar bar = barMap.get(key);
-
 	    if (!key.isBefore(getStartDateTime()) && !key.isAfter(getEndDateTime())) {
+		Bar bar = barMap.get(key);
+
 		// resolve orders first
 		resolveOrders(bar);
 
@@ -155,8 +155,12 @@ public abstract class AbstractStrategy {
 	return bankroll;
     }
 
-    public int getBankrollRE() {
-	return bankrollRE;
+    public void setStartDate(LocalDate startDate) {
+	this.startDateTime = LocalDateTime.of(startDate, NINE_TWENTYFIVE);
+    }
+
+    public void setEndDate(LocalDate endDate) {
+	this.endDateTime = LocalDateTime.of(endDate, FIVE_PM);
     }
 
     public int getLowestEquity() {
@@ -189,10 +193,6 @@ public abstract class AbstractStrategy {
 	return bar;
     }
 
-    protected Input getInput() {
-	return input;
-    }
-
     protected LocalDateTime getStartDateTime() {
 	return startDateTime;
     }
@@ -217,6 +217,18 @@ public abstract class AbstractStrategy {
 	marketSellShort = true;
     }
 
+    protected void stopBuy(int stop) {
+	stopBuy = stop;
+    }
+
+    protected void stopCover(int stop) {
+	stopCover = stop;
+    }
+
+    protected void stopSell(int stop) {
+	stopSell = stop;
+    }
+
     private void addBankroll(int realized) {
 	this.bankroll += convertTicks(realized);
 	this.bankroll -= COMMISSION + SLIPPAGE + COMMISSION + SLIPPAGE;
@@ -226,21 +238,6 @@ public abstract class AbstractStrategy {
 
 	if (bankrollEquity > 0) {
 	    this.bankrollEquity = 0;
-	}
-
-	if (marginCheck) {
-	    this.bankrollRE += convertTicks(realized) * numContracts;
-	    this.bankrollRE -= (COMMISSION + SLIPPAGE + COMMISSION + SLIPPAGE) * numContracts;
-
-	    if (bankrollRE / getCostPerContractRE() > numContracts && numContracts < 100) {
-		numContracts = bankrollRE / getCostPerContractRE();
-
-		if (numContracts >= 100) {
-		    bankrollRE = 0;
-		    numContracts = 1;
-		}
-	    }
-
 	}
     }
 
@@ -334,14 +331,6 @@ public abstract class AbstractStrategy {
 		throw new IllegalStateException("Maintenance Margin Exceeded! " + dateTime + " " + getBankroll() + " "
 			+ unrealized + " " + getStrategyMargin());
 	    }
-
-	    int equityRE = bankrollRE + (unrealized * numContracts) + getCostPerContractRE();
-
-	    if (equityRE < getStrategyMargin() * numContracts) {
-		throw new IllegalStateException("Maintenance Margin Exceeded REBALANCE! " + dateTime + " "
-			+ getBankrollRE() + " " + unrealized * numContracts + " " + getStrategyMargin() * numContracts
-			+ " " + numContracts);
-	    }
 	}
     }
 
@@ -414,6 +403,53 @@ public abstract class AbstractStrategy {
 	    marketSellShort = false;
 	}
 
+	if (marketPosition == 1 && stopSell > 0 && bar.getLow() <= stopSell) {
+	    if (bar.getOpen() < stopSell) {
+		stopSell = bar.getOpen();
+	    }
+
+	    addBankroll(stopSell - positionPrice);
+
+	    if (PRINT_TRADES) {
+		System.out.println(count + " " + bar.getDateTime() + " StopSell " + stopSell + " " + getBankroll());
+	    }
+
+	    positionPrice = 0;
+	    marketPosition = 0;
+	}
+
+	if (marketPosition == -1 && stopCover > 0 && bar.getHigh() >= stopCover) {
+	    if (bar.getOpen() > stopCover) {
+		stopCover = bar.getOpen();
+	    }
+
+	    addBankroll(positionPrice - stopCover);
+
+	    if (PRINT_TRADES) {
+		System.out.println(count + " " + bar.getDateTime() + " StopCover " + stopCover + " " + getBankroll());
+	    }
+
+	    positionPrice = 0;
+	    marketPosition = 0;
+	}
+
+	if (marketPosition == -1 && stopBuy > 0 && bar.getHigh() >= stopBuy) {
+	    if (bar.getOpen() > stopBuy) {
+		stopBuy = bar.getOpen();
+	    }
+
+	    addBankroll(positionPrice - stopBuy);
+
+	    if (PRINT_TRADES) {
+		System.out.println(count + " " + bar.getDateTime() + " StopBuy " + stopBuy + " " + getBankroll());
+		count++;
+		System.out.println(count + " " + bar.getDateTime() + " Long " + stopBuy);
+	    }
+
+	    positionPrice = stopBuy;
+	    marketPosition = 1;
+	}
+
 	if (marketPosition == -1 && limitCover > 0 && bar.getLow() <= limitCover) {
 	    if (bar.getOpen() < limitCover) {
 		limitCover = bar.getOpen();
@@ -430,5 +466,8 @@ public abstract class AbstractStrategy {
 	}
 
 	limitCover = 0;
+	stopBuy = 0;
+	stopCover = 0;
+	stopSell = 0;
     }
 }

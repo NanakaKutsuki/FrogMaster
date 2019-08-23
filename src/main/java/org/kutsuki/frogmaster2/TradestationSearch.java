@@ -4,7 +4,9 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -19,10 +21,11 @@ import java.util.concurrent.Future;
 import org.apache.commons.lang3.SystemUtils;
 import org.kutsuki.frogmaster2.core.Bar;
 import org.kutsuki.frogmaster2.core.Ticker;
+import org.kutsuki.frogmaster2.inputs.AbstractInput;
 import org.kutsuki.frogmaster2.inputs.Input;
 import org.kutsuki.frogmaster2.inputs.InputResult;
 import org.kutsuki.frogmaster2.inputs.InputSearch;
-import org.kutsuki.frogmaster2.strategy.HybridTest;
+import org.kutsuki.frogmaster2.strategy.HybridTimeLimitRE;
 
 public class TradestationSearch extends AbstractParser {
     private static final boolean OUTPUT = false;
@@ -31,6 +34,8 @@ public class TradestationSearch extends AbstractParser {
     private static final File UNIX_ATES = new File("atES.txt");
     private static final int CAPACITY = 100000;
     private static final int YEAR = 19;
+    private static final LocalDate START_DATE = LocalDate.of(2010, 12, 17);
+    private static final LocalDate END_DATE = LocalDate.of(2017, 12, 15);
     private static final String WINDOWS_DIR = "C:/Users/" + System.getProperty("user.name") + "/Desktop/ES/";
     private static final String UNIX_DIR = "ES/";
     private static final String TXT = ".txt";
@@ -95,40 +100,72 @@ public class TradestationSearch extends AbstractParser {
 	waitForFutures();
     }
 
+    private boolean skip(LocalTime time) {
+	int hour = time.getHour();
+	int min = time.getMinute();
+
+	return (hour == 16 && min == 10) || (hour == 16 && min == 15) || (hour == 16 && min == 20)
+		|| (hour == 16 && min == 25) || (hour == 16 && min == 30) || (hour == 16 && min == 55) || hour == 17
+		|| (hour == 18 && min == 0);
+    }
+
     private int stage(boolean count) {
 	int tests = 0;
 
-	for (int length = 8; length <= 8; length += 1) {
-	    for (int mom = -700; mom <= -500; mom += 25) {
-		for (int accel = -200; accel <= 0; accel += 25) {
-		    for (int up = 500; up <= 700; up += 25) {
-			for (int down = 900; down <= 1200; down += 25) {
-			    for (int upAH = 200; upAH <= 600; upAH += 25) {
-				for (int downAH = 1700; downAH <= 2400; downAH += 25) {
-				    if (count) {
-					tests++;
-				    } else {
-					Input input = new Input(length, mom, accel, up, down, 0, 0, 0, upAH, downAH);
-					addTest(input);
-				    }
-				}
-			    }
+	// LocalTime long1 = LocalTime.of(23, 15);
+	// LocalTime short1 = LocalTime.of(15, 45);
+	// LocalTime long2 = LocalTime.MIN;
+	// LocalTime short2 = LocalTime.MIN;
+	// for (int hour = 0; hour <= 23; hour++) {
+	// for (int minute = 0; minute <= 55; minute += 5) {
+	// for (int hour2 = 0; hour2 <= 23; hour2++) {
+	// for (int minute2 = 0; minute2 <= 55; minute2 += 5) {
+	// long1 = LocalTime.of(hour, minute);
+	// short1 = LocalTime.of(hour2, minute2);
+	// if (!skip(long1) && !skip(long2) && !skip(short1) && !skip(short2)) {
+	// if (count) {
+	// tests++;
+	// } else {
+	// AbstractInput input = new TimeInput(long1, long2, short1, short2);
+	// addTest(input);
+	// }
+	// }
+	// }
+	// }
+	// }
+	// }
+
+	// for (int length = 4; length <= 12; length++) {
+	for (int mom = -800; mom <= -500; mom += 25) {
+	    for (int accel = -300; accel <= -0; accel += 25) {
+		for (int up = 500; up <= 1200; up += 25) {
+		    for (int down = 500; down <= 1200; down += 25) {
+			if (count) {
+			    tests++;
+			} else {
+			    AbstractInput input = new Input(8, mom, accel, up, down);
+			    // AbstractInput input = new Input(8, -600, -25, 575, 1100, 12, mom, accel, up,
+			    // down);
+			    addTest(input);
 			}
 		    }
 		}
 	    }
 	}
+	// }
 
 	return tests;
 
     }
 
-    private void addTest(Input input) {
+    private void addTest(AbstractInput input) {
 	InputSearch is = new InputSearch();
 	is.setAtEsBarMap(atEsBarMap);
 	is.setTickerBarMap(tickerBarMap);
 	is.setInput(input);
-	is.setStrategy(new HybridTest());
+	is.setStrategy(new HybridTimeLimitRE());
+	// is.setStartDate(START_DATE);
+	// is.setEndDate(END_DATE);
 
 	Future<InputResult> f = es.submit(is);
 	futureList.add(f);

@@ -15,7 +15,7 @@ import org.kutsuki.frogmaster2.inputs.Input;
 // -25, 575, 1100, 4, -1125, -525, 1075, 1300)
 // 1. Total $360243.56 LowestEquity -$19465.46 ROI 14.1464x Inputs: (8, -600,
 // -25, 575, 1100, 7, -1575, -550, 2225, 1875)
-public class HybridTest extends AbstractStrategy {
+public class HybridTimeLimitRE extends AbstractStrategy {
     private static final int COST_PER_CONTRACT = 5000000;
     private static final int COST_PER_CONTRACT_RE = 5000000;
     private static final LocalTime START = LocalTime.of(9, 25);
@@ -77,15 +77,14 @@ public class HybridTest extends AbstractStrategy {
 		    }
 		} else if (getMarketPosition() <= 0) {
 		    if (bar.getLow() <= lowPrice) {
-			// if (input.getLengthRE() > 0 && mom2 < input.getMomRE() && accel2 <
-			// input.getAccelRE()) {
-			// highPrice = bar.getClose() + input.getUpAmountRE();
-			// lowPrice = bar.getClose() - input.getDownAmountRE();
-			// marketSellShort();
-			// limitCover(lowPrice);
-			// } else {
-			marketBuy();
-			// }
+			if (input.getLengthRE() > 0 && mom2 < input.getMomRE() && accel2 < input.getAccelRE()) {
+			    highPrice = bar.getClose() + input.getUpAmountRE();
+			    lowPrice = bar.getClose() - input.getDownAmountRE();
+			    marketSellShort();
+			    limitCover(lowPrice);
+			} else {
+			    marketBuy();
+			}
 		    } else if (bar.getClose() >= highPrice) {
 			marketBuy();
 		    } else if (getMarketPosition() == -1) {
@@ -94,6 +93,7 @@ public class HybridTest extends AbstractStrategy {
 		}
 	    } else if (getMarketPosition() == 1 && bar.getTime().equals(GO_SHORT)) {
 		marketSellShort();
+
 	    } else if (getMarketPosition() == -1 && bar.getTime().equals(GO_LONG)) {
 		marketBuy();
 	    }
@@ -101,7 +101,6 @@ public class HybridTest extends AbstractStrategy {
     }
 
     private boolean isDay(LocalTime time) {
-	return (time.isAfter(GO_LONG) && time.isBefore(LocalTime.MAX))
-		|| (time.isAfter(LocalTime.MIN)) && time.isBefore(GO_SHORT) || time.equals(LocalTime.MIN);
+	return time.isAfter(START) && time.isBefore(GO_SHORT);
     }
 }

@@ -9,18 +9,14 @@ import org.kutsuki.frogmaster2.core.Ticker;
 import org.kutsuki.frogmaster2.inputs.AbstractInput;
 import org.kutsuki.frogmaster2.inputs.Input;
 
-//1. Total $362594.34 LowestEquity -$14242.68 ROI 17.9124x Inputs: (8, -600,
-//-25, 575, 1100, 11, -1300, -750, 1325, 2025)
-// 1. Total $360624.64 LowestEquity -$14309.42 ROI 17.7565x Inputs: (8, -600,
-// -25, 575, 1100, 4, -1125, -525, 1075, 1300)
-// 1. Total $360243.56 LowestEquity -$19465.46 ROI 14.1464x Inputs: (8, -600,
-// -25, 575, 1100, 7, -1575, -550, 2225, 1875)
-public class HybridTest extends AbstractStrategy {
+//1. Total $343050.76 LowestEquity -$15529.06 ROI 15.9343x Inputs: (8, -600,
+// -25, 575, 1100, 4, -1075, -525, 1050, 1275)
+public class HybridTimeRE extends AbstractStrategy {
     private static final int COST_PER_CONTRACT = 5000000;
     private static final int COST_PER_CONTRACT_RE = 5000000;
     private static final LocalTime START = LocalTime.of(9, 25);
     private static final LocalTime GO_SHORT = LocalTime.of(15, 45);
-    private static final LocalTime GO_LONG = LocalTime.of(23, 20);
+    private static final LocalTime GO_LONG = LocalTime.of(23, 15);
 
     private boolean initialized;
     private Input input;
@@ -73,23 +69,17 @@ public class HybridTest extends AbstractStrategy {
 			highPrice = bar.getClose() + input.getUpAmount();
 			lowPrice = bar.getClose() - input.getDownAmount();
 			marketSellShort();
-			limitCover(lowPrice);
 		    }
 		} else if (getMarketPosition() <= 0) {
 		    if (bar.getLow() <= lowPrice) {
-			// if (input.getLengthRE() > 0 && mom2 < input.getMomRE() && accel2 <
-			// input.getAccelRE()) {
-			// highPrice = bar.getClose() + input.getUpAmountRE();
-			// lowPrice = bar.getClose() - input.getDownAmountRE();
-			// marketSellShort();
-			// limitCover(lowPrice);
-			// } else {
-			marketBuy();
-			// }
+			if (input.getLengthRE() > 0 && mom2 < input.getMomRE() && accel2 < input.getAccelRE()) {
+			    highPrice = bar.getClose() + input.getUpAmountRE();
+			    lowPrice = bar.getClose() - input.getDownAmountRE();
+			} else {
+			    marketBuy();
+			}
 		    } else if (bar.getClose() >= highPrice) {
 			marketBuy();
-		    } else if (getMarketPosition() == -1) {
-			limitCover(lowPrice);
 		    }
 		}
 	    } else if (getMarketPosition() == 1 && bar.getTime().equals(GO_SHORT)) {
@@ -101,7 +91,6 @@ public class HybridTest extends AbstractStrategy {
     }
 
     private boolean isDay(LocalTime time) {
-	return (time.isAfter(GO_LONG) && time.isBefore(LocalTime.MAX))
-		|| (time.isAfter(LocalTime.MIN)) && time.isBefore(GO_SHORT) || time.equals(LocalTime.MIN);
+	return time.isAfter(START) && time.isBefore(GO_SHORT);
     }
 }

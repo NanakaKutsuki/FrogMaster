@@ -1,17 +1,17 @@
 package org.kutsuki.frogmaster2.inputs;
 
-public class Input {
+public class Input extends AbstractInput {
     private int length;
     private int momST;
     private int accelST;
     private int upAmount;
     private int downAmount;
 
-    private int lengthAH;
-    private int momAH;
-    private int accelAH;
-    private int upAmountAH;
-    private int downAmountAH;
+    private int lengthRE;
+    private int momRE;
+    private int accelRE;
+    private int upAmountRE;
+    private int downAmountRE;
 
     public Input(int length, int momST, int accelST, int upAmount, int downAmount) {
 	this.length = length;
@@ -19,21 +19,22 @@ public class Input {
 	this.accelST = accelST;
 	this.upAmount = upAmount;
 	this.downAmount = downAmount;
+	this.lengthRE = 0;
     }
 
-    public Input(int length, int momST, int accelST, int upAmount, int downAmount, int lengthAH, int momAH, int accelAH,
-	    int upAmountAH, int downAmountAH) {
+    public Input(int length, int momST, int accelST, int upAmount, int downAmount, int lengthRE, int momRE, int accelRE,
+	    int upAmountRE, int downAmountRE) {
 	this.length = length;
 	this.momST = momST;
 	this.accelST = accelST;
 	this.upAmount = upAmount;
 	this.downAmount = downAmount;
 
-	this.lengthAH = lengthAH;
-	this.momAH = momAH;
-	this.accelAH = accelAH;
-	this.upAmountAH = upAmountAH;
-	this.downAmountAH = downAmountAH;
+	this.lengthRE = lengthRE;
+	this.momRE = momRE;
+	this.accelRE = accelRE;
+	this.upAmountRE = upAmountRE;
+	this.downAmountRE = downAmountRE;
     }
 
     @Override
@@ -41,17 +42,17 @@ public class Input {
 	StringBuilder sb = new StringBuilder();
 	sb.append("Inputs: (");
 
-	if (getDownAmountAH() != 0) {
+	if (getLengthRE() != 0) {
 	    sb.append(getLength()).append(',').append(' ');
 	    sb.append(getMomST()).append(',').append(' ');
 	    sb.append(getAccelST()).append(',').append(' ');
 	    sb.append(getUpAmount()).append(',').append(' ');
 	    sb.append(getDownAmount()).append(',').append(' ');
-	    sb.append(getLengthAH()).append(',').append(' ');
-	    sb.append(getMomAH()).append(',').append(' ');
-	    sb.append(getAccelAH()).append(',').append(' ');
-	    sb.append(getUpAmountAH()).append(',').append(' ');
-	    sb.append(getDownAmountAH());
+	    sb.append(getLengthRE()).append(',').append(' ');
+	    sb.append(getMomRE()).append(',').append(' ');
+	    sb.append(getAccelRE()).append(',').append(' ');
+	    sb.append(getUpAmountRE()).append(',').append(' ');
+	    sb.append(getDownAmountRE());
 	} else {
 	    sb.append(getLength()).append(',').append(' ');
 	    sb.append(getMomST()).append(',').append(' ');
@@ -84,23 +85,23 @@ public class Input {
 	return downAmount;
     }
 
-    public int getLengthAH() {
-	return lengthAH;
+    public int getLengthRE() {
+	return lengthRE;
     }
 
-    public int getMomAH() {
-	return momAH;
+    public int getMomRE() {
+	return momRE;
     }
 
-    public int getAccelAH() {
-	return accelAH;
+    public int getAccelRE() {
+	return accelRE;
     }
 
-    public int getUpAmountAH() {
-	return upAmountAH;
+    public int getUpAmountRE() {
+	return upAmountRE;
     }
 
-    public int getDownAmountAH() {
-	return downAmountAH;
+    public int getDownAmountRE() {
+	return downAmountRE;
     }
 }
