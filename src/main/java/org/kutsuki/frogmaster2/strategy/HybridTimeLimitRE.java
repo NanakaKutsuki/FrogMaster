@@ -9,18 +9,17 @@ import org.kutsuki.frogmaster2.core.Ticker;
 import org.kutsuki.frogmaster2.inputs.AbstractInput;
 import org.kutsuki.frogmaster2.inputs.Input;
 
-//1. Total $362594.34 LowestEquity -$14242.68 ROI 17.9124x Inputs: (8, -600,
-//-25, 575, 1100, 11, -1300, -750, 1325, 2025)
-// 1. Total $360624.64 LowestEquity -$14309.42 ROI 17.7565x Inputs: (8, -600,
-// -25, 575, 1100, 4, -1125, -525, 1075, 1300)
-// 1. Total $360243.56 LowestEquity -$19465.46 ROI 14.1464x Inputs: (8, -600,
-// -25, 575, 1100, 7, -1575, -550, 2225, 1875)
+//1. Total $367395.76 LowestEquity -$13878.00 ROI 18.4825x Inputs: (8, -600, -25, 575, 1100, 11, -1300, -750, 1325, 2025)
+//1. Total $367012.06 LowestEquity -$13962.34 ROI 18.3852x Inputs: (8, -600, -25, 575, 1100, 10, -1400, -225, 1250, 2025)
+//1. Total $365895.92 LowestEquity -$13729.84 ROI 18.5453x Inputs: (8, -600, -25, 575, 1100, 4, -1125, -525, 1075, 1300)
+//1. Total $365832.72 LowestEquity -$15288.20 ROI 17.1848x Inputs: (8, -600, -25, 575, 1100, 12, -1000, -975, 1075, 2025)
+//1. Total $363797.90 LowestEquity -$20033.10 ROI 13.9744x Inputs: (8, -600, -25, 575, 1100, 7, -1575, -550, 2250, 1950)
 public class HybridTimeLimitRE extends AbstractStrategy {
     private static final int COST_PER_CONTRACT = 5000000;
     private static final int COST_PER_CONTRACT_RE = 5000000;
     private static final LocalTime START = LocalTime.of(9, 25);
     private static final LocalTime GO_SHORT = LocalTime.of(15, 45);
-    private static final LocalTime GO_LONG = LocalTime.of(23, 20);
+    private static final LocalTime GO_LONG = LocalTime.of(18, 50);
 
     private boolean initialized;
     private Input input;

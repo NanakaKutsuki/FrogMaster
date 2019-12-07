@@ -16,7 +16,7 @@ public class HybridTimeRE extends AbstractStrategy {
     private static final int COST_PER_CONTRACT_RE = 5000000;
     private static final LocalTime START = LocalTime.of(9, 25);
     private static final LocalTime GO_SHORT = LocalTime.of(15, 45);
-    private static final LocalTime GO_LONG = LocalTime.of(23, 15);
+    private static final LocalTime GO_LONG = LocalTime.of(18, 50);
 
     private boolean initialized;
     private Input input;

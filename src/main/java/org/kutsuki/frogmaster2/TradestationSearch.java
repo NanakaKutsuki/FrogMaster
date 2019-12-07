@@ -135,27 +135,25 @@ public class TradestationSearch extends AbstractParser {
 	// }
 	// }
 
-	// for (int length = 4; length <= 12; length++) {
-	for (int mom = -800; mom <= -500; mom += 25) {
-	    for (int accel = -300; accel <= -0; accel += 25) {
-		for (int up = 500; up <= 1200; up += 25) {
-		    for (int down = 500; down <= 1200; down += 25) {
-			if (count) {
-			    tests++;
-			} else {
-			    AbstractInput input = new Input(8, mom, accel, up, down);
-			    // AbstractInput input = new Input(8, -600, -25, 575, 1100, 12, mom, accel, up,
-			    // down);
-			    addTest(input);
+	for (int length = 5; length <= 8; length += 3) {
+	    for (int mom = -1000; mom <= -0; mom += 100) {
+		for (int accel = -1000; accel <= -0; accel += 100) {
+		    for (int up = 100; up <= 2000; up += 100) {
+			for (int down = 100; down <= 2000; down += 100) {
+			    if (count) {
+				tests++;
+			    } else {
+				AbstractInput input = new Input(length, mom, accel, up, down);
+				addTest(input);
+			    }
 			}
+
 		    }
 		}
 	    }
 	}
-	// }
 
 	return tests;
-
     }
 
     private void addTest(AbstractInput input) {

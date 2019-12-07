@@ -9,6 +9,8 @@ import org.kutsuki.frogmaster2.core.Ticker;
 import org.kutsuki.frogmaster2.inputs.AbstractInput;
 import org.kutsuki.frogmaster2.inputs.Input;
 
+//1. Total $378710.00 LowestEquity -$15549.78 ROI 17.5737x Inputs: (8, -650, -75, 1025, 1050, 11, -1400, -775, 2600, 2025)
+//1. Total $375642.00 LowestEquity -$16516.48 ROI 16.6830x Inputs: (8, -650, -75, 1025, 1050, 10, -1425, -300, 1500, 1975)
 public class HybridLimitRE extends AbstractStrategy {
     private static final int COST_PER_CONTRACT = 5000000;
     private static final int COST_PER_CONTRACT_RE = 5000000;
