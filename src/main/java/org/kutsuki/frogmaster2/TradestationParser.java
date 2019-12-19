@@ -26,7 +26,7 @@ public class TradestationParser extends AbstractParser {
     private Map<String, Symbol> tickerMap;
 
     public TradestationParser() {
-	setTicker(TICKER);
+	setTicker(TICKER.getTicker());
 	this.tickerMap = new HashMap<String, Symbol>();
 
 	for (int year = 6; year <= YEAR; year++) {

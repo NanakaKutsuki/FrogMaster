@@ -74,10 +74,6 @@ public abstract class AbstractParser {
 	return ticker;
     }
 
-    public void setTicker(Ticker ticker) {
-	this.ticker = ticker;
-    }
-
     public void setTicker(String ticker) {
 	if (StringUtils.contains(ticker, Ticker.ES.getTicker())) {
 	    this.ticker = Ticker.ES;
