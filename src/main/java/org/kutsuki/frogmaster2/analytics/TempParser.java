@@ -2,19 +2,24 @@ package org.kutsuki.frogmaster2.analytics;
 
 import java.io.File;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.time.LocalTime;
+import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import org.kutsuki.frogmaster2.AbstractParser;
 import org.kutsuki.frogmaster2.core.Bar;
+import org.kutsuki.frogmaster2.core.Symbol;
 import org.kutsuki.frogmaster2.core.Ticker;
 
 public class TempParser extends AbstractParser {
     private static final String FILE_NAME = "C:/Users/" + System.getProperty("user.name") + "/Desktop/atES.txt";
 
+    public TempParser() {
+	super(Ticker.ES.getTicker());
+    }
+
     @Override
-    public File getFile(Ticker ticker) {
+    public File getFile(Symbol symbol) {
 	return new File(FILE_NAME);
     }
 
@@ -23,30 +28,51 @@ public class TempParser extends AbstractParser {
 	TreeMap<LocalDateTime, Bar> barMap = load(file);
 
 	if (file.exists()) {
-	    int high = 0;
-	    int low = 0;
+	    int bankroll = 0;
 
-	    List<Bar> barList = new ArrayList<Bar>();
+	    boolean set = false;
+	    LocalTime fourpm = LocalTime.of(15, 45);
+	    LocalTime sixpm = LocalTime.of(18, 5);
+	    int close = 0;
+	    int yesterday = 0;
 
-	    for (Bar bar : barMap.values()) {
-		if (bar.getHigh() > high) {
-		    Bar bar2 = new Bar();
-		    bar2.setDateTime(bar.getDateTime());
-		    bar2.setHigh(high);
-		    bar2.setLow(low);
-		    barList.add(bar2);
+	    TreeMap<Integer, String> resultMap = new TreeMap<Integer, String>();
 
-		    high = bar.getHigh();
-		    low = Integer.MAX_VALUE;
-		}
+	    for (int hour = 12; hour <= 16; hour++) {
+		for (int minute = 0; minute <= 55; minute += 5) {
+		    for (int hour2 = 18; hour2 <= 23; hour2++) {
+			for (int minute2 = 0; minute2 <= 55; minute2 += 5) {
+			    fourpm = LocalTime.of(hour, minute);
+			    sixpm = LocalTime.of(hour2, minute2);
 
-		if (bar.getLow() < low) {
-		    low = bar.getLow();
+			    for (Bar bar : barMap.values()) {
+				if (bar.getTime().equals(fourpm)) {
+				    close = bar.getClose();
+				    set = true;
+				}
+
+				if (set && bar.getTime().equals(sixpm)) {
+				    bankroll += bar.getClose() - close;
+				    set = false;
+				}
+
+				if (bar.getDateTime().getDayOfMonth() != yesterday) {
+				    set = false;
+				}
+
+				yesterday = bar.getDateTime().getDayOfMonth();
+			    }
+			    // System.out.println(bankroll);
+			    resultMap.put(bankroll, fourpm + " - " + sixpm);
+			    bankroll = 0;
+			    set = false;
+			}
+		    }
 		}
 	    }
 
-	    for (Bar bar : barList) {
-		System.out.println(bar);
+	    for (Entry<Integer, String> e : resultMap.entrySet()) {
+		System.out.println(e.toString());
 	    }
 	}
     }

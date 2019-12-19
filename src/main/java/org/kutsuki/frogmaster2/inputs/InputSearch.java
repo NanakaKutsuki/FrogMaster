@@ -7,18 +7,18 @@ import java.util.TreeMap;
 import java.util.concurrent.Callable;
 
 import org.kutsuki.frogmaster2.core.Bar;
+import org.kutsuki.frogmaster2.core.Symbol;
 import org.kutsuki.frogmaster2.core.Ticker;
 import org.kutsuki.frogmaster2.strategy.AbstractStrategy;
 
 public class InputSearch implements Callable<InputResult> {
-    private static final Ticker AT_ES_TICKER = new Ticker('A', 6);
-
     private AbstractInput input;
     private AbstractStrategy strategy;
     private LocalDate startDate;
     private LocalDate endDate;
-    private Map<Ticker, TreeMap<LocalDateTime, Bar>> tickerBarMap;
+    private Map<Symbol, TreeMap<LocalDateTime, Bar>> tickerBarMap;
     private TreeMap<LocalDateTime, Bar> atEsBarMap;
+    private Ticker ticker;
 
     @Override
     public InputResult call() {
@@ -37,7 +37,7 @@ public class InputSearch implements Callable<InputResult> {
 	this.atEsBarMap = atEsBarMap;
     }
 
-    public void setTickerBarMap(Map<Ticker, TreeMap<LocalDateTime, Bar>> tickerBarMap) {
+    public void setTickerBarMap(Map<Symbol, TreeMap<LocalDateTime, Bar>> tickerBarMap) {
 	this.tickerBarMap = tickerBarMap;
     }
 
@@ -57,9 +57,14 @@ public class InputSearch implements Callable<InputResult> {
 	this.strategy = strategy;
     }
 
+    public void setTicker(Ticker ticker) {
+	this.ticker = ticker;
+    }
+
     private InputResult runAtEs() {
+	Symbol at = new Symbol(ticker, 'A', 6);
 	strategy.disableMarginCheck();
-	strategy.setup(AT_ES_TICKER, atEsBarMap, input);
+	strategy.setup(at, atEsBarMap, input);
 	applyDates();
 
 	strategy.run();
@@ -71,9 +76,9 @@ public class InputSearch implements Callable<InputResult> {
 	int total = 0;
 	int equity = 0;
 
-	for (Ticker ticker : tickerBarMap.keySet()) {
+	for (Symbol symbol : tickerBarMap.keySet()) {
 	    strategy.disableMarginCheck();
-	    strategy.setup(ticker, tickerBarMap.get(ticker), input);
+	    strategy.setup(symbol, tickerBarMap.get(symbol), input);
 
 	    // if (ticker.toString().equals("ESZ18")) {
 	    // strategy.setEndDate(END_DATE);

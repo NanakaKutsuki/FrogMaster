@@ -15,14 +15,31 @@ import java.util.TreeMap;
 
 import org.apache.commons.lang3.StringUtils;
 import org.kutsuki.frogmaster2.core.Bar;
-import org.kutsuki.frogmaster2.core.Ticker;
+import org.kutsuki.frogmaster2.core.Symbol;
 
 public abstract class AbstractParser {
-    private static final BigDecimal HUNDRED = BigDecimal.valueOf(100);
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("MM/dd/yyyy");
     private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm");
 
-    public abstract File getFile(Ticker ticker);
+    public abstract File getFile(Symbol symbol);
+
+    private BigDecimal divisor;
+
+    public AbstractParser(String ticker) {
+	switch (ticker) {
+	case "ES":
+	    divisor = BigDecimal.valueOf(100);
+	    break;
+	case "GC":
+	    divisor = BigDecimal.TEN;
+	    break;
+	case "US":
+	    divisor = BigDecimal.valueOf(10000);
+	    break;
+	default:
+	    throw new IllegalArgumentException("Unknown Ticker:" + ticker);
+	}
+    }
 
     public TreeMap<LocalDateTime, Bar> load(File file) {
 	TreeMap<LocalDateTime, Bar> barMap = new TreeMap<LocalDateTime, Bar>();
@@ -70,7 +87,7 @@ public abstract class AbstractParser {
 
     public BigDecimal revertDollars(int i) {
 	BigDecimal bd = new BigDecimal(i);
-	bd = bd.divide(HUNDRED, 2, RoundingMode.HALF_UP);
+	bd = bd.divide(divisor, 2, RoundingMode.HALF_UP);
 	return bd;
     }
 }

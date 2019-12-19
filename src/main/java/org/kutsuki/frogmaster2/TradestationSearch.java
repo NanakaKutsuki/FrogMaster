@@ -20,18 +20,20 @@ import java.util.concurrent.Future;
 
 import org.apache.commons.lang3.SystemUtils;
 import org.kutsuki.frogmaster2.core.Bar;
+import org.kutsuki.frogmaster2.core.Symbol;
 import org.kutsuki.frogmaster2.core.Ticker;
 import org.kutsuki.frogmaster2.inputs.AbstractInput;
 import org.kutsuki.frogmaster2.inputs.Input;
 import org.kutsuki.frogmaster2.inputs.InputResult;
 import org.kutsuki.frogmaster2.inputs.InputSearch;
-import org.kutsuki.frogmaster2.strategy.HybridTimeLimitRE;
+import org.kutsuki.frogmaster2.strategy.HybridTest;
 
+// TODO CHANGE BACK TO ES - Fix abstract parser, fix Hybrid Test
 public class TradestationSearch extends AbstractParser {
     private static final boolean OUTPUT = false;
     private static final File WINDOWS_ATES = new File(
-	    "C:/Users/" + System.getProperty("user.name") + "/Desktop/atES.txt");
-    private static final File UNIX_ATES = new File("atES.txt");
+	    "C:/Users/" + System.getProperty("user.name") + "/Desktop/atGC.txt");
+    private static final File UNIX_ATES = new File("atGC.txt");
     private static final int CAPACITY = 100000;
     private static final int YEAR = 19;
     private static final LocalDate START_DATE = LocalDate.of(2010, 12, 17);
@@ -39,10 +41,11 @@ public class TradestationSearch extends AbstractParser {
     private static final String WINDOWS_DIR = "C:/Users/" + System.getProperty("user.name") + "/Desktop/ES/";
     private static final String UNIX_DIR = "ES/";
     private static final String TXT = ".txt";
+    private static final Ticker TICKER = Ticker.GC;
 
     private ExecutorService es;
     private int cores;
-    private Map<Ticker, TreeMap<LocalDateTime, Bar>> tickerBarMap;
+    private Map<Symbol, TreeMap<LocalDateTime, Bar>> tickerBarMap;
     private List<Future<InputResult>> futureList;
     private List<InputResult> resultList;
     private long start;
@@ -50,6 +53,7 @@ public class TradestationSearch extends AbstractParser {
     private TreeMap<LocalDateTime, Bar> atEsBarMap;
 
     public TradestationSearch() {
+	super(TICKER.getTicker());
 	this.cores = Runtime.getRuntime().availableProcessors();
 	if (SystemUtils.IS_OS_WINDOWS) {
 	    this.cores -= 2;
@@ -62,18 +66,18 @@ public class TradestationSearch extends AbstractParser {
     }
 
     @Override
-    public File getFile(Ticker ticker) {
+    public File getFile(Symbol symbol) {
 	File file = null;
 	StringBuilder sb = new StringBuilder();
 
 	if (SystemUtils.IS_OS_WINDOWS) {
 	    sb.append(WINDOWS_DIR);
-	    sb.append(ticker);
+	    sb.append(symbol);
 	    sb.append(TXT);
 	    file = new File(sb.toString());
 	} else if (SystemUtils.IS_OS_UNIX) {
 	    sb.append(UNIX_DIR);
-	    sb.append(ticker);
+	    sb.append(symbol);
 	    sb.append(TXT);
 	    file = new File(sb.toString());
 	}
@@ -135,33 +139,52 @@ public class TradestationSearch extends AbstractParser {
 	// }
 	// }
 
-	for (int length = 5; length <= 8; length += 3) {
-	    for (int mom = -1000; mom <= -0; mom += 100) {
-		for (int accel = -1000; accel <= -0; accel += 100) {
-		    for (int up = 100; up <= 2000; up += 100) {
-			for (int down = 100; down <= 2000; down += 100) {
-			    if (count) {
-				tests++;
-			    } else {
-				AbstractInput input = new Input(length, mom, accel, up, down);
-				addTest(input);
-			    }
-			}
+	// 1. Total $367991.38 LowestEquity -$21418.06 ROI 13.4215x Inputs: (8, -600,
+	// -25, 575, 1100, 11, -1700, -200, 2000, 400)
+	// 3. Total $366397.38 LowestEquity -$21468.06 ROI 13.3390x Inputs: (8, -600,
+	// -25, 575, 1100, 11, -1700, -200, 2000, 300)
+	// 4. Total $366166.38 LowestEquity -$21543.06 ROI 13.2943x Inputs: (8, -600,
+	// -25, 575, 1100, 11, -1700, -200, 2100, 400)
+	// 6. Total $365881.10 LowestEquity -$21418.06 ROI 13.3445x Inputs: (8, -600,
+	// -25, 575, 1100, 11, -1700, -200, 1900, 400)
+	// 7. Total $365873.12 LowestEquity -$21468.06 ROI 13.3199x Inputs: (8, -600,
+	// -25, 575, 1100, 11, -1700, -200, 1900, 300)
+	// 8. Total $365645.82 LowestEquity -$21168.06 ROI 13.4587x Inputs: (8, -600,
+	// -25, 575, 1100, 11, -1700, -200, 1800, 400)
 
-		    }
-		}
-	    }
-	}
+	tests++;
+	AbstractInput input = new Input(8, -60, 0, 50, 90);
+	addTest(input);
+
+	// for (int length = 1; length <= 12; length += 1) {
+	// for (int mom = -200; mom <= -0; mom += 10) {
+	// for (int accel = -200; accel <= -0; accel += 10) {
+	// for (int up = 10; up <= 300; up += 10) {
+	// for (int down = 10; down <= 300; down += 10) {
+	// if (count) {
+	// tests++;
+	// } else {
+	// AbstractInput input = new Input(length, mom, accel, up, down);
+	// addTest(input);
+	// }
+	// }
+	//
+	// }
+	// }
+	// }
+	// }
 
 	return tests;
+
     }
 
     private void addTest(AbstractInput input) {
 	InputSearch is = new InputSearch();
 	is.setAtEsBarMap(atEsBarMap);
 	is.setTickerBarMap(tickerBarMap);
+	is.setTicker(TICKER);
 	is.setInput(input);
-	is.setStrategy(new HybridTimeLimitRE());
+	is.setStrategy(new HybridTest());
 	// is.setStartDate(START_DATE);
 	// is.setEndDate(END_DATE);
 
@@ -214,19 +237,19 @@ public class TradestationSearch extends AbstractParser {
     }
 
     public void loadQuarterly() {
-	this.tickerBarMap = new HashMap<Ticker, TreeMap<LocalDateTime, Bar>>();
+	this.tickerBarMap = new HashMap<Symbol, TreeMap<LocalDateTime, Bar>>();
 
 	for (int year = 6; year <= YEAR; year++) {
-	    Ticker h = new Ticker('H', year);
+	    Symbol h = new Symbol(TICKER, 'H', year);
 	    tickerBarMap.put(h, load(getFile(h)));
 
-	    Ticker m = new Ticker('M', year);
+	    Symbol m = new Symbol(TICKER, 'M', year);
 	    tickerBarMap.put(m, load(getFile(m)));
 
-	    Ticker u = new Ticker('U', year);
+	    Symbol u = new Symbol(TICKER, 'U', year);
 	    tickerBarMap.put(u, load(getFile(u)));
 
-	    Ticker z = new Ticker('Z', year);
+	    Symbol z = new Symbol(TICKER, 'Z', year);
 	    tickerBarMap.put(z, load(getFile(z)));
 
 	    System.out.println("Loaded: " + z.getFullYear());

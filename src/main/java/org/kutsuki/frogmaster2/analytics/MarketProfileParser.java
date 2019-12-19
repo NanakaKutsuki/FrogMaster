@@ -10,6 +10,7 @@ import java.util.TreeMap;
 
 import org.kutsuki.frogmaster2.AbstractParser;
 import org.kutsuki.frogmaster2.core.Bar;
+import org.kutsuki.frogmaster2.core.Symbol;
 import org.kutsuki.frogmaster2.core.Ticker;
 
 public class MarketProfileParser extends AbstractParser {
@@ -31,6 +32,7 @@ public class MarketProfileParser extends AbstractParser {
     private TreeMap<Integer, Integer> tpoMap;
 
     public MarketProfileParser() {
+	super(Ticker.ES.getTicker());
 	File file = getFile(null);
 	if (!file.exists()) {
 	    throw new IllegalStateException("atES Missing: " + FILE_NAME);
@@ -49,7 +51,7 @@ public class MarketProfileParser extends AbstractParser {
     }
 
     @Override
-    public File getFile(Ticker ticker) {
+    public File getFile(Symbol symbol) {
 	return new File(FILE_NAME);
     }
 

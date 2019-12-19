@@ -10,15 +10,13 @@ import java.util.List;
 import java.util.TreeMap;
 
 import org.kutsuki.frogmaster2.core.Bar;
+import org.kutsuki.frogmaster2.core.Symbol;
 import org.kutsuki.frogmaster2.core.Ticker;
 import org.kutsuki.frogmaster2.inputs.AbstractInput;
 
 public abstract class AbstractStrategy {
     private static final boolean PRINT_TRADES = false;
-    private static final int COMMISSION = 269;
-    private static final int FIFTY = 50;
     private static final int MAINTENANCE_MARGIN = 630000;
-    private static final int SLIPPAGE = 25;
     private static final LocalTime NINE_TWENTYFIVE = LocalTime.of(9, 25);
     private static final LocalTime FIVE_PM = LocalTime.of(17, 0);
 
@@ -43,9 +41,10 @@ public abstract class AbstractStrategy {
     private LocalDateTime startDateTime;
     private LocalDateTime endDateTime;
     private LocalDateTime lowestEquityDateTime;
+    private Ticker symbol;
     private TreeMap<LocalDateTime, Bar> barMap;
 
-    public abstract void setup(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap, AbstractInput input);
+    public abstract void setup(Symbol symbol, TreeMap<LocalDateTime, Bar> barMap, AbstractInput input);
 
     protected abstract int getCostPerContract();
 
@@ -57,7 +56,7 @@ public abstract class AbstractStrategy {
 	this.marginCheck = true;
     }
 
-    protected void setTickerBarMap(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap) {
+    protected void setTickerBarMap(Symbol symbol, TreeMap<LocalDateTime, Bar> barMap) {
 	this.bankroll = 0;
 	this.bankrollEquity = 0;
 	this.barMap = barMap;
@@ -80,8 +79,8 @@ public abstract class AbstractStrategy {
 	Collections.sort(this.keyList);
 
 	if (!barMap.isEmpty()) {
-	    this.endDateTime = calcEndDateTime(ticker);
-	    this.startDateTime = calcStartDateTime(ticker);
+	    this.endDateTime = calcEndDateTime(symbol);
+	    this.startDateTime = calcStartDateTime(symbol);
 	    this.lowestEquityDateTime = barMap.firstKey();
 	}
     }
@@ -231,38 +230,40 @@ public abstract class AbstractStrategy {
 
     private void addBankroll(int realized) {
 	this.bankroll += convertTicks(realized);
-	this.bankroll -= COMMISSION + SLIPPAGE + COMMISSION + SLIPPAGE;
+	this.bankroll -= symbol.getCommission() + symbol.getMinimumTick() + symbol.getCommission()
+		+ symbol.getMinimumTick();
 
 	this.bankrollEquity += convertTicks(realized);
-	this.bankrollEquity -= COMMISSION + SLIPPAGE + COMMISSION + SLIPPAGE;
+	this.bankrollEquity -= symbol.getCommission() + symbol.getMinimumTick() + symbol.getCommission()
+		+ symbol.getMinimumTick();
 
 	if (bankrollEquity > 0) {
 	    this.bankrollEquity = 0;
 	}
     }
 
-    private LocalDateTime calcStartDateTime(Ticker ticker) {
+    private LocalDateTime calcStartDateTime(Symbol symbol) {
 	LocalDate date = null;
 
-	switch (ticker.getMonth()) {
+	switch (symbol.getMonth()) {
 	case 'A':
 	    // hard coded for @ES
 	    date = LocalDate.of(2005, 12, 1);
 	    break;
 	case 'H':
-	    date = LocalDate.of(ticker.getFullYear() - 1, 12, 1);
+	    date = LocalDate.of(symbol.getFullYear() - 1, 12, 1);
 	    break;
 	case 'M':
-	    date = LocalDate.of(ticker.getFullYear(), 3, 1);
+	    date = LocalDate.of(symbol.getFullYear(), 3, 1);
 	    break;
 	case 'U':
-	    date = LocalDate.of(ticker.getFullYear(), 6, 1);
+	    date = LocalDate.of(symbol.getFullYear(), 6, 1);
 	    break;
 	case 'Z':
-	    date = LocalDate.of(ticker.getFullYear(), 9, 1);
+	    date = LocalDate.of(symbol.getFullYear(), 9, 1);
 	    break;
 	default:
-	    throw new IllegalStateException("Bad Ticker!" + ticker);
+	    throw new IllegalStateException("Bad Ticker!" + symbol);
 	}
 
 	LocalDateTime dateTime = LocalDateTime.of(calcThirdDayOfWeek(date), NINE_TWENTYFIVE);
@@ -273,8 +274,8 @@ public abstract class AbstractStrategy {
 	return dateTime;
     }
 
-    private LocalDateTime calcEndDateTime(Ticker ticker) {
-	return calcEndDateTime(ticker.getMonth(), ticker.getFullYear());
+    private LocalDateTime calcEndDateTime(Symbol symbol) {
+	return calcEndDateTime(symbol.getMonth(), symbol.getFullYear());
     }
 
     private LocalDate calcThirdDayOfWeek(LocalDate start) {
@@ -300,17 +301,17 @@ public abstract class AbstractStrategy {
     private void calcUnrealized(Bar bar) {
 	if (getMarketPosition() == 1) {
 	    unrealized = convertTicks(bar.getClose() - positionPrice);
-	    unrealized -= COMMISSION + SLIPPAGE;
+	    unrealized -= symbol.getCommission() + symbol.getMinimumTick();
 	} else if (getMarketPosition() == -1) {
 	    unrealized = convertTicks(positionPrice - bar.getClose());
-	    unrealized -= COMMISSION + SLIPPAGE;
+	    unrealized -= symbol.getCommission() + symbol.getMinimumTick();
 	} else {
 	    unrealized = 0;
 	}
     }
 
     private int convertTicks(int ticks) {
-	return ticks * FIFTY;
+	return ticks * symbol.getDollarValue();
     }
 
     private int getStrategyMargin() {

@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.kutsuki.frogmaster2.core.Bar;
+import org.kutsuki.frogmaster2.core.Symbol;
 import org.kutsuki.frogmaster2.core.Ticker;
 import org.kutsuki.frogmaster2.inputs.Input;
 import org.kutsuki.frogmaster2.strategy.AbstractStrategy;
@@ -19,19 +20,20 @@ public class TradestationParser extends AbstractParser {
     private static final Input INPUT = new Input(8, -600, -75, 575, 1100, 0, -1150, -525, 2025, 350);
     private static final int YEAR = LocalDate.now().getYear() - 2000;
     private static final String DIR = "C:/Users/" + System.getProperty("user.name") + "/Desktop/ES/";
-    private static final String ES = "ES";
     private static final String TXT = ".txt";
+    private static final Ticker TICKER = Ticker.ES;
 
-    private Map<String, Ticker> tickerMap;
+    private Map<String, Symbol> tickerMap;
 
     public TradestationParser() {
-	this.tickerMap = new HashMap<String, Ticker>();
+	super(TICKER.getTicker());
+	this.tickerMap = new HashMap<String, Symbol>();
 
 	for (int year = 6; year <= YEAR; year++) {
-	    Ticker h = new Ticker('H', year);
-	    Ticker m = new Ticker('M', year);
-	    Ticker u = new Ticker('U', year);
-	    Ticker z = new Ticker('Z', year);
+	    Symbol h = new Symbol(TICKER, 'H', year);
+	    Symbol m = new Symbol(TICKER, 'M', year);
+	    Symbol u = new Symbol(TICKER, 'U', year);
+	    Symbol z = new Symbol(TICKER, 'Z', year);
 
 	    tickerMap.put(h.toString(), h);
 	    tickerMap.put(m.toString(), m);
@@ -41,37 +43,37 @@ public class TradestationParser extends AbstractParser {
     }
 
     @Override
-    public File getFile(Ticker ticker) {
+    public File getFile(Symbol symbol) {
 	StringBuilder sb = new StringBuilder();
 	sb.append(DIR);
-	sb.append(ticker);
+	sb.append(symbol);
 	sb.append(TXT);
 	return new File(sb.toString());
     }
 
     public void run(char month, int year) {
-	Ticker ticker = getTicker(month, year);
-	File file = getFile(ticker);
+	Symbol symbol = getSymbol(month, year);
+	File file = getFile(symbol);
 
 	if (file.exists()) {
 	    TreeMap<LocalDateTime, Bar> barMap = load(file);
 
-	    STRATEGY.setup(ticker, barMap, INPUT);
+	    STRATEGY.setup(symbol, barMap, INPUT);
 	    STRATEGY.disableMarginCheck();
 	    STRATEGY.run();
 
 	    // set ticker data
-	    ticker.setEquityDateTime(STRATEGY.getLowestEquityDateTime());
-	    ticker.setEquity(STRATEGY.getLowestEquity());
-	    ticker.setRealized(STRATEGY.getBankroll());
-	    ticker.setUnrealized(STRATEGY.getUnrealized());
-	    tickerMap.put(ticker.toString(), ticker);
+	    symbol.setEquityDateTime(STRATEGY.getLowestEquityDateTime());
+	    symbol.setEquity(STRATEGY.getLowestEquity());
+	    symbol.setRealized(STRATEGY.getBankroll());
+	    symbol.setUnrealized(STRATEGY.getUnrealized());
+	    tickerMap.put(symbol.toString(), symbol);
 	}
     }
 
-    public Ticker getTicker(char month, int year) {
+    public Symbol getSymbol(char month, int year) {
 	StringBuilder sb = new StringBuilder();
-	sb.append(ES);
+	sb.append(TICKER.getTicker());
 	sb.append(month);
 
 	if (year < 10) {
@@ -85,10 +87,10 @@ public class TradestationParser extends AbstractParser {
     public void printEquityDateTime() {
 	System.out.println("Lowest Equity Dates");
 	for (int year = YEAR; year >= 6; year--) {
-	    Ticker h = getTicker('H', year);
-	    Ticker m = getTicker('M', year);
-	    Ticker u = getTicker('U', year);
-	    Ticker z = getTicker('Z', year);
+	    Symbol h = getSymbol('H', year);
+	    Symbol m = getSymbol('M', year);
+	    Symbol u = getSymbol('U', year);
+	    Symbol z = getSymbol('Z', year);
 
 	    LocalDateTime hDate = h.getEquityDateTime();
 	    LocalDateTime uDate = u.getEquityDateTime();
@@ -116,10 +118,10 @@ public class TradestationParser extends AbstractParser {
     public void printRealized() {
 	System.out.println("--------------------------");
 	for (int year = YEAR; year >= 6; year--) {
-	    BigDecimal h = revertDollars(getTicker('H', year).getRealized());
-	    BigDecimal m = revertDollars(getTicker('M', year).getRealized());
-	    BigDecimal u = revertDollars(getTicker('U', year).getRealized());
-	    BigDecimal z = revertDollars(getTicker('Z', year).getRealized());
+	    BigDecimal h = revertDollars(getSymbol('H', year).getRealized());
+	    BigDecimal m = revertDollars(getSymbol('M', year).getRealized());
+	    BigDecimal u = revertDollars(getSymbol('U', year).getRealized());
+	    BigDecimal z = revertDollars(getSymbol('Z', year).getRealized());
 	    System.out.println(h + "," + m + "," + u + "," + z);
 	}
 
@@ -130,10 +132,10 @@ public class TradestationParser extends AbstractParser {
     public BigDecimal getRealized() {
 	int realized = 0;
 	for (int year = YEAR; year >= 6; year--) {
-	    realized += getTicker('H', year).getRealized();
-	    realized += getTicker('M', year).getRealized();
-	    realized += getTicker('U', year).getRealized();
-	    realized += getTicker('Z', year).getRealized();
+	    realized += getSymbol('H', year).getRealized();
+	    realized += getSymbol('M', year).getRealized();
+	    realized += getSymbol('U', year).getRealized();
+	    realized += getSymbol('Z', year).getRealized();
 	}
 
 	return revertDollars(realized);
@@ -142,10 +144,10 @@ public class TradestationParser extends AbstractParser {
     public BigDecimal getUnrealized() {
 	int unrealized = 0;
 	for (int year = YEAR; year >= 6; year--) {
-	    unrealized += getTicker('H', year).getUnrealized();
-	    unrealized += getTicker('M', year).getUnrealized();
-	    unrealized += getTicker('U', year).getUnrealized();
-	    unrealized += getTicker('Z', year).getUnrealized();
+	    unrealized += getSymbol('H', year).getUnrealized();
+	    unrealized += getSymbol('M', year).getUnrealized();
+	    unrealized += getSymbol('U', year).getUnrealized();
+	    unrealized += getSymbol('Z', year).getUnrealized();
 	}
 
 	return revertDollars(unrealized);
@@ -155,10 +157,10 @@ public class TradestationParser extends AbstractParser {
 	System.out.println("--------------------------");
 	System.out.println("Lowest Equity");
 	for (int year = YEAR; year >= 6; year--) {
-	    BigDecimal h = revertDollars(getTicker('H', year).getEquity());
-	    BigDecimal m = revertDollars(getTicker('M', year).getEquity());
-	    BigDecimal u = revertDollars(getTicker('U', year).getEquity());
-	    BigDecimal z = revertDollars(getTicker('Z', year).getEquity());
+	    BigDecimal h = revertDollars(getSymbol('H', year).getEquity());
+	    BigDecimal m = revertDollars(getSymbol('M', year).getEquity());
+	    BigDecimal u = revertDollars(getSymbol('U', year).getEquity());
+	    BigDecimal z = revertDollars(getSymbol('Z', year).getEquity());
 	    System.out.println(h + "," + m + "," + u + "," + z);
 	}
     }

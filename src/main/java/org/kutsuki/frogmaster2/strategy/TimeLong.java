@@ -5,7 +5,7 @@ import java.time.LocalTime;
 import java.util.TreeMap;
 
 import org.kutsuki.frogmaster2.core.Bar;
-import org.kutsuki.frogmaster2.core.Ticker;
+import org.kutsuki.frogmaster2.core.Symbol;
 import org.kutsuki.frogmaster2.inputs.AbstractInput;
 import org.kutsuki.frogmaster2.inputs.TimeInput;
 
@@ -29,8 +29,8 @@ public class TimeLong extends AbstractStrategy {
     private TimeInput input;
 
     @Override
-    public void setup(Ticker ticker, TreeMap<LocalDateTime, Bar> barMap, AbstractInput input) {
-	setTickerBarMap(ticker, barMap);
+    public void setup(Symbol symbol, TreeMap<LocalDateTime, Bar> barMap, AbstractInput input) {
+	setTickerBarMap(symbol, barMap);
 	this.initialized = false;
 	this.input = (TimeInput) input;
     }

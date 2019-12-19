@@ -5,22 +5,26 @@ import java.time.LocalDateTime;
 import java.util.TreeMap;
 
 import org.kutsuki.frogmaster2.core.Bar;
+import org.kutsuki.frogmaster2.core.Symbol;
 import org.kutsuki.frogmaster2.core.Ticker;
 import org.kutsuki.frogmaster2.inputs.AbstractInput;
 import org.kutsuki.frogmaster2.inputs.Input;
 import org.kutsuki.frogmaster2.strategy.AbstractStrategy;
 import org.kutsuki.frogmaster2.strategy.HybridTest;
 
+// check file, strategy, and symbol
 public class TradestationParserAtEs extends AbstractParser {
-    private static final String FILE_NAME = "C:/Users/" + System.getProperty("user.name") + "/Desktop/atES.txt";
+    private static final String FILE_NAME = "C:/Users/" + System.getProperty("user.name") + "/Desktop/atGC.txt";
     private static final AbstractStrategy STRATEGY = new HybridTest();
-    private static final AbstractInput INPUT = new Input(18, -1100, -125, 2400, 575);
-    // private static final AbstractInput INPUT = new Input(12, -3000, -4000, 1800,
-    // 700);
-    private static final Ticker TICKER = new Ticker('A', 6);
+    private static final AbstractInput INPUT = new Input(8, -60, 0, 50, 90);
+    private static final Symbol SYMBOL = new Symbol(Ticker.GC, 'A', 6);
+
+    public TradestationParserAtEs() {
+	super(SYMBOL.getTicker().getTicker());
+    }
 
     @Override
-    public File getFile(Ticker ticker) {
+    public File getFile(Symbol symbol) {
 	return new File(FILE_NAME);
     }
 
@@ -29,7 +33,7 @@ public class TradestationParserAtEs extends AbstractParser {
 	TreeMap<LocalDateTime, Bar> barMap = load(file);
 
 	if (file.exists()) {
-	    STRATEGY.setup(TICKER, barMap, INPUT);
+	    STRATEGY.setup(SYMBOL, barMap, INPUT);
 	    STRATEGY.disableMarginCheck();
 	    STRATEGY.run();
 	}
