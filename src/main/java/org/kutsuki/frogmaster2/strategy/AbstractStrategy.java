@@ -41,7 +41,7 @@ public abstract class AbstractStrategy {
     private LocalDateTime startDateTime;
     private LocalDateTime endDateTime;
     private LocalDateTime lowestEquityDateTime;
-    private Ticker symbol;
+    private Ticker ticker;
     private TreeMap<LocalDateTime, Bar> barMap;
 
     public abstract void setup(Symbol symbol, TreeMap<LocalDateTime, Bar> barMap, AbstractInput input);
@@ -73,6 +73,7 @@ public abstract class AbstractStrategy {
 	this.stopBuy = 0;
 	this.stopCover = 0;
 	this.stopSell = 0;
+	this.ticker = symbol.getTicker();
 	this.unrealized = 0;
 
 	this.keyList = new ArrayList<LocalDateTime>(barMap.keySet());
@@ -230,12 +231,12 @@ public abstract class AbstractStrategy {
 
     private void addBankroll(int realized) {
 	this.bankroll += convertTicks(realized);
-	this.bankroll -= symbol.getCommission() + symbol.getMinimumTick() + symbol.getCommission()
-		+ symbol.getMinimumTick();
+	this.bankroll -= ticker.getCommission() + ticker.getMinimumTick() + ticker.getCommission()
+		+ ticker.getMinimumTick();
 
 	this.bankrollEquity += convertTicks(realized);
-	this.bankrollEquity -= symbol.getCommission() + symbol.getMinimumTick() + symbol.getCommission()
-		+ symbol.getMinimumTick();
+	this.bankrollEquity -= ticker.getCommission() + ticker.getMinimumTick() + ticker.getCommission()
+		+ ticker.getMinimumTick();
 
 	if (bankrollEquity > 0) {
 	    this.bankrollEquity = 0;
@@ -301,17 +302,17 @@ public abstract class AbstractStrategy {
     private void calcUnrealized(Bar bar) {
 	if (getMarketPosition() == 1) {
 	    unrealized = convertTicks(bar.getClose() - positionPrice);
-	    unrealized -= symbol.getCommission() + symbol.getMinimumTick();
+	    unrealized -= ticker.getCommission() + ticker.getMinimumTick();
 	} else if (getMarketPosition() == -1) {
 	    unrealized = convertTicks(positionPrice - bar.getClose());
-	    unrealized -= symbol.getCommission() + symbol.getMinimumTick();
+	    unrealized -= ticker.getCommission() + ticker.getMinimumTick();
 	} else {
 	    unrealized = 0;
 	}
     }
 
     private int convertTicks(int ticks) {
-	return ticks * symbol.getDollarValue();
+	return ticks * ticker.getDollarValue();
     }
 
     private int getStrategyMargin() {
