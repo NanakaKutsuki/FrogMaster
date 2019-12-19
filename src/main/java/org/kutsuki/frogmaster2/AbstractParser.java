@@ -16,6 +16,7 @@ import java.util.TreeMap;
 import org.apache.commons.lang3.StringUtils;
 import org.kutsuki.frogmaster2.core.Bar;
 import org.kutsuki.frogmaster2.core.Symbol;
+import org.kutsuki.frogmaster2.core.Ticker;
 
 public abstract class AbstractParser {
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("MM/dd/yyyy");
@@ -23,11 +24,7 @@ public abstract class AbstractParser {
 
     public abstract File getFile(Symbol symbol);
 
-    private BigDecimal divisor;
-
-    public AbstractParser(BigDecimal divisor) {
-	this.divisor = divisor;
-    }
+    private Ticker ticker;
 
     public TreeMap<LocalDateTime, Bar> load(File file) {
 	TreeMap<LocalDateTime, Bar> barMap = new TreeMap<LocalDateTime, Bar>();
@@ -73,9 +70,27 @@ public abstract class AbstractParser {
 	return barMap;
     }
 
+    public Ticker getTicker() {
+	return ticker;
+    }
+
+    public void setTicker(Ticker ticker) {
+	this.ticker = ticker;
+    }
+
+    public void setTicker(String ticker) {
+	if (StringUtils.contains(ticker, Ticker.ES.getTicker())) {
+	    this.ticker = Ticker.ES;
+	} else if (StringUtils.contains(ticker, Ticker.GC.getTicker())) {
+	    this.ticker = Ticker.GC;
+	} else if (StringUtils.contains(ticker, Ticker.US.getTicker())) {
+	    this.ticker = Ticker.US;
+	}
+    }
+
     public BigDecimal revertDollars(int i) {
 	BigDecimal bd = new BigDecimal(i);
-	bd = bd.divide(divisor, 2, RoundingMode.HALF_UP);
+	bd = bd.divide(ticker.getDivisor(), 2, RoundingMode.HALF_UP);
 	return bd;
     }
 }

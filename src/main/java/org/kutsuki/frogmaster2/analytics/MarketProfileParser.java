@@ -8,10 +8,10 @@ import java.time.LocalTime;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
+import org.apache.commons.lang3.StringUtils;
 import org.kutsuki.frogmaster2.AbstractParser;
 import org.kutsuki.frogmaster2.core.Bar;
 import org.kutsuki.frogmaster2.core.Symbol;
-import org.kutsuki.frogmaster2.core.Ticker;
 
 public class MarketProfileParser extends AbstractParser {
     private static final BigDecimal TWO = new BigDecimal("2");
@@ -32,10 +32,10 @@ public class MarketProfileParser extends AbstractParser {
     private TreeMap<Integer, Integer> tpoMap;
 
     public MarketProfileParser() {
-	super(Ticker.ES.getDivisor());
+	setTicker(StringUtils.substringAfterLast(FILE_NAME, Character.toString('/')));
 	File file = getFile(null);
 	if (!file.exists()) {
-	    throw new IllegalStateException("atES Missing: " + FILE_NAME);
+	    throw new IllegalStateException("at File Missing: " + FILE_NAME);
 	}
 
 	this.barMap = load(file);

@@ -6,17 +6,13 @@ import java.time.LocalTime;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
+import org.apache.commons.lang3.StringUtils;
 import org.kutsuki.frogmaster2.AbstractParser;
 import org.kutsuki.frogmaster2.core.Bar;
 import org.kutsuki.frogmaster2.core.Symbol;
-import org.kutsuki.frogmaster2.core.Ticker;
 
 public class TempParser extends AbstractParser {
     private static final String FILE_NAME = "C:/Users/" + System.getProperty("user.name") + "/Desktop/atES.txt";
-
-    public TempParser() {
-	super(Ticker.ES.getDivisor());
-    }
 
     @Override
     public File getFile(Symbol symbol) {
@@ -24,6 +20,7 @@ public class TempParser extends AbstractParser {
     }
 
     public void run() {
+	setTicker(StringUtils.substringAfterLast(FILE_NAME, Character.toString('/')));
 	File file = getFile(null);
 	TreeMap<LocalDateTime, Bar> barMap = load(file);
 

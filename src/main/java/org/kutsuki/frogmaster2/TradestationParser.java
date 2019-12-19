@@ -26,14 +26,14 @@ public class TradestationParser extends AbstractParser {
     private Map<String, Symbol> tickerMap;
 
     public TradestationParser() {
-	super(TICKER.getDivisor());
+	setTicker(TICKER);
 	this.tickerMap = new HashMap<String, Symbol>();
 
 	for (int year = 6; year <= YEAR; year++) {
-	    Symbol h = new Symbol(TICKER, 'H', year);
-	    Symbol m = new Symbol(TICKER, 'M', year);
-	    Symbol u = new Symbol(TICKER, 'U', year);
-	    Symbol z = new Symbol(TICKER, 'Z', year);
+	    Symbol h = new Symbol(getTicker(), 'H', year);
+	    Symbol m = new Symbol(getTicker(), 'M', year);
+	    Symbol u = new Symbol(getTicker(), 'U', year);
+	    Symbol z = new Symbol(getTicker(), 'Z', year);
 
 	    tickerMap.put(h.toString(), h);
 	    tickerMap.put(m.toString(), m);
@@ -73,7 +73,7 @@ public class TradestationParser extends AbstractParser {
 
     public Symbol getSymbol(char month, int year) {
 	StringBuilder sb = new StringBuilder();
-	sb.append(TICKER.getTicker());
+	sb.append(getTicker().getTicker());
 	sb.append(month);
 
 	if (year < 10) {

@@ -4,6 +4,7 @@ import java.io.File;
 import java.time.LocalDateTime;
 import java.util.TreeMap;
 
+import org.apache.commons.lang3.StringUtils;
 import org.kutsuki.frogmaster2.core.Bar;
 import org.kutsuki.frogmaster2.core.Symbol;
 import org.kutsuki.frogmaster2.core.Ticker;
@@ -13,15 +14,11 @@ import org.kutsuki.frogmaster2.strategy.AbstractStrategy;
 import org.kutsuki.frogmaster2.strategy.HybridTest;
 
 // check file, strategy, and symbol
-public class TradestationParserAtEs extends AbstractParser {
+public class TradestationParserAt extends AbstractParser {
     private static final String FILE_NAME = "C:/Users/" + System.getProperty("user.name") + "/Desktop/atGC.txt";
     private static final AbstractStrategy STRATEGY = new HybridTest();
     private static final AbstractInput INPUT = new Input(8, -60, 0, 50, 90);
     private static final Symbol SYMBOL = new Symbol(Ticker.GC, 'A', 6);
-
-    public TradestationParserAtEs() {
-	super(SYMBOL.getTicker().getDivisor());
-    }
 
     @Override
     public File getFile(Symbol symbol) {
@@ -29,6 +26,7 @@ public class TradestationParserAtEs extends AbstractParser {
     }
 
     public void run() {
+	setTicker(StringUtils.substringAfterLast(FILE_NAME, Character.toString('/')));
 	File file = getFile(null);
 	TreeMap<LocalDateTime, Bar> barMap = load(file);
 
@@ -48,7 +46,7 @@ public class TradestationParserAtEs extends AbstractParser {
     }
 
     public static void main(String[] args) {
-	TradestationParserAtEs parser = new TradestationParserAtEs();
+	TradestationParserAt parser = new TradestationParserAt();
 	parser.run();
 	parser.printSummary();
     }
