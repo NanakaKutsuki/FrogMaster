@@ -20,7 +20,7 @@ public class TradestationParserAtEs extends AbstractParser {
     private static final Symbol SYMBOL = new Symbol(Ticker.GC, 'A', 6);
 
     public TradestationParserAtEs() {
-	super(SYMBOL.getTicker().getTicker());
+	super(SYMBOL.getTicker().getDivisor());
     }
 
     @Override

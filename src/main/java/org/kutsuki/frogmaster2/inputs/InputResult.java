@@ -4,20 +4,21 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 
 public class InputResult implements Comparable<InputResult> {
-    private static final BigDecimal HUNDRED = BigDecimal.valueOf(100);
-
     private AbstractInput input;
+    private BigDecimal divisor;
     private int total;
     private int lowestEquity;
 
     public InputResult() {
 	this.input = null;
+	this.divisor = BigDecimal.ZERO;
 	this.total = Integer.MIN_VALUE;
 	this.lowestEquity = 0;
     }
 
-    public InputResult(AbstractInput input, int total, int equity) {
+    public InputResult(AbstractInput input, BigDecimal divisor, int total, int equity) {
 	this.input = input;
+	this.divisor = divisor;
 	this.total = total;
 	this.lowestEquity = equity;
     }
@@ -28,12 +29,12 @@ public class InputResult implements Comparable<InputResult> {
 
 	sb.append("Total $");
 	BigDecimal bd = new BigDecimal(total);
-	bd = bd.divide(HUNDRED, 2, RoundingMode.HALF_UP);
+	bd = bd.divide(divisor, 2, RoundingMode.HALF_UP);
 	sb.append(bd).append(' ');
 
 	sb.append("LowestEquity -$");
 	bd = new BigDecimal(lowestEquity);
-	bd = bd.divide(HUNDRED, 2, RoundingMode.HALF_UP).negate();
+	bd = bd.divide(divisor, 2, RoundingMode.HALF_UP).negate();
 	sb.append(bd).append(' ');
 
 	sb.append("ROI ");

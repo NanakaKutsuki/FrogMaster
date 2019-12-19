@@ -28,7 +28,7 @@ import org.kutsuki.frogmaster2.inputs.InputResult;
 import org.kutsuki.frogmaster2.inputs.InputSearch;
 import org.kutsuki.frogmaster2.strategy.HybridTest;
 
-// TODO CHANGE BACK TO ES - Fix abstract parser, fix Hybrid Test
+// Check File and Ticker
 public class TradestationSearch extends AbstractParser {
     private static final boolean OUTPUT = false;
     private static final File WINDOWS_ATES = new File(
@@ -53,7 +53,7 @@ public class TradestationSearch extends AbstractParser {
     private TreeMap<LocalDateTime, Bar> atEsBarMap;
 
     public TradestationSearch() {
-	super(TICKER.getTicker());
+	super(TICKER.getDivisor());
 	this.cores = Runtime.getRuntime().availableProcessors();
 	if (SystemUtils.IS_OS_WINDOWS) {
 	    this.cores -= 2;

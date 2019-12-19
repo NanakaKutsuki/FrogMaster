@@ -32,7 +32,7 @@ public class MarketProfileParser extends AbstractParser {
     private TreeMap<Integer, Integer> tpoMap;
 
     public MarketProfileParser() {
-	super(Ticker.ES.getTicker());
+	super(Ticker.ES.getDivisor());
 	File file = getFile(null);
 	if (!file.exists()) {
 	    throw new IllegalStateException("atES Missing: " + FILE_NAME);

@@ -25,20 +25,8 @@ public abstract class AbstractParser {
 
     private BigDecimal divisor;
 
-    public AbstractParser(String ticker) {
-	switch (ticker) {
-	case "ES":
-	    divisor = BigDecimal.valueOf(100);
-	    break;
-	case "GC":
-	    divisor = BigDecimal.TEN;
-	    break;
-	case "US":
-	    divisor = BigDecimal.valueOf(10000);
-	    break;
-	default:
-	    throw new IllegalArgumentException("Unknown Ticker:" + ticker);
-	}
+    public AbstractParser(BigDecimal divisor) {
+	this.divisor = divisor;
     }
 
     public TreeMap<LocalDateTime, Bar> load(File file) {

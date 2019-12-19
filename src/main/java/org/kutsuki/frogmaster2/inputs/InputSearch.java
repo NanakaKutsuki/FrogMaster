@@ -1,5 +1,6 @@
 package org.kutsuki.frogmaster2.inputs;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -69,16 +70,22 @@ public class InputSearch implements Callable<InputResult> {
 
 	strategy.run();
 
-	return new InputResult(input, strategy.getBankroll() + strategy.getUnrealized(), strategy.getLowestEquity());
+	return new InputResult(input, ticker.getDivisor(), strategy.getBankroll() + strategy.getUnrealized(),
+		strategy.getLowestEquity());
     }
 
     private InputResult runQuarterly() {
 	int total = 0;
 	int equity = 0;
+	BigDecimal divisor = null;
 
 	for (Symbol symbol : tickerBarMap.keySet()) {
 	    strategy.disableMarginCheck();
 	    strategy.setup(symbol, tickerBarMap.get(symbol), input);
+
+	    if (divisor == null) {
+		divisor = symbol.getTicker().getDivisor();
+	    }
 
 	    // if (ticker.toString().equals("ESZ18")) {
 	    // strategy.setEndDate(END_DATE);
@@ -93,7 +100,7 @@ public class InputSearch implements Callable<InputResult> {
 	    }
 	}
 
-	return new InputResult(input, total, equity);
+	return new InputResult(input, divisor, total, equity);
     }
 
     private void applyDates() {

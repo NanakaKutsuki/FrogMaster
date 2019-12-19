@@ -15,7 +15,7 @@ public class TempParser extends AbstractParser {
     private static final String FILE_NAME = "C:/Users/" + System.getProperty("user.name") + "/Desktop/atES.txt";
 
     public TempParser() {
-	super(Ticker.ES.getTicker());
+	super(Ticker.ES.getDivisor());
     }
 
     @Override
