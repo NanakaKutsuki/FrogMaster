@@ -34,10 +34,6 @@ public class HybridLimit extends AbstractStrategy {
 	this.input = (Input) input;
     }
 
-    private Input getInput() {
-	return input;
-    }
-
     @Override
     protected int getCostPerContract() {
 	return COST_PER_CONTRACT;
@@ -50,23 +46,23 @@ public class HybridLimit extends AbstractStrategy {
 
     @Override
     protected void strategy(Bar bar) {
+	mom = bar.getClose() - getPrevBar(input.getLength()).getClose();
+	accel = mom - lastMom;
+	lastMom = mom;
+
 	if (!initialized) {
 	    if (bar.getTime().equals(START)) {
 		marketBuy();
 		initialized = true;
 	    }
 
-	    lastMom = bar.getClose() - getPrevBar(getInput().getLength()).getClose();
+	    lastMom = bar.getClose() - getPrevBar(input.getLength()).getClose();
 	} else {
 	    if (isDay(bar.getTime())) {
-		mom = bar.getClose() - getPrevBar(getInput().getLength()).getClose();
-		accel = mom - lastMom;
-		lastMom = mom;
-
 		if (getMarketPosition() == 1) {
-		    if (mom < getInput().getMomST() && accel < getInput().getAccelST()) {
-			highPrice = bar.getClose() + getInput().getUpAmount();
-			lowPrice = bar.getClose() - getInput().getDownAmount();
+		    if (mom < input.getMomST() && accel < input.getAccelST()) {
+			highPrice = bar.getClose() + input.getUpAmount();
+			lowPrice = bar.getClose() - input.getDownAmount();
 			marketSellShort();
 			limitCover(lowPrice);
 		    }

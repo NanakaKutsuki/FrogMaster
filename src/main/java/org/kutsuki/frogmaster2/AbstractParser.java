@@ -79,8 +79,6 @@ public abstract class AbstractParser {
 	    this.ticker = Ticker.ES;
 	} else if (StringUtils.contains(ticker, Ticker.GC.getTicker())) {
 	    this.ticker = Ticker.GC;
-	} else if (StringUtils.contains(ticker, Ticker.US.getTicker())) {
-	    this.ticker = Ticker.US;
 	}
     }
 

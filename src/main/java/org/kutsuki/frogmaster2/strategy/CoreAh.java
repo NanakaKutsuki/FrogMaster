@@ -15,7 +15,7 @@ public class CoreAh extends AbstractStrategy {
     private static final int COST_PER_CONTRACT = 5000000;
     private static final int COST_PER_CONTRACT_RE = 5000000;
     private static final LocalTime START = LocalTime.of(9, 25);
-    private static final LocalTime END = LocalTime.of(15, 55);
+    private static final LocalTime END = LocalTime.of(16, 0);
 
     private Input input;
     private boolean initialized;
@@ -47,27 +47,27 @@ public class CoreAh extends AbstractStrategy {
 
     @Override
     protected void strategy(Bar bar) {
+	mom = bar.getClose() - getPrevBar(input.getLength()).getClose();
+	accel = mom - lastMom;
+	lastMom = mom;
+
+	mom2 = bar.getClose() - getPrevBar(input.getLengthRE()).getClose();
+	accel2 = mom2 - lastMom2;
+	lastMom2 = mom2;
+
 	if (!initialized) {
 	    if (bar.getTime().equals(START)) {
 		marketBuy();
 		initialized = true;
 	    }
 	} else {
-	    mom = bar.getClose() - getPrevBar(input.getLength()).getClose();
-	    accel = mom - lastMom;
-	    lastMom = mom;
-
-	    mom2 = bar.getClose() - getPrevBar(input.getLengthRE()).getClose();
-	    accel2 = mom2 - lastMom2;
-	    lastMom2 = mom2;
-
 	    if (bar.getTime().equals(START)) {
 		flipCore(bar);
-	    } else if (bar.getTime().equals(END)) {
+	    } else if (input.getLengthRE() > 0 && bar.getTime().equals(END)) {
 		flipAfter(bar);
 	    } else if (bar.getTime().isAfter(START) && bar.getTime().isBefore(END)) {
 		coreHours(bar);
-	    } else {
+	    } else if (input.getLengthRE() > 0) {
 		afterHours(bar);
 	    }
 	}

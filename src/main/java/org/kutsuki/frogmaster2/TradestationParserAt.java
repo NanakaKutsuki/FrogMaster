@@ -15,10 +15,10 @@ import org.kutsuki.frogmaster2.strategy.HybridTest;
 
 // check file, strategy, and symbol
 public class TradestationParserAt extends AbstractParser {
-    private static final String FILE_NAME = "C:/Users/" + System.getProperty("user.name") + "/Desktop/atGC.txt";
+    private static final String FILE_NAME = "C:/Users/" + System.getProperty("user.name") + "/Desktop/atES.txt";
     private static final AbstractStrategy STRATEGY = new HybridTest();
-    private static final AbstractInput INPUT = new Input(8, -60, 0, 50, 90);
-    private static final Symbol SYMBOL = new Symbol(Ticker.GC, 'A', 6);
+    private static final AbstractInput INPUT = new Input(8, -650, -75, 1075, 1050, 2, -650, -1150, 1800, 1275);
+    private static final Symbol SYMBOL = new Symbol(Ticker.ES, 'A', 6);
 
     @Override
     public File getFile(Symbol symbol) {
