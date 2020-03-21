@@ -25,7 +25,7 @@ import org.kutsuki.frogmaster2.inputs.AbstractInput;
 import org.kutsuki.frogmaster2.inputs.Input;
 import org.kutsuki.frogmaster2.inputs.InputResult;
 import org.kutsuki.frogmaster2.inputs.InputSearch;
-import org.kutsuki.frogmaster2.strategy.HybridLimit;
+import org.kutsuki.frogmaster2.strategy.HybridTest;
 
 public class TradestationSearch extends AbstractParser {
     private static final boolean OUTPUT = false;
@@ -35,7 +35,7 @@ public class TradestationSearch extends AbstractParser {
     private static final int CAPACITY = 100000;
     private static final int YEAR = 19;
     private static final LocalDate START_DATE = LocalDate.of(2010, 12, 17);
-    private static final LocalDate END_DATE = LocalDate.of(2006, 12, 15);
+    private static final LocalDate END_DATE = LocalDate.of(2019, 3, 15);
     private static final String WINDOWS_DIR = "C:/Users/" + System.getProperty("user.name") + "/Desktop/ES/";
     private static final String UNIX_DIR = "ES/";
     private static final String TXT = ".txt";
@@ -136,16 +136,54 @@ public class TradestationSearch extends AbstractParser {
 	// }
 	// }
 
+	// 1. Total $326833.64 LowestEquity -$34232.28 ROI 8.1237x Inputs: (8, -650,
+	// -75, 1025, 1050)
+	// 2. Total $324006.26 LowestEquity -$35301.40 ROI 7.8449x Inputs: (8, -650,
+	// -75, 1025, 1075)
+	// 3. Total $323842.36 LowestEquity -$34906.54 ROI 7.9166x Inputs: (8, -650,
+	// -75, 1075, 1050)
+	// 4. Total $323830.14 LowestEquity -$31159.74 ROI 8.7145x Inputs: (8, -650,
+	// -50, 625, 1025)
+	// 5. Total $323797.46 LowestEquity -$23633.02 ROI 10.9269x Inputs: (8, -650,
+	// -75, 1100, 1050)
+	// 6. Total $323757.66 LowestEquity -$37181.78 ROI 7.4976x Inputs: (8, -625, 0,
+	// 625, 1025)
+	// 7. Total $322189.32 LowestEquity -$32273.60 ROI 8.4181x Inputs: (8, -650,
+	// -100, 1025, 1050)
+	// 8. Total $322159.80 LowestEquity -$24677.88 ROI 10.5014x Inputs: (8, -650,
+	// -75, 1100, 1075)
+	// 9. Total $321817.20 LowestEquity -$35963.90 ROI 7.6689x Inputs: (8, -650,
+	// -75, 1075, 1075)
+
+	// 1. Total $285482.78 LowestEquity -$23254.40 ROI 9.7586x Inputs: (8, -700,
+	// -100, 1100, 1100)
+	// 2. Total $273971.58 LowestEquity -$35226.44 ROI 6.6455x Inputs: (8, -700, 0,
+	// 1100, 1100)
+	// 3. Total $264422.94 LowestEquity -$25267.02 ROI 8.4569x Inputs: (8, -700,
+	// -200, 1100, 1100)
+	// 4. Total $262621.26 LowestEquity -$35049.38 ROI 6.3977x Inputs: (8, -700,
+	// -100, 1000, 1100)
+	// 5. Total $261045.58 LowestEquity -$35154.32 ROI 6.3431x Inputs: (8, -700,
+	// -100, 700, 1100)
+	// 6. Total $260445.26 LowestEquity -$35017.56 ROI 6.3496x Inputs: (8, -700,
+	// -100, 800, 1100)
+	// 7. Total $259706.78 LowestEquity -$34876.44 ROI 6.3535x Inputs: (8, -700,
+	// -100, 900, 1100)
+	// 8. Total $258982.38 LowestEquity -$32422.16 ROI 6.7404x Inputs: (8, -600,
+	// -100, 900, 1100)
+	// 9. Total $255731.42 LowestEquity -$40153.32 ROI 5.5409x Inputs: (5, -600,
+	// -300, 900, 1000)
+
 	// TODO
 	// for (int length = 1; length <= 12; length += 1) {
-	for (int mom = -300; mom <= -0; mom += 25) {
-	    for (int accel = -400; accel <= -100; accel += 25) {
-		for (int up = 700; up <= 2100; up += 25) {
-		    for (int down = 200; down <= 1000; down += 25) {
+	for (int mom = -800; mom <= -500; mom += 25) {
+	    for (int accel = -300; accel <= -0; accel += 25) {
+		for (int up = 600; up <= 1200; up += 25) {
+		    for (int down = 1000; down <= 1200; down += 25) {
 			if (count) {
 			    tests++;
 			} else {
-			    AbstractInput input = new Input(1, mom, accel, up, down);
+			    AbstractInput input = new Input(8, mom, accel, up, down);
 			    addTest(input);
 			}
 		    }
@@ -165,9 +203,9 @@ public class TradestationSearch extends AbstractParser {
 	is.setTickerBarMap(tickerBarMap);
 	is.setTicker(getTicker());
 	is.setInput(input);
-	is.setStrategy(new HybridLimit());
+	is.setStrategy(new HybridTest());
 	// is.setStartDate(START_DATE);
-	is.setEndDate(END_DATE);
+	// is.setEndDate(END_DATE);
 
 	Future<InputResult> f = es.submit(is);
 	futureList.add(f);

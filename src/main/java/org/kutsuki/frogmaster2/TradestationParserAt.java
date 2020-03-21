@@ -11,13 +11,15 @@ import org.kutsuki.frogmaster2.core.Ticker;
 import org.kutsuki.frogmaster2.inputs.AbstractInput;
 import org.kutsuki.frogmaster2.inputs.Input;
 import org.kutsuki.frogmaster2.strategy.AbstractStrategy;
-import org.kutsuki.frogmaster2.strategy.HybridTest;
+import org.kutsuki.frogmaster2.strategy.HybridLimit;
 
 // check file, strategy, and symbol
 public class TradestationParserAt extends AbstractParser {
     private static final String FILE_NAME = "C:/Users/" + System.getProperty("user.name") + "/Desktop/atES.txt";
-    private static final AbstractStrategy STRATEGY = new HybridTest();
-    private static final AbstractInput INPUT = new Input(8, -650, -75, 1075, 1050, 2, -650, -1150, 1800, 1275);
+    private static final AbstractStrategy STRATEGY = new HybridLimit();
+    private static final AbstractInput INPUT = new Input(8, -650, -75, 1025, 1050);
+    // private static final LocalDate START_DATE = LocalDate.of(2018, 9, 21);
+    // private static final LocalDate END_DATE = LocalDate.of(2018, 12, 21);
     private static final Symbol SYMBOL = new Symbol(Ticker.ES, 'A', 6);
 
     @Override
@@ -33,6 +35,8 @@ public class TradestationParserAt extends AbstractParser {
 	if (file.exists()) {
 	    STRATEGY.setup(SYMBOL, barMap, INPUT);
 	    STRATEGY.disableMarginCheck();
+	    // STRATEGY.setStartDate(START_DATE);
+	    // STRATEGY.setEndDate(END_DATE);
 	    STRATEGY.run();
 	}
     }
@@ -41,7 +45,7 @@ public class TradestationParserAt extends AbstractParser {
 	System.out.println("Realized: " + revertDollars(STRATEGY.getBankroll()));
 	System.out.println("Unrealized: " + revertDollars(STRATEGY.getUnrealized()));
 	System.out.println(
-		"Equity: " + revertDollars(STRATEGY.getLowestEquity()) + " " + STRATEGY.getLowestEquityDateTime());
+		"Lequity: " + revertDollars(STRATEGY.getLowestEquity()) + " " + STRATEGY.getLowestEquityDateTime());
 	System.out.println("Total: " + revertDollars(STRATEGY.getBankroll() + STRATEGY.getUnrealized()));
     }
 
