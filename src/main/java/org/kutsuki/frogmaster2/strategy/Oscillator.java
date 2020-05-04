@@ -9,7 +9,8 @@ import org.kutsuki.frogmaster2.core.Symbol;
 import org.kutsuki.frogmaster2.inputs.AbstractInput;
 import org.kutsuki.frogmaster2.inputs.LineInput;
 
-public class HybridTest extends AbstractStrategy {
+// 3,-373,402
+public class Oscillator extends AbstractStrategy {
     private static final LocalTime CORE_TIME = LocalTime.of(9, 25);
     private static final LocalTime AH_TIME = LocalTime.of(15, 45);
     private static final LocalTime ON_TIME = LocalTime.of(23, 55);
@@ -18,7 +19,6 @@ public class HybridTest extends AbstractStrategy {
     private LineInput input;
     private int po;
     private int lastPO;
-    private int lastPO2;
 
     @Override
     public void setup(Symbol symbol, List<LocalDateTime> keyList, List<Bar> barList, AbstractInput input) {
@@ -27,7 +27,6 @@ public class HybridTest extends AbstractStrategy {
 	this.input = (LineInput) input;
 	this.po = 0;
 	this.lastPO = 0;
-	this.lastPO2 = 0;
     }
 
     @Override
@@ -44,18 +43,13 @@ public class HybridTest extends AbstractStrategy {
 	    runAfterHours(bar);
 	    runOverNight(bar);
 
-	    lastPO2 = lastPO;
 	    lastPO = po;
 	}
     }
 
     private void runCoreHours(Bar bar) {
-	// boolean goLong = po > input.getCoreLine() && lastPO < input.getCoreLine();
-	// boolean goShort = po < input.getCoreLine() && lastPO > input.getCoreLine();
-	boolean goLong = po > input.getCoreLine() && lastPO > input.getCoreLine() && lastPO2 > input.getCoreLine()
-		&& po > lastPO && lastPO < lastPO2;
-	boolean goShort = po < input.getCoreLine() && lastPO < input.getCoreLine() && lastPO2 < input.getCoreLine()
-		&& po < lastPO && lastPO > lastPO2;
+	boolean goLong = po > input.getCoreLine() && lastPO < input.getCoreLine();
+	boolean goShort = po < input.getCoreLine() && lastPO > input.getCoreLine();
 
 	if (bar.getTime().equals(CORE_TIME) && getMarketPosition() == -1) {
 	    marketBuy();
@@ -65,12 +59,8 @@ public class HybridTest extends AbstractStrategy {
     }
 
     private void runAfterHours(Bar bar) {
-	// boolean goLong = po > input.getAhLine() && lastPO < input.getAhLine();
-	// boolean goShort = po < input.getAhLine() && lastPO > input.getAhLine();
-	boolean goLong = po > input.getAhLine() && lastPO > input.getAhLine() && lastPO2 > input.getAhLine()
-		&& po > lastPO && lastPO < lastPO2;
-	boolean goShort = po < input.getAhLine() && lastPO < input.getAhLine() && lastPO2 < input.getAhLine()
-		&& po < lastPO && lastPO > lastPO2;
+	boolean goLong = po > input.getAhLine() && lastPO < input.getAhLine();
+	boolean goShort = po < input.getAhLine() && lastPO > input.getAhLine();
 
 	if (bar.getTime().equals(AH_TIME) && getMarketPosition() == 1) {
 	    marketSellShort();
@@ -80,12 +70,8 @@ public class HybridTest extends AbstractStrategy {
     }
 
     private void runOverNight(Bar bar) {
-	// boolean goLong = po > input.getOnLine() && lastPO < input.getOnLine();
-	// boolean goShort = po < input.getOnLine() && lastPO > input.getOnLine();
-	boolean goLong = po > input.getOnLine() && lastPO > input.getOnLine() && lastPO2 > input.getOnLine()
-		&& po > lastPO && lastPO < lastPO2;
-	boolean goShort = po < input.getOnLine() && lastPO < input.getOnLine() && lastPO2 < input.getOnLine()
-		&& po < lastPO && lastPO > lastPO2;
+	boolean goLong = po > input.getOnLine() && lastPO < input.getOnLine();
+	boolean goShort = po < input.getOnLine() && lastPO > input.getOnLine();
 
 	if (bar.getTime().equals(ON_TIME) && getMarketPosition() == -1) {
 	    marketBuy();

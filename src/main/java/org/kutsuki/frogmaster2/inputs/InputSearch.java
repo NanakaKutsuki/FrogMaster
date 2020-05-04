@@ -3,6 +3,8 @@ package org.kutsuki.frogmaster2.inputs;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.Callable;
@@ -64,8 +66,9 @@ public class InputSearch implements Callable<InputResult> {
 
     private InputResult runAtEs() {
 	Symbol at = new Symbol(ticker, 'A', 6);
-	strategy.disableMarginCheck();
-	strategy.setup(at, atEsBarMap, input);
+	List<LocalDateTime> keyList = new ArrayList<LocalDateTime>(atEsBarMap.keySet());
+	List<Bar> barList = new ArrayList<Bar>(atEsBarMap.values());
+	strategy.setup(at, keyList, barList, input);
 	applyDates();
 
 	strategy.run();
@@ -80,8 +83,9 @@ public class InputSearch implements Callable<InputResult> {
 	BigDecimal divisor = null;
 
 	for (Symbol symbol : tickerBarMap.keySet()) {
-	    strategy.disableMarginCheck();
-	    strategy.setup(symbol, tickerBarMap.get(symbol), input);
+	    List<LocalDateTime> keyList = new ArrayList<LocalDateTime>(tickerBarMap.get(symbol).keySet());
+	    List<Bar> barList = new ArrayList<Bar>(tickerBarMap.get(symbol).values());
+	    strategy.setup(symbol, keyList, barList, input);
 
 	    if (divisor == null) {
 		divisor = symbol.getTicker().getDivisor();

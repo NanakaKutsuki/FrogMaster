@@ -1,16 +1,30 @@
 package org.kutsuki.frogmaster2.core;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 public class Bar implements Comparable<Bar> {
+    private static final BigDecimal TWO = BigDecimal.valueOf(2);
+
     private LocalDateTime dateTime;
     private int open;
     private int high;
     private int low;
     private int close;
-    // private int upTicks;
-    // private int downTicks;
+    private int upTicks;
+    private int downTicks;
+    private BigDecimal median;
+
+    public Bar(LocalDateTime dateTime, int open, int high, int low, int close) {
+	this.dateTime = dateTime;
+	this.open = open;
+	this.high = high;
+	this.low = low;
+	this.close = close;
+	this.median = BigDecimal.valueOf(high).add(BigDecimal.valueOf(low)).divide(TWO, 2, RoundingMode.HALF_UP);
+    }
 
     @Override
     public int compareTo(Bar other) {
@@ -40,55 +54,39 @@ public class Bar implements Comparable<Bar> {
 	return dateTime;
     }
 
-    public void setDateTime(LocalDateTime dateTime) {
-	this.dateTime = dateTime;
-    }
-
     public int getOpen() {
 	return open;
-    }
-
-    public void setOpen(int open) {
-	this.open = open;
     }
 
     public int getHigh() {
 	return high;
     }
 
-    public void setHigh(int high) {
-	this.high = high;
-    }
-
     public int getLow() {
 	return low;
-    }
-
-    public void setLow(int low) {
-	this.low = low;
     }
 
     public int getClose() {
 	return close;
     }
 
-    public void setClose(int close) {
-	this.close = close;
+    public int getUpTicks() {
+	return upTicks;
     }
 
-    // public int getUpTicks() {
-    // return upTicks;
-    // }
-    //
-    // public void setUpTicks(int upTicks) {
-    // this.upTicks = upTicks;
-    // }
-    //
-    // public int getDownTicks() {
-    // return downTicks;
-    // }
-    //
-    // public void setDownTicks(int downTicks) {
-    // this.downTicks = downTicks;
-    // }
+    public int getDownTicks() {
+	return downTicks;
+    }
+
+    public void setUpTicks(int upTicks) {
+	this.upTicks = upTicks;
+    }
+
+    public void setDownTicks(int downTicks) {
+	this.downTicks = downTicks;
+    }
+
+    public BigDecimal getMedian() {
+	return median;
+    }
 }

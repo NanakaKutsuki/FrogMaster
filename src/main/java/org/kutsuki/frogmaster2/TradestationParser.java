@@ -4,7 +4,9 @@ import java.io.File;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -57,9 +59,10 @@ public class TradestationParser extends AbstractParser {
 
 	if (file.exists()) {
 	    TreeMap<LocalDateTime, Bar> barMap = load(file);
+	    List<LocalDateTime> keyList = new ArrayList<LocalDateTime>(barMap.keySet());
+	    List<Bar> barList = new ArrayList<Bar>(barMap.values());
 
-	    STRATEGY.setup(symbol, barMap, INPUT);
-	    STRATEGY.disableMarginCheck();
+	    STRATEGY.setup(symbol, keyList, barList, INPUT);
 	    STRATEGY.run();
 
 	    // set ticker data

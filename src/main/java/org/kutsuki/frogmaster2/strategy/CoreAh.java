@@ -2,7 +2,7 @@ package org.kutsuki.frogmaster2.strategy;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.TreeMap;
+import java.util.List;
 
 import org.kutsuki.frogmaster2.core.Bar;
 import org.kutsuki.frogmaster2.core.Symbol;
@@ -12,8 +12,6 @@ import org.kutsuki.frogmaster2.inputs.Input;
 //1. Total $312909.72 LowestEquity -$16112.50 ROI 14.1508x Inputs: (8, -600,
 // -25, 575, 1100, 5, -825, -150, 600, 475)
 public class CoreAh extends AbstractStrategy {
-    private static final int COST_PER_CONTRACT = 5000000;
-    private static final int COST_PER_CONTRACT_RE = 5000000;
     private static final LocalTime START = LocalTime.of(9, 25);
     private static final LocalTime END = LocalTime.of(16, 0);
 
@@ -30,19 +28,9 @@ public class CoreAh extends AbstractStrategy {
     private int lastMom2;
 
     @Override
-    public void setup(Symbol symbol, TreeMap<LocalDateTime, Bar> barMap, AbstractInput input) {
-	setTickerBarMap(symbol, barMap);
+    public void setup(Symbol symbol, List<LocalDateTime> keyList, List<Bar> barList, AbstractInput input) {
+	setTickerBarMap(symbol, keyList, barList);
 	this.input = (Input) input;
-    }
-
-    @Override
-    protected int getCostPerContract() {
-	return COST_PER_CONTRACT;
-    }
-
-    @Override
-    protected int getCostPerContractRE() {
-	return COST_PER_CONTRACT_RE;
     }
 
     @Override

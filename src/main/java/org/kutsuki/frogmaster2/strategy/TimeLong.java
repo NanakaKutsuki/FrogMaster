@@ -2,7 +2,7 @@ package org.kutsuki.frogmaster2.strategy;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.TreeMap;
+import java.util.List;
 
 import org.kutsuki.frogmaster2.core.Bar;
 import org.kutsuki.frogmaster2.core.Symbol;
@@ -21,28 +21,16 @@ import org.kutsuki.frogmaster2.inputs.TimeInput;
  *
  */
 public class TimeLong extends AbstractStrategy {
-    private static final int COST_PER_CONTRACT = 5000000;
-    private static final int COST_PER_CONTRACT_RE = 5000000;
     private static final LocalTime START = LocalTime.of(9, 30);
 
     private boolean initialized;
     private TimeInput input;
 
     @Override
-    public void setup(Symbol symbol, TreeMap<LocalDateTime, Bar> barMap, AbstractInput input) {
-	setTickerBarMap(symbol, barMap);
+    public void setup(Symbol symbol, List<LocalDateTime> keyList, List<Bar> barList, AbstractInput input) {
+	setTickerBarMap(symbol, keyList, barList);
 	this.initialized = false;
 	this.input = (TimeInput) input;
-    }
-
-    @Override
-    protected int getCostPerContract() {
-	return COST_PER_CONTRACT;
-    }
-
-    @Override
-    protected int getCostPerContractRE() {
-	return COST_PER_CONTRACT_RE;
     }
 
     @Override

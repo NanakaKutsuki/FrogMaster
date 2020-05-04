@@ -62,4 +62,8 @@ public class InputResult implements Comparable<InputResult> {
     public int getTotal() {
 	return total;
     }
+
+    public AbstractInput getInput() {
+	return input;
+    }
 }

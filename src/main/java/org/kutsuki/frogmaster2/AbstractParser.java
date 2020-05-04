@@ -48,12 +48,7 @@ public abstract class AbstractParser {
 			// int up = Integer.parseInt(split[6]);
 			// int down = Integer.parseInt(split[7]);
 
-			Bar bar = new Bar();
-			bar.setDateTime(LocalDateTime.of(date, time));
-			bar.setOpen(open);
-			bar.setHigh(high);
-			bar.setLow(low);
-			bar.setClose(close);
+			Bar bar = new Bar(LocalDateTime.of(date, time), open, high, low, close);
 			// bar.setUpTicks(up);
 			// bar.setDownTicks(down);
 

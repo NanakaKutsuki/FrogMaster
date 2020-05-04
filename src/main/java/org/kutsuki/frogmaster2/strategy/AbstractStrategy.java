@@ -1,13 +1,12 @@
 package org.kutsuki.frogmaster2.strategy;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.TreeMap;
 
 import org.kutsuki.frogmaster2.core.Bar;
 import org.kutsuki.frogmaster2.core.Symbol;
@@ -16,11 +15,9 @@ import org.kutsuki.frogmaster2.inputs.AbstractInput;
 
 public abstract class AbstractStrategy {
     private static final boolean PRINT_TRADES = false;
-    private static final int MAINTENANCE_MARGIN = 630000;
     private static final LocalTime NINE_TWENTYFIVE = LocalTime.of(9, 25);
     private static final LocalTime FIVE_PM = LocalTime.of(17, 0);
 
-    private boolean marginCheck;
     private boolean marketBuy;
     private boolean marketBuyToCover;
     private boolean marketSell;
@@ -37,29 +34,19 @@ public abstract class AbstractStrategy {
     private int stopCover;
     private int stopSell;
     private int unrealized;
-    private List<LocalDateTime> keyList;
+    private List<Bar> barList;
     private LocalDateTime startDateTime;
     private LocalDateTime endDateTime;
     private LocalDateTime lowestEquityDateTime;
     private Ticker ticker;
-    private TreeMap<LocalDateTime, Bar> barMap;
 
-    public abstract void setup(Symbol symbol, TreeMap<LocalDateTime, Bar> barMap, AbstractInput input);
-
-    protected abstract int getCostPerContract();
-
-    protected abstract int getCostPerContractRE();
+    public abstract void setup(Symbol symbol, List<LocalDateTime> keyList, List<Bar> barList, AbstractInput input);
 
     protected abstract void strategy(Bar bar);
 
-    public AbstractStrategy() {
-	this.marginCheck = true;
-    }
-
-    protected void setTickerBarMap(Symbol symbol, TreeMap<LocalDateTime, Bar> barMap) {
+    protected void setTickerBarMap(Symbol symbol, List<LocalDateTime> keyList, List<Bar> barList) {
 	this.bankroll = 0;
 	this.bankrollEquity = 0;
-	this.barMap = barMap;
 	this.count = 0;
 	this.index = 0;
 	this.limitCover = 0;
@@ -76,21 +63,19 @@ public abstract class AbstractStrategy {
 	this.ticker = symbol.getTicker();
 	this.unrealized = 0;
 
-	this.keyList = new ArrayList<LocalDateTime>(barMap.keySet());
-	Collections.sort(this.keyList);
+	this.barList = barList;
 
-	if (!barMap.isEmpty()) {
-	    this.endDateTime = calcEndDateTime(symbol);
-	    this.startDateTime = calcStartDateTime(symbol);
-	    this.lowestEquityDateTime = barMap.firstKey();
+	if (!barList.isEmpty()) {
+	    this.endDateTime = calcEndDateTime(keyList, symbol);
+	    this.startDateTime = calcStartDateTime(keyList, symbol);
+	    this.lowestEquityDateTime = keyList.get(0);
 	}
     }
 
     public void run() {
-	for (LocalDateTime key : keyList) {
+	for (Bar bar : barList) {
+	    LocalDateTime key = bar.getDateTime();
 	    if (!key.isBefore(getStartDateTime()) && !key.isAfter(getEndDateTime())) {
-		Bar bar = barMap.get(key);
-
 		// resolve orders first
 		resolveOrders(bar);
 
@@ -106,22 +91,19 @@ public abstract class AbstractStrategy {
 		    lowestEquity = equity;
 		    lowestEquityDateTime = key;
 		}
-
-		// margin check
-		maintenanceMarginCheck(key);
 	    }
 
 	    index++;
 	}
     }
 
-    public LocalDateTime calcEndDateTime(char month, int fullYear) {
+    public LocalDateTime calcEndDateTime(List<LocalDateTime> keyList, char month, int fullYear) {
 	LocalDate date = null;
 
 	switch (month) {
 	case 'A':
 	    // hard coded for @ES
-	    date = barMap.lastKey().toLocalDate();
+	    date = barList.get(barList.size() - 1).getDateTime().toLocalDate();
 	    break;
 	case 'H':
 	    date = LocalDate.of(fullYear, 3, 1);
@@ -140,15 +122,11 @@ public abstract class AbstractStrategy {
 	}
 
 	LocalDateTime dateTime = LocalDateTime.of(calcThirdDayOfWeek(date), FIVE_PM);
-	while (!barMap.containsKey(dateTime)) {
+	while (!keyList.contains(dateTime)) {
 	    dateTime = dateTime.minusDays(1);
 	}
 
 	return dateTime;
-    }
-
-    public void disableMarginCheck() {
-	this.marginCheck = false;
     }
 
     public int getBankroll() {
@@ -187,7 +165,7 @@ public abstract class AbstractStrategy {
 	Bar bar = null;
 
 	if (index > length) {
-	    bar = barMap.get(keyList.get(index - length));
+	    bar = barList.get(index - length);
 	}
 
 	return bar;
@@ -217,6 +195,15 @@ public abstract class AbstractStrategy {
 	marketSellShort = true;
     }
 
+    protected boolean skip(LocalTime time) {
+	int hour = time.getHour();
+	int min = time.getMinute();
+
+	return (hour == 16 && min == 10) || (hour == 16 && min == 15) || (hour == 16 && min == 20)
+		|| (hour == 16 && min == 25) || (hour == 16 && min == 30) || (hour == 16 && min == 55) || hour == 17
+		|| (hour == 18 && min == 0);
+    }
+
     protected void stopBuy(int stop) {
 	stopBuy = stop;
     }
@@ -243,7 +230,55 @@ public abstract class AbstractStrategy {
 	}
     }
 
-    private LocalDateTime calcStartDateTime(Symbol symbol) {
+    protected int averageFC(int length) {
+	int result = 0;
+
+	if (index > length) {
+	    int sum = 0;
+
+	    for (int i = 0; i < length; i++) {
+		sum += getPrevBar(i).getClose();
+	    }
+
+	    result = BigDecimal.valueOf(sum).divide(BigDecimal.valueOf(length), 0, RoundingMode.HALF_UP).intValue();
+	}
+
+	return result;
+    }
+
+    protected int priceOscillator(int fastLength, int slowLength) {
+	BigDecimal fastAvg = BigDecimal.ZERO;
+	BigDecimal slowAvg = BigDecimal.ZERO;
+
+	if (index > fastLength) {
+	    BigDecimal sum = BigDecimal.ZERO;
+
+	    for (int i = 0; i < fastLength; i++) {
+		sum = sum.add(getPrevBar(i).getMedian());
+	    }
+
+	    fastAvg = sum.divide(BigDecimal.valueOf(fastLength), 2, RoundingMode.HALF_UP);
+	}
+
+	if (index > slowLength) {
+	    BigDecimal sum = BigDecimal.ZERO;
+
+	    for (int i = 0; i < slowLength; i++) {
+		sum = sum.add(getPrevBar(i).getMedian());
+	    }
+
+	    slowAvg = sum.divide(BigDecimal.valueOf(slowLength), 2, RoundingMode.HALF_UP);
+	}
+
+	// if (getPrevBar(0).getDateTime().isEqual(LocalDateTime.of(2006, 2, 27, 14,
+	// 15))) {
+	// System.out.println(fastAvg + " " + slowAvg);
+	// }
+
+	return fastAvg.subtract(slowAvg).setScale(0, RoundingMode.HALF_UP).intValue();
+    }
+
+    private LocalDateTime calcStartDateTime(List<LocalDateTime> keyList, Symbol symbol) {
 	LocalDate date = null;
 
 	switch (symbol.getMonth()) {
@@ -268,15 +303,15 @@ public abstract class AbstractStrategy {
 	}
 
 	LocalDateTime dateTime = LocalDateTime.of(calcThirdDayOfWeek(date), NINE_TWENTYFIVE);
-	while (!barMap.containsKey(dateTime)) {
+	while (!keyList.contains(dateTime)) {
 	    dateTime = dateTime.plusDays(1);
 	}
 
 	return dateTime;
     }
 
-    private LocalDateTime calcEndDateTime(Symbol symbol) {
-	return calcEndDateTime(symbol.getMonth(), symbol.getFullYear());
+    private LocalDateTime calcEndDateTime(List<LocalDateTime> keyList, Symbol symbol) {
+	return calcEndDateTime(keyList, symbol.getMonth(), symbol.getFullYear());
     }
 
     private LocalDate calcThirdDayOfWeek(LocalDate start) {
@@ -313,27 +348,6 @@ public abstract class AbstractStrategy {
 
     private int convertTicks(int ticks) {
 	return ticks * ticker.getDollarValue();
-    }
-
-    private int getStrategyMargin() {
-	int margin = 0;
-
-	if (getMarketPosition() != 0) {
-	    margin = MAINTENANCE_MARGIN;
-	}
-
-	return margin;
-    }
-
-    private void maintenanceMarginCheck(LocalDateTime dateTime) {
-	if (marginCheck) {
-	    int equity = getBankroll() + unrealized + getCostPerContract();
-
-	    if (equity < getStrategyMargin()) {
-		throw new IllegalStateException("Maintenance Margin Exceeded! " + dateTime + " " + getBankroll() + " "
-			+ unrealized + " " + getStrategyMargin());
-	    }
-	}
     }
 
     private void resolveOrders(Bar bar) {

@@ -4,12 +4,9 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -24,18 +21,16 @@ import org.kutsuki.frogmaster2.core.Symbol;
 import org.kutsuki.frogmaster2.inputs.AbstractInput;
 import org.kutsuki.frogmaster2.inputs.InputResult;
 import org.kutsuki.frogmaster2.inputs.InputSearch;
-import org.kutsuki.frogmaster2.inputs.LineInput;
-import org.kutsuki.frogmaster2.strategy.Oscillator;
+import org.kutsuki.frogmaster2.inputs.TimeInput;
+import org.kutsuki.frogmaster2.strategy.HybridTest;
 
-public class TradestationSearch extends AbstractParser {
+public class TradestationSearch222 extends AbstractParser {
     private static final boolean OUTPUT = false;
     private static final File AT_FILE = new File("atES.txt");
     private static final File WINDOWS_AT = new File(
 	    "C:/Users/" + System.getProperty("user.name") + "/Desktop/" + AT_FILE.getName());
     private static final int CAPACITY = 100000;
     private static final int YEAR = 20;
-    private static final LocalDate START_DATE = LocalDate.of(2010, 12, 17);
-    private static final LocalDate END_DATE = LocalDate.of(2020, 3, 27);
     private static final String WINDOWS_DIR = "C:/Users/" + System.getProperty("user.name") + "/Desktop/ES/";
     private static final String UNIX_DIR = "ES/";
     private static final String TXT = ".txt";
@@ -49,7 +44,7 @@ public class TradestationSearch extends AbstractParser {
     private TradestationStatus status;
     private TreeMap<LocalDateTime, Bar> atBarMap;
 
-    public TradestationSearch() {
+    public TradestationSearch222() {
 	setTicker(AT_FILE.getName());
 	this.cores = Runtime.getRuntime().availableProcessors();
 	if (SystemUtils.IS_OS_WINDOWS) {
@@ -85,7 +80,6 @@ public class TradestationSearch extends AbstractParser {
     public void run() {
 	// load data
 	loadAt();
-	// loadQuarterly();
 
 	// count
 	int count = stage(true);
@@ -113,41 +107,29 @@ public class TradestationSearch extends AbstractParser {
     private int stage(boolean count) {
 	int tests = 0;
 
-	// LocalTime long1 = LocalTime.of(23, 15);
-	// LocalTime short1 = LocalTime.of(15, 45);
-	// LocalTime long2 = LocalTime.MIN;
-	// LocalTime short2 = LocalTime.MIN;
-	// for (int hour = 0; hour <= 23; hour++) {
-	// for (int minute = 0; minute <= 55; minute += 5) {
-	// for (int hour2 = 0; hour2 <= 23; hour2++) {
-	// for (int minute2 = 0; minute2 <= 55; minute2 += 5) {
-	// long1 = LocalTime.of(hour, minute);
-	// short1 = LocalTime.of(hour2, minute2);
-	// if (!skip(long1) && !skip(long2) && !skip(short1) && !skip(short2)) {
-	// if (count) {
-	// tests++;
-	// } else {
-	// AbstractInput input = new TimeInput(long1, long2, short1, short2);
-	// addTest(input);
-	// }
-	// }
-	// }
-	// }
-	// }
-	// }
-
-	// TODO
-	for (int core = -2000; core < 2000; core += 1) {
-	    // for (int core = -300; core < 100; core += 1) {
-	    if (count) {
-		tests++;
-	    } else {
-		AbstractInput input = new LineInput(3, -373, core);
-		addTest(input);
+	LocalTime long1 = null;
+	LocalTime long2 = null;
+	for (int hour = 0; hour <= 23; hour++) {
+	    for (int minute = 0; minute <= 55; minute += 5) {
+		for (int hour2 = 0; hour2 <= 23; hour2++) {
+		    for (int minute2 = 0; minute2 <= 55; minute2 += 5) {
+			long1 = LocalTime.of(hour, minute);
+			long2 = LocalTime.of(hour2, minute2);
+			if (!skip(long1) && !skip(long2)) {
+			    if (count) {
+				tests++;
+			    } else {
+				AbstractInput input = new TimeInput(long1, long2, null, null);
+				addTest(input);
+			    }
+			}
+		    }
+		}
 	    }
 	}
 
 	return tests;
+
     }
 
     private void addTest(AbstractInput input) {
@@ -156,9 +138,7 @@ public class TradestationSearch extends AbstractParser {
 	is.setTickerBarMap(tickerBarMap);
 	is.setTicker(getTicker());
 	is.setInput(input);
-	is.setStrategy(new Oscillator());
-	// is.setStartDate(START_DATE);
-	is.setEndDate(END_DATE);
+	is.setStrategy(new HybridTest());
 
 	Future<InputResult> f = es.submit(is);
 	futureList.add(f);
@@ -179,17 +159,7 @@ public class TradestationSearch extends AbstractParser {
 	    }
 	}
 
-	Collections.sort(resultList);
-	List<InputResult> resultList2 = new ArrayList<InputResult>();
-
-	int size = resultList.size() < 9 ? resultList.size() : 9;
-	for (int i = 0; i < size; i++) {
-	    resultList2.add(resultList.get(i));
-	}
-
-	resultList = new ArrayList<InputResult>(resultList2);
 	futureList = new ArrayList<Future<InputResult>>(CAPACITY);
-
 	print();
     }
 
@@ -208,35 +178,27 @@ public class TradestationSearch extends AbstractParser {
 	System.out.println(AT_FILE.getName() + " Loaded!");
     }
 
-    private void loadQuarterly() {
-	this.tickerBarMap = new HashMap<Symbol, TreeMap<LocalDateTime, Bar>>();
+    private void print() {
+	TreeMap<LocalTime, InputResult> resultMap = new TreeMap<LocalTime, InputResult>();
+	for (InputResult ir : resultList) {
+	    LocalTime key = ((TimeInput) ir.getInput()).getLong1();
+	    InputResult result = resultMap.get(key);
+	    if (result != null) {
+		if (result.getTotal() < ir.getTotal()) {
+		    result = ir;
+		}
+	    } else {
+		result = ir;
+	    }
 
-	for (int year = 6; year <= YEAR; year++) {
-	    Symbol h = new Symbol(getTicker(), 'H', year);
-	    tickerBarMap.put(h, load(getFile(h)));
-
-	    Symbol m = new Symbol(getTicker(), 'M', year);
-	    tickerBarMap.put(m, load(getFile(m)));
-
-	    Symbol u = new Symbol(getTicker(), 'U', year);
-	    tickerBarMap.put(u, load(getFile(u)));
-
-	    Symbol z = new Symbol(getTicker(), 'Z', year);
-	    tickerBarMap.put(z, load(getFile(z)));
-
-	    System.out.println("Loaded: " + z.getFullYear());
+	    resultMap.put(key, result);
 	}
 
-	System.out.println("Quarterly ES Loaded!");
-    }
-
-    private void print() {
 	StringBuilder sb = new StringBuilder();
-	for (int i = 0; i < resultList.size(); i++) {
-	    sb.append(i + 1);
-	    sb.append('.');
-	    sb.append(' ');
-	    sb.append(resultList.get(i));
+	for (InputResult result : resultMap.values()) {
+	    sb.append(((TimeInput) result.getInput()).getLong1()).append(',');
+	    sb.append(((TimeInput) result.getInput()).getLong2()).append(',');
+	    sb.append(result.getTotal());
 	    sb.append('\n');
 	}
 
@@ -256,7 +218,7 @@ public class TradestationSearch extends AbstractParser {
     }
 
     public static void main(String[] args) {
-	TradestationSearch search = new TradestationSearch();
+	TradestationSearch222 search = new TradestationSearch222();
 	search.run();
     }
 }

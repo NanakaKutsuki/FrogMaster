@@ -3,7 +3,7 @@ package org.kutsuki.frogmaster2.core;
 import java.math.BigDecimal;
 
 public class Ticker {
-    public static final Ticker ES = new Ticker("ES", 50, 25, 269, BigDecimal.valueOf(100));
+    public static final Ticker ES = new Ticker("ES", 50, 25, 275, BigDecimal.valueOf(100));
     public static final Ticker GC = new Ticker("GC", 100, 1, 27, BigDecimal.TEN);
 
     private String ticker;
