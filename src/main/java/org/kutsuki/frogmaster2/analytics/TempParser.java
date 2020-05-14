@@ -3,12 +3,12 @@ package org.kutsuki.frogmaster2.analytics;
 import java.io.File;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.TreeMap;
 
 import org.apache.commons.lang3.StringUtils;
 import org.kutsuki.frogmaster2.AbstractParser;
 import org.kutsuki.frogmaster2.core.Bar;
+import org.kutsuki.frogmaster2.core.BarMap;
 import org.kutsuki.frogmaster2.core.Symbol;
 
 public class TempParser extends AbstractParser {
@@ -23,7 +23,7 @@ public class TempParser extends AbstractParser {
     public void run() {
 	setTicker(StringUtils.substringAfterLast(FILE_NAME, Character.toString('/')));
 	File file = getFile(null);
-	TreeMap<LocalDateTime, Bar> barMap = load(file);
+	BarMap barMap = load(file);
 
 	if (file.exists()) {
 	    TreeMap<LocalDate, Bar> resultMap = new TreeMap<LocalDate, Bar>();
@@ -47,7 +47,9 @@ public class TempParser extends AbstractParser {
 	    int lowUp = 0;
 	    int lowDown = 0;
 
-	    for (Bar bar : barMap.values()) {
+	    for (int i = 0; i < barMap.size(); i++) {
+		Bar bar = barMap.get(i);
+
 		if (!first) {
 		    if (bar.getOpen() > prevBar.getHigh() && bar.getOpen() - prevBar.getHigh() >= 5000) {
 			if (isPreviousDayRange(bar, prevBar, true)) {

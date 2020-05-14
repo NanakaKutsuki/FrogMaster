@@ -3,7 +3,6 @@ package org.kutsuki.frogmaster2.analytics;
 import java.io.File;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Map.Entry;
 import java.util.TreeMap;
@@ -11,6 +10,7 @@ import java.util.TreeMap;
 import org.apache.commons.lang3.StringUtils;
 import org.kutsuki.frogmaster2.AbstractParser;
 import org.kutsuki.frogmaster2.core.Bar;
+import org.kutsuki.frogmaster2.core.BarMap;
 import org.kutsuki.frogmaster2.core.Symbol;
 
 public class MarketProfileParser extends AbstractParser {
@@ -28,7 +28,7 @@ public class MarketProfileParser extends AbstractParser {
     private int lastPoc;
     private int lastVah;
     private int lastVal;
-    private TreeMap<LocalDateTime, Bar> barMap;
+    private BarMap barMap;
     private TreeMap<Integer, Integer> tpoMap;
 
     public MarketProfileParser() {
@@ -59,14 +59,15 @@ public class MarketProfileParser extends AbstractParser {
 	int open = 0;
 	int total = 0;
 
-	for (LocalDateTime key : barMap.keySet()) {
-	    addTpos(key);
+	for (int i = 0; i < barMap.size(); i++) {
+	    Bar bar = barMap.get(i);
+	    addTpos(bar);
 
-	    LocalTime time = key.toLocalTime();
+	    LocalTime time = bar.getTime();
 	    if (time.equals(START)) {
-		open = barMap.get(key).getOpen();
+		open = bar.getOpen();
 	    } else if (time.equals(END) && lastVal != 0 && lastVah != 0) {
-		int close = barMap.get(key).getClose();
+		int close = bar.getClose();
 		total += open - close;
 	    }
 	}
@@ -74,8 +75,8 @@ public class MarketProfileParser extends AbstractParser {
 	System.out.println(total);
     }
 
-    private void addTpos(LocalDateTime key) {
-	LocalTime time = key.toLocalTime();
+    private void addTpos(Bar bar) {
+	LocalTime time = bar.getTime();
 
 	if (time.equals(START)) {
 	    lastPoc = poc;
@@ -88,7 +89,6 @@ public class MarketProfileParser extends AbstractParser {
 	}
 
 	if (time.isAfter(START) && (time.isBefore(END) || time.equals(END))) {
-	    Bar bar = barMap.get(key);
 	    if (bar.getHigh() > high30) {
 		high30 = bar.getHigh();
 	    }

@@ -16,6 +16,7 @@ public class Bar implements Comparable<Bar> {
     private int upTicks;
     private int downTicks;
     private BigDecimal median;
+    private int po;
 
     public Bar(LocalDateTime dateTime, int open, int high, int low, int close) {
 	this.dateTime = dateTime;
@@ -88,5 +89,13 @@ public class Bar implements Comparable<Bar> {
 
     public BigDecimal getMedian() {
 	return median;
+    }
+
+    public void setPo(int po) {
+	this.po = po;
+    }
+
+    public int getPo() {
+	return po;
     }
 }

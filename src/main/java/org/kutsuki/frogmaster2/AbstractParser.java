@@ -11,14 +11,17 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.TreeMap;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.kutsuki.frogmaster2.core.Bar;
+import org.kutsuki.frogmaster2.core.BarMap;
 import org.kutsuki.frogmaster2.core.Symbol;
 import org.kutsuki.frogmaster2.core.Ticker;
 
 public abstract class AbstractParser {
+    private static final boolean PRICE_OSCILLATOR = false;
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("MM/dd/yyyy");
     private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm");
 
@@ -26,11 +29,14 @@ public abstract class AbstractParser {
 
     private Ticker ticker;
 
-    public TreeMap<LocalDateTime, Bar> load(File file) {
-	TreeMap<LocalDateTime, Bar> barMap = new TreeMap<LocalDateTime, Bar>();
+    public BarMap load(File file) {
+	BarMap barMap = null;
 
 	if (file.exists()) {
 	    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+		List<LocalDateTime> dateList = new ArrayList<LocalDateTime>();
+		List<Bar> barList = new ArrayList<Bar>();
+
 		// skip first line
 		br.readLine();
 
@@ -52,11 +58,15 @@ public abstract class AbstractParser {
 			// bar.setUpTicks(up);
 			// bar.setDownTicks(down);
 
-			barMap.put(bar.getDateTime(), bar);
+			barList.add(bar);
+			dateList.add(bar.getDateTime());
+
 		    } catch (DateTimeParseException | NumberFormatException e) {
 			e.printStackTrace();
 		    }
 		}
+
+		barMap = new BarMap(dateList, barList, PRICE_OSCILLATOR);
 	    } catch (IOException e) {
 		e.printStackTrace();
 	    }

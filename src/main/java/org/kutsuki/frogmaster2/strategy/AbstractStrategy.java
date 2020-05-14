@@ -1,7 +1,5 @@
 package org.kutsuki.frogmaster2.strategy;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -9,6 +7,7 @@ import java.time.LocalTime;
 import java.util.List;
 
 import org.kutsuki.frogmaster2.core.Bar;
+import org.kutsuki.frogmaster2.core.BarMap;
 import org.kutsuki.frogmaster2.core.Symbol;
 import org.kutsuki.frogmaster2.core.Ticker;
 import org.kutsuki.frogmaster2.inputs.AbstractInput;
@@ -18,6 +17,7 @@ public abstract class AbstractStrategy {
     private static final LocalTime NINE_TWENTYFIVE = LocalTime.of(9, 25);
     private static final LocalTime FIVE_PM = LocalTime.of(17, 0);
 
+    private BarMap barMap;
     private boolean marketBuy;
     private boolean marketBuyToCover;
     private boolean marketSell;
@@ -34,21 +34,20 @@ public abstract class AbstractStrategy {
     private int stopCover;
     private int stopSell;
     private int unrealized;
-    private List<Bar> barList;
     private LocalDateTime startDateTime;
     private LocalDateTime endDateTime;
     private LocalDateTime lowestEquityDateTime;
     private Ticker ticker;
 
-    public abstract void setup(Symbol symbol, List<LocalDateTime> keyList, List<Bar> barList, AbstractInput input);
+    public abstract void setup(Symbol symbol, BarMap barMap, AbstractInput input);
 
     protected abstract void strategy(Bar bar);
 
-    protected void setTickerBarMap(Symbol symbol, List<LocalDateTime> keyList, List<Bar> barList) {
+    protected void setTickerBarMap(Symbol symbol, BarMap barMap) {
 	this.bankroll = 0;
 	this.bankrollEquity = 0;
+	this.barMap = barMap;
 	this.count = 0;
-	this.index = 0;
 	this.limitCover = 0;
 	this.lowestEquity = Integer.MAX_VALUE;
 	this.marketPosition = 0;
@@ -63,17 +62,16 @@ public abstract class AbstractStrategy {
 	this.ticker = symbol.getTicker();
 	this.unrealized = 0;
 
-	this.barList = barList;
-
-	if (!barList.isEmpty()) {
-	    this.endDateTime = calcEndDateTime(keyList, symbol);
-	    this.startDateTime = calcStartDateTime(keyList, symbol);
-	    this.lowestEquityDateTime = keyList.get(0);
+	if (!barMap.isEmpty()) {
+	    this.endDateTime = calcEndDateTime(barMap.getDateList(), symbol);
+	    this.startDateTime = calcStartDateTime(barMap.getDateList(), symbol);
+	    this.lowestEquityDateTime = barMap.getDateList().get(0);
 	}
     }
 
     public void run() {
-	for (Bar bar : barList) {
+	for (index = 0; index < barMap.size(); index++) {
+	    Bar bar = barMap.get(index);
 	    LocalDateTime key = bar.getDateTime();
 	    if (!key.isBefore(getStartDateTime()) && !key.isAfter(getEndDateTime())) {
 		// resolve orders first
@@ -92,8 +90,6 @@ public abstract class AbstractStrategy {
 		    lowestEquityDateTime = key;
 		}
 	    }
-
-	    index++;
 	}
     }
 
@@ -103,7 +99,7 @@ public abstract class AbstractStrategy {
 	switch (month) {
 	case 'A':
 	    // hard coded for @ES
-	    date = barList.get(barList.size() - 1).getDateTime().toLocalDate();
+	    date = barMap.get(barMap.size() - 1).getDateTime().toLocalDate();
 	    break;
 	case 'H':
 	    date = LocalDate.of(fullYear, 3, 1);
@@ -162,13 +158,7 @@ public abstract class AbstractStrategy {
     }
 
     protected Bar getPrevBar(int length) {
-	Bar bar = null;
-
-	if (index > length) {
-	    bar = barList.get(index - length);
-	}
-
-	return bar;
+	return barMap.getPrevBar(index, length);
     }
 
     protected LocalDateTime getStartDateTime() {
@@ -228,54 +218,6 @@ public abstract class AbstractStrategy {
 	if (bankrollEquity > 0) {
 	    this.bankrollEquity = 0;
 	}
-    }
-
-    protected int averageFC(int length) {
-	int result = 0;
-
-	if (index > length) {
-	    int sum = 0;
-
-	    for (int i = 0; i < length; i++) {
-		sum += getPrevBar(i).getClose();
-	    }
-
-	    result = BigDecimal.valueOf(sum).divide(BigDecimal.valueOf(length), 0, RoundingMode.HALF_UP).intValue();
-	}
-
-	return result;
-    }
-
-    protected int priceOscillator(int fastLength, int slowLength) {
-	BigDecimal fastAvg = BigDecimal.ZERO;
-	BigDecimal slowAvg = BigDecimal.ZERO;
-
-	if (index > fastLength) {
-	    BigDecimal sum = BigDecimal.ZERO;
-
-	    for (int i = 0; i < fastLength; i++) {
-		sum = sum.add(getPrevBar(i).getMedian());
-	    }
-
-	    fastAvg = sum.divide(BigDecimal.valueOf(fastLength), 2, RoundingMode.HALF_UP);
-	}
-
-	if (index > slowLength) {
-	    BigDecimal sum = BigDecimal.ZERO;
-
-	    for (int i = 0; i < slowLength; i++) {
-		sum = sum.add(getPrevBar(i).getMedian());
-	    }
-
-	    slowAvg = sum.divide(BigDecimal.valueOf(slowLength), 2, RoundingMode.HALF_UP);
-	}
-
-	// if (getPrevBar(0).getDateTime().isEqual(LocalDateTime.of(2006, 2, 27, 14,
-	// 15))) {
-	// System.out.println(fastAvg + " " + slowAvg);
-	// }
-
-	return fastAvg.subtract(slowAvg).setScale(0, RoundingMode.HALF_UP).intValue();
     }
 
     private LocalDateTime calcStartDateTime(List<LocalDateTime> keyList, Symbol symbol) {

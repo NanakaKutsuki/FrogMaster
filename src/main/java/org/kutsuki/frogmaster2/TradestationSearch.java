@@ -5,27 +5,25 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import org.apache.commons.lang3.SystemUtils;
-import org.kutsuki.frogmaster2.core.Bar;
+import org.kutsuki.frogmaster2.core.BarMap;
 import org.kutsuki.frogmaster2.core.Symbol;
 import org.kutsuki.frogmaster2.inputs.AbstractInput;
 import org.kutsuki.frogmaster2.inputs.InputResult;
 import org.kutsuki.frogmaster2.inputs.InputSearch;
-import org.kutsuki.frogmaster2.inputs.LineInput;
-import org.kutsuki.frogmaster2.strategy.Oscillator;
+import org.kutsuki.frogmaster2.inputs.TimeInput;
+import org.kutsuki.frogmaster2.strategy.TimeShort;
 
 public class TradestationSearch extends AbstractParser {
     private static final boolean OUTPUT = false;
@@ -40,14 +38,14 @@ public class TradestationSearch extends AbstractParser {
     private static final String UNIX_DIR = "ES/";
     private static final String TXT = ".txt";
 
+    private BarMap atBarMap;
     private ExecutorService es;
     private int cores;
-    private Map<Symbol, TreeMap<LocalDateTime, Bar>> tickerBarMap;
+    private Map<Symbol, BarMap> tickerBarMap;
     private List<Future<InputResult>> futureList;
     private List<InputResult> resultList;
     private long start;
     private TradestationStatus status;
-    private TreeMap<LocalDateTime, Bar> atBarMap;
 
     public TradestationSearch() {
 	setTicker(AT_FILE.getName());
@@ -113,39 +111,48 @@ public class TradestationSearch extends AbstractParser {
     private int stage(boolean count) {
 	int tests = 0;
 
-	// LocalTime long1 = LocalTime.of(23, 15);
-	// LocalTime short1 = LocalTime.of(15, 45);
-	// LocalTime long2 = LocalTime.MIN;
-	// LocalTime short2 = LocalTime.MIN;
-	// for (int hour = 0; hour <= 23; hour++) {
-	// for (int minute = 0; minute <= 55; minute += 5) {
-	// for (int hour2 = 0; hour2 <= 23; hour2++) {
-	// for (int minute2 = 0; minute2 <= 55; minute2 += 5) {
-	// long1 = LocalTime.of(hour, minute);
-	// short1 = LocalTime.of(hour2, minute2);
-	// if (!skip(long1) && !skip(long2) && !skip(short1) && !skip(short2)) {
+	// 1. Total $142846.00 LowestEquity -$34529.00 ROI 3.5245x Inputs:
+	// ("23:20","00:00","15:45","00:00")
+	LocalTime long1 = LocalTime.of(23, 15);
+	LocalTime short1 = LocalTime.of(15, 45);
+	LocalTime long2 = LocalTime.MIN;
+	LocalTime short2 = LocalTime.MIN;
+	for (int hour = 0; hour <= 23; hour++) {
+	    for (int minute = 0; minute <= 55; minute += 5) {
+		for (int hour2 = 0; hour2 <= 23; hour2++) {
+		    for (int minute2 = 0; minute2 <= 55; minute2 += 5) {
+			long1 = LocalTime.of(hour, minute);
+			short1 = LocalTime.of(hour2, minute2);
+			if (!skip(long1) && !skip(long2) && !skip(short1) && !skip(short2)) {
+			    if (count) {
+				tests++;
+			    } else {
+				AbstractInput input = new TimeInput(long1, long2, short1, short2);
+				addTest(input);
+			    }
+			}
+		    }
+		}
+	    }
+	}
+
+	// 1. Total $247861.00 LowestEquity -$22411.50 ROI 8.7240x Inputs: (3, -731,
+	// 644, 200, 0)
+	// 2. Total $245496.00 LowestEquity -$21277.00 ROI 9.0001x Inputs: (3, -411,
+	// 644, 200, 0)
+
+	// TODO
+	// for (int core = 900; core < 1100; core += 1) {
+	// for (int ah = -500; ah < -300; ah += 1) {
+	//
 	// if (count) {
 	// tests++;
 	// } else {
-	// AbstractInput input = new TimeInput(long1, long2, short1, short2);
+	// AbstractInput input = new LineInput(core, ah, 0);
 	// addTest(input);
 	// }
 	// }
 	// }
-	// }
-	// }
-	// }
-
-	// TODO
-	for (int core = -2000; core < 2000; core += 1) {
-	    // for (int core = -300; core < 100; core += 1) {
-	    if (count) {
-		tests++;
-	    } else {
-		AbstractInput input = new LineInput(3, -373, core);
-		addTest(input);
-	    }
-	}
 
 	return tests;
     }
@@ -156,9 +163,9 @@ public class TradestationSearch extends AbstractParser {
 	is.setTickerBarMap(tickerBarMap);
 	is.setTicker(getTicker());
 	is.setInput(input);
-	is.setStrategy(new Oscillator());
+	is.setStrategy(new TimeShort());
 	// is.setStartDate(START_DATE);
-	is.setEndDate(END_DATE);
+	// is.setEndDate(END_DATE);
 
 	Future<InputResult> f = es.submit(is);
 	futureList.add(f);
@@ -209,7 +216,7 @@ public class TradestationSearch extends AbstractParser {
     }
 
     private void loadQuarterly() {
-	this.tickerBarMap = new HashMap<Symbol, TreeMap<LocalDateTime, Bar>>();
+	this.tickerBarMap = new HashMap<Symbol, BarMap>();
 
 	for (int year = 6; year <= YEAR; year++) {
 	    Symbol h = new Symbol(getTicker(), 'H', year);

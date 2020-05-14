@@ -4,13 +4,10 @@ import java.io.File;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
-import org.kutsuki.frogmaster2.core.Bar;
+import org.kutsuki.frogmaster2.core.BarMap;
 import org.kutsuki.frogmaster2.core.Symbol;
 import org.kutsuki.frogmaster2.core.Ticker;
 import org.kutsuki.frogmaster2.inputs.Input;
@@ -58,11 +55,9 @@ public class TradestationParser extends AbstractParser {
 	File file = getFile(symbol);
 
 	if (file.exists()) {
-	    TreeMap<LocalDateTime, Bar> barMap = load(file);
-	    List<LocalDateTime> keyList = new ArrayList<LocalDateTime>(barMap.keySet());
-	    List<Bar> barList = new ArrayList<Bar>(barMap.values());
+	    BarMap barMap = load(file);
 
-	    STRATEGY.setup(symbol, keyList, barList, INPUT);
+	    STRATEGY.setup(symbol, barMap, INPUT);
 	    STRATEGY.run();
 
 	    // set ticker data

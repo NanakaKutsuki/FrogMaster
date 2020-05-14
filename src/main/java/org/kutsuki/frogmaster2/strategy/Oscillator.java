@@ -1,10 +1,9 @@
 package org.kutsuki.frogmaster2.strategy;
 
-import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.List;
 
 import org.kutsuki.frogmaster2.core.Bar;
+import org.kutsuki.frogmaster2.core.BarMap;
 import org.kutsuki.frogmaster2.core.Symbol;
 import org.kutsuki.frogmaster2.inputs.AbstractInput;
 import org.kutsuki.frogmaster2.inputs.LineInput;
@@ -21,8 +20,8 @@ public class Oscillator extends AbstractStrategy {
     private int lastPO;
 
     @Override
-    public void setup(Symbol symbol, List<LocalDateTime> keyList, List<Bar> barList, AbstractInput input) {
-	setTickerBarMap(symbol, keyList, barList);
+    public void setup(Symbol symbol, BarMap barMap, AbstractInput input) {
+	setTickerBarMap(symbol, barMap);
 	this.initialized = false;
 	this.input = (LineInput) input;
 	this.po = 0;
@@ -37,7 +36,7 @@ public class Oscillator extends AbstractStrategy {
 		initialized = true;
 	    }
 	} else {
-	    po = priceOscillator(5, 34);
+	    po = bar.getPo();
 
 	    runCoreHours(bar);
 	    runAfterHours(bar);

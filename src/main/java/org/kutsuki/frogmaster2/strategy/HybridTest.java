@@ -1,14 +1,14 @@
 package org.kutsuki.frogmaster2.strategy;
 
-import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.List;
 
 import org.kutsuki.frogmaster2.core.Bar;
+import org.kutsuki.frogmaster2.core.BarMap;
 import org.kutsuki.frogmaster2.core.Symbol;
 import org.kutsuki.frogmaster2.inputs.AbstractInput;
 import org.kutsuki.frogmaster2.inputs.LineInput;
 
+// 3,-373,402
 public class HybridTest extends AbstractStrategy {
     private static final LocalTime CORE_TIME = LocalTime.of(9, 25);
     private static final LocalTime AH_TIME = LocalTime.of(15, 45);
@@ -18,16 +18,16 @@ public class HybridTest extends AbstractStrategy {
     private LineInput input;
     private int po;
     private int lastPO;
-    private int lastPO2;
+    private int ahOpen;
+    private int onOpen;
 
     @Override
-    public void setup(Symbol symbol, List<LocalDateTime> keyList, List<Bar> barList, AbstractInput input) {
-	setTickerBarMap(symbol, keyList, barList);
+    public void setup(Symbol symbol, BarMap barMap, AbstractInput input) {
+	setTickerBarMap(symbol, barMap);
 	this.initialized = false;
 	this.input = (LineInput) input;
 	this.po = 0;
 	this.lastPO = 0;
-	this.lastPO2 = 0;
     }
 
     @Override
@@ -38,60 +38,90 @@ public class HybridTest extends AbstractStrategy {
 		initialized = true;
 	    }
 	} else {
-	    po = priceOscillator(5, 34);
+	    po = bar.getPo();
 
 	    runCoreHours(bar);
 	    runAfterHours(bar);
-	    runOverNight(bar);
+	    // runOverNight(bar);
 
-	    lastPO2 = lastPO;
 	    lastPO = po;
 	}
     }
 
     private void runCoreHours(Bar bar) {
-	// boolean goLong = po > input.getCoreLine() && lastPO < input.getCoreLine();
-	// boolean goShort = po < input.getCoreLine() && lastPO > input.getCoreLine();
-	boolean goLong = po > input.getCoreLine() && lastPO > input.getCoreLine() && lastPO2 > input.getCoreLine()
-		&& po > lastPO && lastPO < lastPO2;
-	boolean goShort = po < input.getCoreLine() && lastPO < input.getCoreLine() && lastPO2 < input.getCoreLine()
-		&& po < lastPO && lastPO > lastPO2;
+	boolean goLong = po > input.getCoreLine() && lastPO < input.getCoreLine();
+	boolean goShort = po < input.getCoreLine() && lastPO > input.getCoreLine();
 
-	if (bar.getTime().equals(CORE_TIME) && getMarketPosition() == -1) {
+	if (bar.getTime().equals(ON_TIME) && getMarketPosition() == -1) {
 	    marketBuy();
-	} else if (bar.getTime().isAfter(CORE_TIME) && bar.getTime().isBefore(AH_TIME)) {
+	} else if ((bar.getTime().equals(LocalTime.MIN) || bar.getTime().isAfter(LocalTime.MIN))
+		&& bar.getTime().isBefore(AH_TIME)) {
 	    flipPosition(goLong, goShort);
 	}
     }
 
     private void runAfterHours(Bar bar) {
-	// boolean goLong = po > input.getAhLine() && lastPO < input.getAhLine();
-	// boolean goShort = po < input.getAhLine() && lastPO > input.getAhLine();
-	boolean goLong = po > input.getAhLine() && lastPO > input.getAhLine() && lastPO2 > input.getAhLine()
-		&& po > lastPO && lastPO < lastPO2;
-	boolean goShort = po < input.getAhLine() && lastPO < input.getAhLine() && lastPO2 < input.getAhLine()
-		&& po < lastPO && lastPO > lastPO2;
+	boolean goLong = po > input.getAhLine() && lastPO < input.getAhLine();
+	boolean goShort = po < input.getAhLine() && lastPO > input.getAhLine();
 
 	if (bar.getTime().equals(AH_TIME) && getMarketPosition() == 1) {
 	    marketSellShort();
+	    ahOpen = 0;
+
+	    if (po > input.getAhLine()) {
+		ahOpen = bar.getOpen();
+	    }
 	} else if (bar.getTime().isAfter(AH_TIME) && bar.getTime().isBefore(ON_TIME)) {
+	    if (getMarketPosition() == 1) {
+		ahOpen = 0;
+	    }
+
 	    flipPosition(goLong, goShort);
 	}
     }
 
+    // private void runAfterHours(Bar bar) {
+    // boolean goLong = po > input.getAhLine() && lastPO < input.getAhLine();
+    // boolean goShort = po < input.getAhLine() && lastPO > input.getAhLine();
+    // boolean escape = ahOpen > 0 && bar.getClose() - ahOpen > input.getAhEscape();
+    // // boolean escape = false;
+    //
+    // if (bar.getTime().equals(AH_TIME) && getMarketPosition() == 1) {
+    // marketSellShort();
+    // ahOpen = 0;
+    //
+    // if (po > input.getAhLine()) {
+    // ahOpen = bar.getOpen();
+    // }
+    // } else if (bar.getTime().isAfter(AH_TIME) && bar.getTime().isBefore(ON_TIME))
+    // {
+    // if (getMarketPosition() == 1) {
+    // ahOpen = 0;
+    // }
+    //
+    // flipPosition(goLong || escape, goShort);
+    // }
+    // }
+
     private void runOverNight(Bar bar) {
-	// boolean goLong = po > input.getOnLine() && lastPO < input.getOnLine();
-	// boolean goShort = po < input.getOnLine() && lastPO > input.getOnLine();
-	boolean goLong = po > input.getOnLine() && lastPO > input.getOnLine() && lastPO2 > input.getOnLine()
-		&& po > lastPO && lastPO < lastPO2;
-	boolean goShort = po < input.getOnLine() && lastPO < input.getOnLine() && lastPO2 < input.getOnLine()
-		&& po < lastPO && lastPO > lastPO2;
+	boolean goLong = po > input.getOnLine() && lastPO < input.getOnLine();
+	boolean goShort = po < input.getOnLine() && lastPO > input.getOnLine();
+	boolean escape = onOpen > 0 && onOpen - bar.getClose() > input.getOnEscape();
 
 	if (bar.getTime().equals(ON_TIME) && getMarketPosition() == -1) {
 	    marketBuy();
+	    onOpen = 0;
+
+	    if (po < input.getOnLine()) {
+		onOpen = bar.getOpen();
+	    }
 	} else if ((bar.getTime().equals(LocalTime.MIN) || bar.getTime().isAfter(LocalTime.MIN))
 		&& bar.getTime().isBefore(CORE_TIME)) {
-	    flipPosition(goLong, goShort);
+	    if (getMarketPosition() == -1) {
+		onOpen = 0;
+	    }
+
+	    flipPosition(goLong, goShort || escape);
 	}
     }
 
