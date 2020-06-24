@@ -21,7 +21,6 @@ import org.kutsuki.frogmaster2.core.Symbol;
 import org.kutsuki.frogmaster2.core.Ticker;
 
 public abstract class AbstractParser {
-    private static final boolean PRICE_OSCILLATOR = false;
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("MM/dd/yyyy");
     private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm");
 
@@ -29,7 +28,7 @@ public abstract class AbstractParser {
 
     private Ticker ticker;
 
-    public BarMap load(File file) {
+    public BarMap load(File file, boolean oscillator) {
 	BarMap barMap = null;
 
 	if (file.exists()) {
@@ -60,13 +59,12 @@ public abstract class AbstractParser {
 
 			barList.add(bar);
 			dateList.add(bar.getDateTime());
-
 		    } catch (DateTimeParseException | NumberFormatException e) {
 			e.printStackTrace();
 		    }
 		}
 
-		barMap = new BarMap(dateList, barList, PRICE_OSCILLATOR);
+		barMap = new BarMap(dateList, barList, oscillator);
 	    } catch (IOException e) {
 		e.printStackTrace();
 	    }
@@ -84,6 +82,10 @@ public abstract class AbstractParser {
 	    this.ticker = Ticker.ES;
 	} else if (StringUtils.contains(ticker, Ticker.GC.getTicker())) {
 	    this.ticker = Ticker.GC;
+	} else if (StringUtils.contains(ticker, Ticker.VX.getTicker())) {
+	    this.ticker = Ticker.VX;
+	} else {
+	    throw new IllegalStateException("No Ticker Found!");
 	}
     }
 

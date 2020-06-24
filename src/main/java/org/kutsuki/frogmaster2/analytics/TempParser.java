@@ -23,7 +23,7 @@ public class TempParser extends AbstractParser {
     public void run() {
 	setTicker(StringUtils.substringAfterLast(FILE_NAME, Character.toString('/')));
 	File file = getFile(null);
-	BarMap barMap = load(file);
+	BarMap barMap = load(file, false);
 
 	if (file.exists()) {
 	    TreeMap<LocalDate, Bar> resultMap = new TreeMap<LocalDate, Bar>();

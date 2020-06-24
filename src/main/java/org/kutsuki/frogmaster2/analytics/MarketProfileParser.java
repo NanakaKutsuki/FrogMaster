@@ -38,7 +38,7 @@ public class MarketProfileParser extends AbstractParser {
 	    throw new IllegalStateException("at File Missing: " + FILE_NAME);
 	}
 
-	this.barMap = load(file);
+	this.barMap = load(file, false);
 	this.high30 = 0;
 	this.lastPoc = 0;
 	this.lastVah = 0;

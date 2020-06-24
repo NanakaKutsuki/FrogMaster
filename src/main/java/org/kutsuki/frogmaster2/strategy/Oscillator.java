@@ -8,11 +8,12 @@ import org.kutsuki.frogmaster2.core.Symbol;
 import org.kutsuki.frogmaster2.inputs.AbstractInput;
 import org.kutsuki.frogmaster2.inputs.LineInput;
 
-// 3,-373,402
+// 1. Total $329395.00 LowestEquity -$24766.00 ROI 10.7065x Inputs: (-133, -731,
+// 1108, 10:50)
 public class Oscillator extends AbstractStrategy {
-    private static final LocalTime CORE_TIME = LocalTime.of(9, 25);
+    private static final LocalTime CORE_TIME = LocalTime.of(11, 0);
     private static final LocalTime AH_TIME = LocalTime.of(15, 45);
-    private static final LocalTime ON_TIME = LocalTime.of(23, 55);
+    private static final LocalTime ON_TIME = LocalTime.of(23, 20);
 
     private boolean initialized;
     private LineInput input;
@@ -22,6 +23,8 @@ public class Oscillator extends AbstractStrategy {
     @Override
     public void setup(Symbol symbol, BarMap barMap, AbstractInput input) {
 	setTickerBarMap(symbol, barMap);
+	checkPrecalc();
+
 	this.initialized = false;
 	this.input = (LineInput) input;
 	this.po = 0;
@@ -74,8 +77,9 @@ public class Oscillator extends AbstractStrategy {
 
 	if (bar.getTime().equals(ON_TIME) && getMarketPosition() == -1) {
 	    marketBuy();
-	} else if ((bar.getTime().equals(LocalTime.MIN) || bar.getTime().isAfter(LocalTime.MIN))
-		&& bar.getTime().isBefore(CORE_TIME)) {
+	} else if ((bar.getTime().isAfter(ON_TIME) && bar.getTime().isBefore(LocalTime.MAX))
+		|| bar.getTime().equals(LocalTime.MIN)
+		|| (bar.getTime().isAfter(LocalTime.MIN) && bar.getTime().isBefore(CORE_TIME))) {
 	    flipPosition(goLong, goShort);
 	}
     }

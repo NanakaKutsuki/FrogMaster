@@ -98,6 +98,7 @@ public abstract class AbstractStrategy {
 
 	switch (month) {
 	case 'A':
+	case 'V':
 	    // hard coded for @ES
 	    date = barMap.get(barMap.size() - 1).getDateTime().toLocalDate();
 	    break;
@@ -123,6 +124,12 @@ public abstract class AbstractStrategy {
 	}
 
 	return dateTime;
+    }
+
+    public void checkPrecalc() {
+	if (!barMap.isPrecalc()) {
+	    throw new IllegalStateException("Precalc must be enabled!");
+	}
     }
 
     public int getBankroll() {
@@ -222,29 +229,37 @@ public abstract class AbstractStrategy {
 
     private LocalDateTime calcStartDateTime(List<LocalDateTime> keyList, Symbol symbol) {
 	LocalDate date = null;
+	LocalDateTime dateTime = null;
 
 	switch (symbol.getMonth()) {
 	case 'A':
 	    // hard coded for @ES
-	    date = LocalDate.of(2005, 12, 1);
+	    dateTime = LocalDateTime.of(LocalDate.of(2005, 12, 15), LocalTime.of(18, 5));
+	    break;
+	case 'V':
+	    // hard coded for @VX
+	    dateTime = LocalDateTime.of(LocalDate.of(2010, 1, 4), LocalTime.of(10, 35));
 	    break;
 	case 'H':
 	    date = LocalDate.of(symbol.getFullYear() - 1, 12, 1);
+	    dateTime = LocalDateTime.of(calcThirdDayOfWeek(date), NINE_TWENTYFIVE);
 	    break;
 	case 'M':
 	    date = LocalDate.of(symbol.getFullYear(), 3, 1);
+	    dateTime = LocalDateTime.of(calcThirdDayOfWeek(date), NINE_TWENTYFIVE);
 	    break;
 	case 'U':
 	    date = LocalDate.of(symbol.getFullYear(), 6, 1);
+	    dateTime = LocalDateTime.of(calcThirdDayOfWeek(date), NINE_TWENTYFIVE);
 	    break;
 	case 'Z':
 	    date = LocalDate.of(symbol.getFullYear(), 9, 1);
+	    dateTime = LocalDateTime.of(calcThirdDayOfWeek(date), NINE_TWENTYFIVE);
 	    break;
 	default:
 	    throw new IllegalStateException("Bad Ticker!" + symbol);
 	}
 
-	LocalDateTime dateTime = LocalDateTime.of(calcThirdDayOfWeek(date), NINE_TWENTYFIVE);
 	while (!keyList.contains(dateTime)) {
 	    dateTime = dateTime.plusDays(1);
 	}

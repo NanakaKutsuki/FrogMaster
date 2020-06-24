@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 public class Ticker {
     public static final Ticker ES = new Ticker("ES", 50, 25, 275, BigDecimal.valueOf(100));
     public static final Ticker GC = new Ticker("GC", 100, 1, 27, BigDecimal.TEN);
+    public static final Ticker VX = new Ticker("VX", 1000, 1, 301, BigDecimal.valueOf(100));
 
     private String ticker;
     private int dollarValue;

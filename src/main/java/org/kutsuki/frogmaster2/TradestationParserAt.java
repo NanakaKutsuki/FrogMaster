@@ -10,17 +10,18 @@ import org.kutsuki.frogmaster2.core.Ticker;
 import org.kutsuki.frogmaster2.inputs.AbstractInput;
 import org.kutsuki.frogmaster2.inputs.LineInput;
 import org.kutsuki.frogmaster2.strategy.AbstractStrategy;
-import org.kutsuki.frogmaster2.strategy.Oscillator;
+import org.kutsuki.frogmaster2.strategy.HybridTest;
 
 // check file, strategy, and symbol
 public class TradestationParserAt extends AbstractParser {
     private static final String FILE_NAME = "C:/Users/" + System.getProperty("user.name") + "/Desktop/atES.txt";
-    private static final AbstractStrategy STRATEGY = new Oscillator();
-    private static final AbstractInput INPUT = new LineInput(3, -373, 644, 1558, -1395);
+    private static final AbstractStrategy STRATEGY = new HybridTest();
+    private static final AbstractInput INPUT = new LineInput(149, 0, 0);
     // private static final AbstractInput INPUT = new TimeInput("23:55", "23:15",
     // "15:45", "00:00");
-    private static final LocalDate START_DATE = LocalDate.of(2020, 4, 3);
-    private static final LocalDate END_DATE = LocalDate.of(2020, 4, 17);
+    private static final boolean OSCILLATOR = true;
+    private static final LocalDate START_DATE = LocalDate.of(2019, 12, 20);
+    private static final LocalDate END_DATE = LocalDate.of(2019, 12, 20);
     private static final Symbol SYMBOL = new Symbol(Ticker.ES, 'A', 6);
 
     @Override
@@ -31,7 +32,7 @@ public class TradestationParserAt extends AbstractParser {
     public void run() {
 	setTicker(StringUtils.substringAfterLast(FILE_NAME, Character.toString('/')));
 	File file = getFile(null);
-	BarMap barMap = load(file);
+	BarMap barMap = load(file, OSCILLATOR);
 
 	if (file.exists()) {
 	    STRATEGY.setup(SYMBOL, barMap, INPUT);

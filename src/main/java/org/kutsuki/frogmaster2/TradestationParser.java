@@ -16,6 +16,7 @@ import org.kutsuki.frogmaster2.strategy.HybridTimeLimitRE;
 
 public class TradestationParser extends AbstractParser {
     private static final AbstractStrategy STRATEGY = new HybridTimeLimitRE();
+    private static final boolean OSCILLATOR = true;
     private static final Input INPUT = new Input(8, -600, -75, 575, 1100, 0, -1150, -525, 2025, 350);
     private static final int YEAR = LocalDate.now().getYear() - 2000;
     private static final String DIR = "C:/Users/" + System.getProperty("user.name") + "/Desktop/ES/";
@@ -55,7 +56,7 @@ public class TradestationParser extends AbstractParser {
 	File file = getFile(symbol);
 
 	if (file.exists()) {
-	    BarMap barMap = load(file);
+	    BarMap barMap = load(file, OSCILLATOR);
 
 	    STRATEGY.setup(symbol, barMap, INPUT);
 	    STRATEGY.run();

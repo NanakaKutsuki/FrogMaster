@@ -6,10 +6,12 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public class BarMap {
+    private boolean precalc;
     private List<LocalDateTime> dateList;
     private List<Bar> barList;
 
     public BarMap(List<LocalDateTime> dateList, List<Bar> barList, boolean precalc) {
+	this.precalc = precalc;
 	this.dateList = dateList;
 	this.barList = barList;
 
@@ -84,6 +86,10 @@ public class BarMap {
 
     public boolean isEmpty() {
 	return barList.isEmpty();
+    }
+
+    public boolean isPrecalc() {
+	return precalc;
     }
 
     public int size() {
